@@ -5,6 +5,7 @@ namespace App\PaymentGateways\Adapters;
 use App\Enums\Gateway\PostbackStatus;
 use App\Enums\Gateway\TransactionStatus;
 use App\Enums\InvoiceStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Client;
 use App\Models\GatewayAccount;
 use App\Models\GatewayCreditCard;
@@ -528,6 +529,48 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
         $response = $this->client()->get('/payments', $filters)->throw();
 
         return $response->json();
+    }
+
+    /**
+     * Persist an Asaas payment payload as a local GatewayPayment bound to the
+     * given invoice and gateway customer. Reuses the existing storage logic so
+     * status, fees and invoice transitions stay consistent with outbound sync.
+     */
+    public function importPayment(array $body, GatewayCustomer $customer, Invoice $invoice): GatewayPayment
+    {
+        return $this->storeGatewayPayment($body, $invoice, $customer);
+    }
+
+    public function paymentMethodFromBillingType(string $billingType): PaymentMethod
+    {
+        return PaymentMethod::from($this->mapBillingType($billingType));
+    }
+
+    public function transactionStatusFromAsaas(string $status): TransactionStatus
+    {
+        return $this->mapTransactionStatus($status);
+    }
+
+    public function listTransfers(array $filters = []): array
+    {
+        $response = $this->client()->get('/transfers', $filters)->throw();
+
+        return $response->json();
+    }
+
+    public function importTransfer(array $body): GatewayTransfer
+    {
+        $status = $this->mapTransferStatus($body['status'] ?? 'PENDING');
+        $grossValue = (float) ($body['value'] ?? 0);
+        $netValue = (float) ($body['netValue'] ?? $grossValue);
+
+        return GatewayTransfer::create([
+            'gateway_reference_key' => $body['id'],
+            'gross_value' => $grossValue,
+            'fee_value' => max(0, $grossValue - $netValue),
+            'status' => $status,
+            'gateway_account_id' => $this->gatewayAccount->id,
+        ]);
     }
 
     private function client(): PendingRequest
