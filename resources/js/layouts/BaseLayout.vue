@@ -120,7 +120,8 @@
         <v-main class="layout-transparent-main">
             <v-container
                 fluid
-                class="pa-4 pa-md-6 layout-transparent-container"
+                class="layout-transparent-container"
+                :class="isFullBleedPage ? 'pa-0' : 'pa-4 pa-md-6'"
             >
                 <div class="page-content-host">
                     <slot />
@@ -197,6 +198,8 @@ const currentPath = computed(() => {
 });
 
 const isApplicationsHome = computed(() => currentPath.value === '/');
+
+const isFullBleedPage = computed(() => page.component === 'Chat');
 
 const currentMenuItem = computed(() => {
     return props.menu
