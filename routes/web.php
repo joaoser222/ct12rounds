@@ -67,6 +67,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('chat', fn () => inertia('Chat'))->name('chat')->can('chat.view');
     Route::get('chat/prompts', [ChatController::class, 'prompts'])->name('chat.prompts')->can('chat.view');
     Route::post('chat/message', [ChatController::class, 'message'])->name('chat.message')->can('chat.view');
+    Route::get('chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations')->can('chat.view');
+    Route::get('chat/conversations/{conversation}', [ChatController::class, 'show'])->name('chat.conversations.show')->can('chat.view');
     Route::get('select-box/{objectName}', SelectBoxController::class)->name('select-box');
     Route::get('contracts/find-client', [ContractController::class, 'findClient'])->name('contracts.find-client');
     Route::get('contracts/find-coupon', [ContractController::class, 'findCoupon'])->name('contracts.find-coupon');

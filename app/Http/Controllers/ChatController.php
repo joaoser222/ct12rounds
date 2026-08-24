@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\ChatMessage;
 use App\Models\Conversation;
 use App\Services\Mcp\ChatPromptProvider;
 use App\Services\Mcp\ChatService;
@@ -56,6 +57,7 @@ class ChatController extends Controller
             'role' => 'user',
             'content' => $data['message'],
         ]);
+        $conversation->touch();
 
         if (! empty($data['stream'])) {
             return $this->chatService->streamAsk(
@@ -82,6 +84,39 @@ class ChatController extends Controller
         return response()->json([
             'reply' => $reply,
             'conversation_id' => $conversation->id,
+        ]);
+    }
+
+    public function conversations(Request $request): JsonResponse
+    {
+        $conversations = Conversation::query()
+            ->where('user_id', $request->user()->id)
+            ->orderByDesc('updated_at')
+            ->limit(50)
+            ->get(['id', 'title', 'updated_at']);
+
+        return response()->json([
+            'conversations' => $conversations,
+        ]);
+    }
+
+    public function show(Request $request, Conversation $conversation): JsonResponse
+    {
+        abort_unless($conversation->user_id === $request->user()->id, 404);
+
+        return response()->json([
+            'conversation' => [
+                'id' => $conversation->id,
+                'title' => $conversation->title,
+            ],
+            'messages' => $conversation->messages()
+                ->orderBy('id')
+                ->get(['id', 'role', 'content'])
+                ->map(fn (ChatMessage $message): array => [
+                    'id' => $message->id,
+                    'role' => $message->role,
+                    'text' => $message->content,
+                ]),
         ]);
     }
 

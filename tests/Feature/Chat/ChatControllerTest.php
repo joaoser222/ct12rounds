@@ -353,6 +353,104 @@ class ChatControllerTest extends TestCase
         );
     }
 
+    public function test_chat_lists_recent_conversations_for_current_user(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        $old = Conversation::create(['user_id' => $user->id, 'title' => 'Conversa antiga']);
+        $old->forceFill(['updated_at' => now()->subDays(2)])->save();
+
+        $recent = Conversation::create(['user_id' => $user->id, 'title' => 'Conversa recente']);
+        $recent->forceFill(['updated_at' => now()->subHour()])->save();
+
+        Conversation::create(['user_id' => $other->id, 'title' => 'De outro usuário']);
+
+        $response = $this->actingAs($user)->getJson('/chat/conversations');
+
+        $response->assertOk();
+        $titles = array_column($response->json('conversations'), 'title');
+        $this->assertSame(['Conversa recente', 'Conversa antiga'], $titles);
+    }
+
+    public function test_chat_returns_conversation_messages_for_owner(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        $conversation = Conversation::create([
+            'user_id' => $user->id,
+            'title' => 'Minha conversa',
+        ]);
+        $conversation->messages()->create(['role' => 'user', 'content' => 'Olá']);
+        $conversation->messages()->create(['role' => 'assistant', 'content' => 'Olá! Como posso ajudar?']);
+
+        $response = $this->actingAs($user)->getJson("/chat/conversations/{$conversation->id}");
+
+        $response->assertOk();
+        $response->assertJsonPath('conversation.id', $conversation->id);
+        $response->assertJsonPath('conversation.title', 'Minha conversa');
+
+        $messages = $response->json('messages');
+        $this->assertCount(2, $messages);
+        $this->assertSame(['id', 'role', 'text'], array_keys($messages[0]));
+        $this->assertSame('user', $messages[0]['role']);
+        $this->assertSame('Olá', $messages[0]['text']);
+        $this->assertSame('assistant', $messages[1]['role']);
+        $this->assertSame('Olá! Como posso ajudar?', $messages[1]['text']);
+    }
+
+    public function test_chat_hides_conversation_messages_from_other_users(): void
+    {
+        $owner = User::factory()->create();
+        $intruder = User::factory()->create();
+        $this->givePermission($intruder, 'chat.view');
+
+        $conversation = Conversation::create([
+            'user_id' => $owner->id,
+            'title' => 'Conversa privada',
+        ]);
+
+        $this->actingAs($intruder)
+            ->getJson("/chat/conversations/{$conversation->id}")
+            ->assertNotFound();
+    }
+
+    public function test_chat_message_updates_conversation_activity_ordering(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        $old = Conversation::create(['user_id' => $user->id, 'title' => 'Conversa antiga']);
+        $old->forceFill(['updated_at' => now()->subDays(1)])->save();
+
+        $newer = Conversation::create(['user_id' => $user->id, 'title' => 'Conversa mais nova']);
+        $newer->forceFill(['updated_at' => now()->subMinutes(5)])->save();
+
+        Http::fake([
+            '*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'role' => 'assistant',
+                        'content' => 'Resposta na conversa antiga.',
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $this->actingAs($user)->postJson('/chat/message', [
+            'message' => 'Continuando a conversa antiga',
+            'conversation_id' => $old->id,
+        ])->assertOk();
+
+        $response = $this->actingAs($user)->getJson('/chat/conversations');
+
+        $response->assertOk();
+        $titles = array_column($response->json('conversations'), 'title');
+        $this->assertSame('Conversa antiga', $titles[0], 'A conversa com atividade recente deve vir primeiro.');
+    }
+
     public function test_chat_usa_groq_com_formato_tool_calls(): void
     {
         $user = User::factory()->create();
