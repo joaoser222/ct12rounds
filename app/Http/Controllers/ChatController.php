@@ -92,7 +92,7 @@ class ChatController extends Controller
         $conversations = Conversation::query()
             ->where('user_id', $request->user()->id)
             ->orderByDesc('updated_at')
-            ->limit(50)
+            ->limit(10)
             ->get(['id', 'title', 'updated_at']);
 
         return response()->json([

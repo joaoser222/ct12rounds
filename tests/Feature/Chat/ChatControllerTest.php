@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Conversation;
 use App\Models\Permission;
 use App\Models\User;
+use App\Services\Mcp\ChatService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -374,6 +375,28 @@ class ChatControllerTest extends TestCase
         $this->assertSame(['Conversa recente', 'Conversa antiga'], $titles);
     }
 
+    public function test_chat_lists_only_the_ten_most_recent_conversations(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        foreach (range(1, 12) as $index) {
+            $conversation = Conversation::create([
+                'user_id' => $user->id,
+                'title' => "Conversa {$index}",
+            ]);
+            $conversation->forceFill(['updated_at' => now()->subMinutes($index)])->save();
+        }
+
+        $response = $this->actingAs($user)->getJson('/chat/conversations');
+
+        $response->assertOk();
+        $titles = array_column($response->json('conversations'), 'title');
+        $this->assertCount(10, $titles);
+        $this->assertSame('Conversa 1', $titles[0]);
+        $this->assertSame('Conversa 10', $titles[9]);
+    }
+
     public function test_chat_returns_conversation_messages_for_owner(): void
     {
         $user = User::factory()->create();
@@ -560,6 +583,73 @@ class ChatControllerTest extends TestCase
 
         $this->assertDatabaseHas('chat_messages', [
             'role' => 'assistant',
+            'content' => 'Olá mundo',
+        ]);
+    }
+
+    public function test_chat_stream_interrupts_upstream_and_persists_partial_when_client_disconnects(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        $conversation = Conversation::create([
+            'user_id' => $user->id,
+            'title' => 'Stream interrompido',
+        ]);
+        $conversation->messages()->create(['role' => 'user', 'content' => 'Oi']);
+
+        // First 8192-byte read delivers the "Olá" token; the rest of the
+        // upstream stream (" mundo" + [DONE]) must never be consumed because
+        // the client disconnects in between.
+        $padding = ': '.str_repeat('x', 8100)."\n\n";
+        $sseBody = 'data: '.json_encode(['choices' => [['delta' => ['content' => 'Olá']]]])."\n\n"
+            .$padding
+            .'data: '.json_encode(['choices' => [['delta' => ['content' => ' mundo']]]])."\n\n"
+            ."data: [DONE]\n\n";
+
+        Http::fake([
+            '*' => Http::response($sseBody, 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $checks = 0;
+        $service = app(ChatService::class);
+
+        $response = $service->streamAsk(
+            'Oi',
+            [],
+            function (string $reply) use ($conversation): void {
+                $conversation->messages()->create([
+                    'role' => 'assistant',
+                    'content' => $reply,
+                ]);
+            },
+            $conversation->id,
+            null,
+            function () use (&$checks): bool {
+                $checks++;
+
+                return $checks > 3;
+            },
+        );
+
+        ob_start();
+        $response->sendContent();
+        $output = (string) ob_get_clean();
+
+        $this->assertStringContainsString('"type":"token"', $output);
+        $this->assertStringContainsString('"content":"Olá"', $output);
+        $this->assertStringNotContainsString('"type":"done"', $output);
+
+        $this->assertCount(1, Http::recorded(), 'Nenhuma chamada adicional ao provedor após a desconexão.');
+
+        $this->assertDatabaseHas('chat_messages', [
+            'conversation_id' => $conversation->id,
+            'role' => 'assistant',
+            'content' => 'Olá',
+        ]);
+
+        $this->assertDatabaseMissing('chat_messages', [
+            'conversation_id' => $conversation->id,
             'content' => 'Olá mundo',
         ]);
     }

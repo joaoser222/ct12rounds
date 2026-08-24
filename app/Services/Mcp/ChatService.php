@@ -27,7 +27,10 @@ class ChatService
     /**
      * Stream the assistant reply as Server-Sent Events. The callback echoes
      * `meta`, `token`, and `done` events; $onComplete receives the final text
-     * so the caller can persist the assistant message.
+     * so the caller can persist the assistant message. When the client
+     * disconnects (or $shouldInterrupt returns true), the upstream LLM stream
+     * is abandoned so no further tokens are generated, and only the partial
+     * text received so far is reported to $onComplete.
      *
      * @param  array<int, array{role: string, content: string}>  $history
      */
@@ -37,6 +40,7 @@ class ChatService
         ?callable $onComplete = null,
         ?int $conversationId = null,
         ?string $promptName = null,
+        ?callable $shouldInterrupt = null,
     ): StreamedResponse {
         ['tools' => $resourceTools, 'map' => $resourceMap] = $this->schemaProvider->readOnlyResourcesForCurrentUser();
         ['tools' => $writeTools, 'map' => $writeMap] = $this->schemaProvider->writableToolsForCurrentUser();
@@ -51,15 +55,28 @@ class ChatService
         $maxIterations = (int) $config['max_tool_iterations'];
         $providers = $this->orderedProviders($config);
 
-        return response()->stream(function () use ($providers, $config, $tools, $messages, $map, $maxIterations, $onComplete, $conversationId): void {
+        return response()->stream(function () use ($providers, $config, $tools, $messages, $map, $maxIterations, $onComplete, $conversationId, $shouldInterrupt): void {
+            $isStopped = $shouldInterrupt ?? static fn (): bool => connection_aborted() !== 0;
+
             if ($conversationId !== null) {
                 echo $this->sseEvent(['type' => 'meta', 'conversation_id' => $conversationId]);
+                flush();
+            }
+
+            if ($isStopped()) {
+                return;
             }
 
             $activeIndex = 0;
             $full = '';
 
             for ($iteration = 0; $iteration <= $maxIterations; $iteration++) {
+                if ($isStopped()) {
+                    $this->finishInterrupted($full, $onComplete);
+
+                    return;
+                }
+
                 $body = null;
 
                 for ($i = $activeIndex; $i < count($providers); $i++) {
@@ -74,6 +91,7 @@ class ChatService
                 if ($body === null) {
                     $failure = 'Falha ao chamar os provedores de LLM.';
                     echo $this->sseEvent(['type' => 'done', 'content' => $failure]);
+                    flush();
 
                     if ($onComplete !== null) {
                         ($onComplete)($failure);
@@ -82,9 +100,18 @@ class ChatService
                     return;
                 }
 
-                $result = $this->streamOneCompletion($body, function (string $token): void {
+                $pending = '';
+                $result = $this->streamOneCompletion($body, function (string $token) use (&$pending): void {
+                    $pending .= $token;
                     echo $this->sseEvent(['type' => 'token', 'content' => $token]);
-                });
+                    flush();
+                }, $isStopped);
+
+                if ($isStopped()) {
+                    $this->finishInterrupted($pending !== '' ? $pending : $full, $onComplete);
+
+                    return;
+                }
 
                 $assistantMessage = ['role' => 'assistant', 'content' => $result['content']];
 
@@ -114,6 +141,12 @@ class ChatService
                 }
             }
 
+            if ($isStopped()) {
+                $this->finishInterrupted($full, $onComplete);
+
+                return;
+            }
+
             if ($full === '') {
                 $full = $this->synthesizeFinalAnswer($messages, $providers, $activeIndex, $config);
             }
@@ -123,6 +156,7 @@ class ChatService
             }
 
             echo $this->sseEvent(['type' => 'done', 'content' => $full]);
+            flush();
 
             if ($onComplete !== null) {
                 ($onComplete)($full);
@@ -550,18 +584,34 @@ class ChatService
     }
 
     /**
+     * Report the partial text received before an interruption so the caller can
+     * persist it; no further LLM calls happen after this point.
+     */
+    private function finishInterrupted(string $partial, ?callable $onComplete): void
+    {
+        if ($partial !== '' && $onComplete !== null) {
+            ($onComplete)($partial);
+        }
+    }
+
+    /**
      * Read an SSE stream, invoking $onToken for each text delta, and return the
-     * accumulated text and reconstructed tool_calls.
+     * accumulated text and reconstructed tool_calls. When $shouldStop returns
+     * true, the loop stops reading so the upstream connection is closed.
      *
      * @return array{content: string, tool_calls: array<int, array{id: string, type: string, function: array{name: string, arguments: string}}>}
      */
-    private function streamOneCompletion(StreamInterface $body, callable $onToken): array
+    private function streamOneCompletion(StreamInterface $body, callable $onToken, ?callable $shouldStop = null): array
     {
         $content = '';
         $toolCalls = [];
         $buffer = '';
 
         while (! $body->eof()) {
+            if ($shouldStop !== null && $shouldStop()) {
+                break;
+            }
+
             $buffer .= $body->read(8192);
 
             while (($pos = strpos($buffer, "\n\n")) !== false) {
