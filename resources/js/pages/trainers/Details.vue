@@ -138,14 +138,15 @@ async function fillAddress(form: AddressForm): Promise<void> {
             </v-divider>
             <v-row class="ma-0">
                 <v-col cols="12" md="4">
-                    <MaskedTextField
-                        v-model="form.address_postal_code"
-                        label="CEP"
-                        :mask="masks.cep"
-                        :loading="isLoadingAddress"
-                        :error-messages="errors.address_postal_code"
-                        @blur="fillAddress(form)"
-                    />
+                <MaskedTextField
+                    v-model="form.address_postal_code"
+                    label="CEP"
+                    :mask="masks.cep"
+                    :loading="isLoadingAddress"
+                    :rules="[required]"
+                    :error-messages="errors.address_postal_code"
+                    @blur="fillAddress(form)"
+                />
                 </v-col>
                 <v-col cols="12" md="8">
                     <v-text-field
@@ -155,12 +156,13 @@ async function fillAddress(form: AddressForm): Promise<void> {
                     />
                 </v-col>
                 <v-col cols="12" md="4">
-                    <v-text-field
-                        v-model="form.address_number"
-                        label="Número"
-                        :error-messages="errors.address_number"
-                        v-text-case="'upper'"
-                    />
+                <v-text-field
+                    v-model="form.address_number"
+                    label="Número"
+                    :rules="[required]"
+                    :error-messages="errors.address_number"
+                    v-text-case="'upper'"
+                />
                 </v-col>
                 <v-col cols="12" md="8">
                     <v-text-field
@@ -179,13 +181,12 @@ async function fillAddress(form: AddressForm): Promise<void> {
                     />
                 </v-col>
                 <v-col cols="12" md="4">
-                    <v-select
-                        v-model="form.address_state"
-                        label="Estado"
-                        :items="ufs"
-                        :rules="[required]"
-                        :error-messages="errors.address_state"
-                    />
+                <v-select
+                    v-model="form.address_state"
+                    label="Estado"
+                    :items="ufs"
+                    :error-messages="errors.address_state"
+                />
                 </v-col>
                 <v-col cols="12" md="4">
                     <v-text-field

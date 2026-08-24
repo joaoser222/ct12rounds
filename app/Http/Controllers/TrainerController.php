@@ -62,12 +62,12 @@ class TrainerController extends CrudModuleController
                 'gender' => ['nullable', 'in:male,female,other'],
                 'profile_image' => ['nullable', 'string', 'max:255'],
                 'address' => ['nullable', 'string', 'max:255'],
-                'address_number' => ['nullable', 'string', 'max:50'],
+                'address_number' => ['required', 'string', 'max:50'],
                 'address_complement' => ['nullable', 'string', 'max:255'],
                 'address_state' => ['nullable', 'string', 'max:2'],
                 'address_city' => ['nullable', 'string', 'max:255'],
                 'address_district' => ['nullable', 'string', 'max:255'],
-                'address_postal_code' => ['nullable', 'string', 'max:10'],
+                'address_postal_code' => ['required', 'string', 'max:10'],
             ]))
         );
 
@@ -100,12 +100,12 @@ class TrainerController extends CrudModuleController
                     'gender' => ['nullable', 'in:male,female,other'],
                     'profile_image' => ['nullable', 'string', 'max:255'],
                     'address' => ['nullable', 'string', 'max:255'],
-                    'address_number' => ['nullable', 'string', 'max:50'],
+                    'address_number' => ['required', 'string', 'max:50'],
                     'address_complement' => ['nullable', 'string', 'max:255'],
                     'address_state' => ['nullable', 'string', 'max:2'],
                     'address_city' => ['nullable', 'string', 'max:255'],
                     'address_district' => ['nullable', 'string', 'max:255'],
-                    'address_postal_code' => ['nullable', 'string', 'max:10'],
+                    'address_postal_code' => ['required', 'string', 'max:10'],
                 ]),
                 'id' => $trainer->getKey(),
             ])
