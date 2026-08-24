@@ -32,6 +32,7 @@ const prompts = ref<ChatPrompt[]>([]);
 const conversations = ref<ConversationSummary[]>([]);
 const historyDrawer = ref(false);
 const messagesHost = ref<HTMLElement | null>(null);
+const abortController = ref<AbortController | null>(null);
 
 const xsrfToken = decodeURIComponent(
     document.cookie.match(/(^|; )XSRF-TOKEN=([^;]*)/)?.[1] ?? '',
@@ -167,6 +168,10 @@ function updateMessage(id: number, text: string): void {
     }
 }
 
+function stopGeneration(): void {
+    abortController.value?.abort();
+}
+
 async function send(promptName: string | null = null): Promise<void> {
     const text = draft.value.trim();
 
@@ -181,6 +186,7 @@ async function send(promptName: string | null = null): Promise<void> {
     const assistantId = Date.now() + 1;
     messages.value.push({ id: assistantId, role: 'assistant', text: '' });
     let accumulated = '';
+    abortController.value = new AbortController();
 
     try {
         const response = await fetch('/chat/message', {
@@ -196,6 +202,7 @@ async function send(promptName: string | null = null): Promise<void> {
                 stream: true,
                 prompt: promptName,
             }),
+            signal: abortController.value.signal,
         });
 
         if (!response.ok || !response.body) {
@@ -254,8 +261,14 @@ async function send(promptName: string | null = null): Promise<void> {
         if (accumulated === '') {
             updateMessage(assistantId, 'Sem resposta.');
         }
-    } catch {
-        updateMessage(assistantId, 'Erro ao obter resposta do assistente.');
+    } catch (error) {
+        const aborted = error instanceof DOMException && error.name === 'AbortError';
+
+        if (! aborted) {
+            updateMessage(assistantId, 'Erro ao obter resposta do assistente.');
+        } else if (accumulated === '') {
+            updateMessage(assistantId, 'Geração interrompida.');
+        }
     } finally {
         loading.value = false;
         void loadConversations();
@@ -403,13 +416,21 @@ async function send(promptName: string | null = null): Promise<void> {
                     @keyup.enter="send"
                 />
                 <v-btn
+                    v-if="!loading"
                     color="primary"
                     icon="ti ti-send"
                     rounded="lg"
-                    :disabled="draft.trim() === '' || loading"
-                    :loading="loading"
+                    :disabled="draft.trim() === ''"
                     title="Enviar"
                     @click="send"
+                />
+                <v-btn
+                    v-else
+                    color="error"
+                    icon="ti ti-player-stop"
+                    rounded="lg"
+                    title="Interromper geração"
+                    @click="stopGeneration"
                 />
             </div>
         </v-container>
