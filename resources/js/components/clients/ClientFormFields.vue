@@ -191,6 +191,7 @@ async function fillAddress(): Promise<void> {
                 label="CEP"
                 :mask="masks.cep"
                 :loading="isLoadingAddress"
+                :rules="[required]"
                 :disabled="disabled"
                 :error-messages="errors.address_postal_code"
                 @blur="fillAddress"
@@ -209,6 +210,7 @@ async function fillAddress(): Promise<void> {
             <v-text-field
                 v-model="form.address_number"
                 label="Número"
+                :rules="[required]"
                 :disabled="disabled"
                 :error-messages="errors.address_number"
                 v-text-case="'upper'"

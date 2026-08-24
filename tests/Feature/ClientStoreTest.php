@@ -67,4 +67,34 @@ class ClientStoreTest extends TestCase
 
         $response->assertSessionHasErrors(['name', 'email', 'phone', 'document', 'gender', 'birth_date']);
     }
+
+    public function test_client_creation_requires_cep_and_number(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'clients.create');
+
+        $withoutCep = $this->validPayload();
+        unset($withoutCep['address_postal_code']);
+        $response = $this->actingAs($user)->post(route('clients.store'), $withoutCep);
+        $response->assertSessionHasErrors(['address_postal_code']);
+
+        $withoutNumber = $this->validPayload();
+        unset($withoutNumber['address_number']);
+        $response = $this->actingAs($user)->post(route('clients.store'), $withoutNumber);
+        $response->assertSessionHasErrors(['address_number']);
+    }
+
+    public function test_client_creation_allows_optional_address_fields(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'clients.create');
+
+        $payload = $this->validPayload();
+        unset($payload['address'], $payload['address_district'], $payload['address_city'], $payload['address_state'], $payload['address_complement']);
+
+        $response = $this->actingAs($user)->post(route('clients.store'), $payload);
+
+        $response->assertRedirect(route('clients.index'));
+        $this->assertDatabaseHas('clients', ['email' => 'cliente@teste.com']);
+    }
 }

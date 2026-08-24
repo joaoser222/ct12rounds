@@ -73,7 +73,6 @@ const defaults = {
                 :errors="errors"
                 :gender-types="genderTypes"
                 :ufs="ufs"
-                require-address-state
             />
         </template>
     </DetailsPage>
