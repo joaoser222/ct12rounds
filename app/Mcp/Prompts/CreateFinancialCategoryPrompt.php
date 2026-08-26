@@ -10,13 +10,13 @@ use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Prompt;
 
-#[Name('register-trainer')]
-#[Description('Guia o modelo a cadastrar um novo treinador na academia.')]
-class RegisterTrainerPrompt extends Prompt
+#[Name('create-financial-category')]
+#[Description('Guia o modelo a cadastrar uma nova categoria financeira na academia.')]
+class CreateFinancialCategoryPrompt extends Prompt
 {
     public function shouldRegister(): bool
     {
-        return auth()->user()?->can('trainers.create') ?? false;
+        return auth()->user()?->can('financial_categories.create') ?? false;
     }
 
     /**
@@ -26,16 +26,16 @@ class RegisterTrainerPrompt extends Prompt
     {
         return [
             [
-                'key' => 'trainer_data',
-                'instruction' => 'Colete os dados do treinador: nome completo, documento (CPF/CNPJ), e-mail e telefone.',
+                'key' => 'category_data',
+                'instruction' => 'Colete os dados: nome da categoria e tipo de operação (entrada ou saída).',
             ],
             [
                 'key' => 'confirm',
-                'instruction' => 'Resuma os dados coletados e peça confirmação do usuário antes de criar o treinador.',
+                'instruction' => 'Resuma os dados coletados e peça confirmação do usuário antes de criar a categoria.',
             ],
             [
                 'key' => 'create',
-                'instruction' => 'Use a ferramenta de criar treinador informando os dados coletados.',
+                'instruction' => 'Use a ferramenta de criar categoria financeira informando o nome e o tipo de operação.',
             ],
         ];
     }
@@ -45,14 +45,11 @@ class RegisterTrainerPrompt extends Prompt
         $name = config('app.name', 'a academia');
 
         return <<<TEXT
-Olá! Para realizar seu cadastro como treinador na {$name}, por favor preencha os dados abaixo:
+Olá! Para cadastrar uma nova categoria financeira na {$name}, por favor preencha os dados abaixo:
 
-*Cadastro de Treinador*
-Nome completo:
-CPF/CNPJ:
-E-mail:
-Telefone:
-Especialidade:
+*Cadastro de Categoria Financeira*
+Nome da categoria:
+Tipo de operação (entrada/saída):
 
 Responda esta mensagem com os dados preenchidos.
 TEXT;
@@ -74,7 +71,7 @@ TEXT;
 
         $stepCount = count($steps);
 
-        return "Siga estritamente as etapas abaixo para cadastrar um treinador. "
+        return "Siga estritamente as etapas abaixo para cadastrar uma categoria financeira. "
             ."Execute cada etapa em ordem. Ao final de cada etapa, resuma o que foi coletado "
             ."e aguarde a confirmação do usuário antes de avançar. Se o usuário quiser corrigir "
             ."dados de uma etapa anterior, retorne a ela.\n\n"

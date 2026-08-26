@@ -19,6 +19,11 @@ class FinancialOverviewPrompt extends Prompt
         return auth()->user()?->can('receivables.view') ?? false;
     }
 
+    public function clientMessage(): ?string
+    {
+        return null;
+    }
+
     public function handle(Request $request): Response
     {
         return Response::text(<<<'TEXT'

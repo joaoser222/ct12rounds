@@ -19,6 +19,11 @@ class CollectReceivablePrompt extends Prompt
         return auth()->user()?->can('receivables.mark_paid') ?? false;
     }
 
+    public function clientMessage(): ?string
+    {
+        return null;
+    }
+
     public function handle(Request $request): Response
     {
         return Response::text(<<<'TEXT'

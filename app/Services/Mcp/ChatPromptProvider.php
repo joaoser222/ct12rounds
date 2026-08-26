@@ -21,17 +21,19 @@ class ChatPromptProvider
      */
     private const LABELS = [
         'onboard-client' => 'Criar cliente',
-        'register-sale' => 'Registrar venda',
         'collect-receivable' => 'Registrar recebimento',
         'financial-overview' => 'Resumo financeiro',
         'register-trainer' => 'Cadastrar treinador',
+        'create-financial-category' => 'Cadastrar categoria financeira',
+        'create-cost-center' => 'Cadastrar centro de custo',
+        'create-product' => 'Cadastrar produto',
     ];
 
     /**
      * Build the list of MCP prompts the current user is allowed to use, ready
      * to be rendered as conversation starters in the chat UI.
      *
-     * @return array<int, array{name: string, label: string, description: string, text: string}>
+     * @return array<int, array{name: string, label: string, description: string, text: string, client_message: ?string}>
      */
     public function promptsForCurrentUser(): array
     {
@@ -56,6 +58,7 @@ class ChatPromptProvider
                 'label' => self::LABELS[$name] ?? $prompt->description(),
                 'description' => $prompt->description(),
                 'text' => $this->promptText($prompt),
+                'client_message' => $this->clientMessage($prompt),
             ];
         }
 
@@ -124,5 +127,21 @@ class ChatPromptProvider
         }
 
         return (string) $result;
+    }
+
+    /**
+     * Return the optional client-facing message text for a prompt, or null
+     * when the prompt is not suitable for forwarding to a client.
+     */
+    private function clientMessage(Prompt $prompt): ?string
+    {
+        if (! method_exists($prompt, 'clientMessage')) {
+            return null;
+        }
+
+        /** @var string|null $message */
+        $message = $prompt->clientMessage();
+
+        return $message !== '' ? $message : null;
     }
 }

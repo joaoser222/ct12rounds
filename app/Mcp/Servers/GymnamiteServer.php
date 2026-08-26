@@ -111,9 +111,11 @@ class GymnamiteServer extends Server
      */
     protected array $prompts = [
         \App\Mcp\Prompts\OnboardClientPrompt::class,
-        \App\Mcp\Prompts\RegisterSalePrompt::class,
         \App\Mcp\Prompts\CollectReceivablePrompt::class,
         \App\Mcp\Prompts\FinancialOverviewPrompt::class,
         \App\Mcp\Prompts\RegisterTrainerPrompt::class,
+        \App\Mcp\Prompts\CreateFinancialCategoryPrompt::class,
+        \App\Mcp\Prompts\CreateCostCenterPrompt::class,
+        \App\Mcp\Prompts\CreateProductPrompt::class,
     ];
 }

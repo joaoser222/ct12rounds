@@ -16,6 +16,7 @@ type ChatPrompt = {
     label: string;
     description: string;
     text: string;
+    client_message: string | null;
 };
 
 type ConversationSummary = {
@@ -33,6 +34,8 @@ const conversations = ref<ConversationSummary[]>([]);
 const historyDrawer = ref(false);
 const messagesHost = ref<HTMLElement | null>(null);
 const abortController = ref<AbortController | null>(null);
+const snackbar = ref(false);
+const snackbarText = ref('');
 
 const xsrfToken = decodeURIComponent(
     document.cookie.match(/(^|; )XSRF-TOKEN=([^;]*)/)?.[1] ?? '',
@@ -97,6 +100,34 @@ function applyPrompt(prompt: ChatPrompt): void {
 
     draft.value = prompt.label;
     void send(prompt.name);
+}
+
+async function copyClientMessage(prompt: ChatPrompt): Promise<void> {
+    if (!prompt.client_message) {
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(prompt.client_message);
+        snackbarText.value = 'Mensagem copiada!';
+        snackbar.value = true;
+    } catch {
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = prompt.client_message;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            snackbarText.value = 'Mensagem copiada!';
+            snackbar.value = true;
+        } catch {
+            snackbarText.value = 'Não foi possível copiar a mensagem.';
+            snackbar.value = true;
+        }
+    }
 }
 
 function startNewConversation(): void {
@@ -389,19 +420,32 @@ async function send(promptName: string | null = null): Promise<void> {
                 class="px-4 pt-2"
             >
                 <div class="d-flex flex-wrap ga-2">
-                    <v-btn
+                    <template
                         v-for="prompt in prompts"
                         :key="prompt.name"
-                        variant="tonal"
-                        color="primary"
-                        size="small"
-                        rounded="sm"
-                        :disabled="loading"
-                        :title="prompt.description"
-                        @click="applyPrompt(prompt)"
                     >
-                        {{ prompt.label }}
-                    </v-btn>
+                        <v-btn
+                            variant="tonal"
+                            color="primary"
+                            size="small"
+                            rounded="sm"
+                            :disabled="loading"
+                            :title="prompt.description"
+                            @click="applyPrompt(prompt)"
+                        >
+                            {{ prompt.label }}
+                        </v-btn>
+                        <v-btn
+                            v-if="prompt.client_message"
+                            icon="ti ti-copy"
+                            variant="text"
+                            size="x-small"
+                            rounded="sm"
+                            :disabled="loading"
+                            title="Copiar mensagem para cliente"
+                            @click="copyClientMessage(prompt)"
+                        />
+                    </template>
                 </div>
             </div>
 
@@ -461,6 +505,14 @@ async function send(promptName: string | null = null): Promise<void> {
             </aside>
         </v-slide-x-transition>
     </div>
+
+    <v-snackbar
+        v-model="snackbar"
+        :timeout="2000"
+        location="bottom"
+    >
+        {{ snackbarText }}
+    </v-snackbar>
 </template>
 
 <style scoped>
