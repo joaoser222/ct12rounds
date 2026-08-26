@@ -364,7 +364,7 @@ class ChatService
         $messages = [
             [
                 'role' => 'system',
-                'content' => 'Você é o assistente virtual da academia Gymnamite. Responda sempre em '
+                'content' => 'Você é o assistente virtual da academia '.config('app.name', 'a academia').'. Responda sempre em '
                     .'português do Brasil. Use as ferramentas disponíveis apenas quando forem '
                     .'necessárias para obter ou registrar dados. Após coletar as informações '
                     .'necessárias, forneça uma resposta final e objetiva ao usuário, sem chamar '
