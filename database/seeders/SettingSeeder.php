@@ -18,6 +18,7 @@ class SettingSeeder extends Seeder
             ['name' => 'sale_default_category', 'label' => 'Categoria de Vendas', 'content' => '', 'object_type' => 'select:financial-category'],
             ['name' => 'direct_lesson_default_category', 'label' => 'Categoria de Aula Avulsa', 'content' => '', 'object_type' => 'select:financial-category'],
             ['name' => 'default_financial_account', 'label' => 'Conta Padrão', 'content' => '', 'object_type' => 'select:financial-account'],
+            ['name' => 'hiring_terms', 'label' => 'Termos de Pré-cadastro', 'content' => '', 'object_type' => 'textarea'],
         ])->each(function (array $attributes): void {
             $setting = Setting::query()->firstOrNew(['name' => $attributes['name']]);
 

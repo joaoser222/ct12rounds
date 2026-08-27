@@ -1,15 +1,15 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\UserPermissionsController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContractController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CostCenterController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DirectLessonController;
 use App\Http\Controllers\FinancialAccountController;
 use App\Http\Controllers\FinancialCategoryController;
@@ -21,12 +21,14 @@ use App\Http\Controllers\GatewayPaymentController;
 use App\Http\Controllers\GatewayPostbackController;
 use App\Http\Controllers\GatewayTransferController;
 use App\Http\Controllers\GatewayTransferRecipientController;
+use App\Http\Controllers\HiringLeadController;
 use App\Http\Controllers\ModalityController;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\PayableController;
 use App\Http\Controllers\PlanCategoryController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PublicHiringLeadController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReceivableController;
 use App\Http\Controllers\ReportController;
@@ -59,6 +61,11 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.update');
 });
 
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('cadastro', [PublicHiringLeadController::class, 'create'])->name('public.cadastro');
+    Route::post('cadastro', [PublicHiringLeadController::class, 'store'])->name('public.cadastro.store');
+});
+
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     Route::get('auth/permissions', UserPermissionsController::class)->name('auth.permissions');
@@ -70,14 +77,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations')->can('chat.view');
     Route::get('chat/conversations/{conversation}', [ChatController::class, 'show'])->name('chat.conversations.show')->can('chat.view');
     Route::get('select-box/{objectName}', SelectBoxController::class)->name('select-box');
-    Route::get('contracts/find-client', [ContractController::class, 'findClient'])->name('contracts.find-client');
-    Route::get('contracts/find-coupon', [ContractController::class, 'findCoupon'])->name('contracts.find-coupon');
+    Route::patch('contracts/{contract}/apply', [ContractController::class, 'apply'])->name('contracts.apply');
     Route::patch('contracts/{contract}/cancel', [ContractController::class, 'cancel'])->name('contracts.cancel');
 
     // Pessoas
     Route::module(ClientController::class);
     Route::module(TrainerController::class);
     Route::module(SupplierController::class);
+    Route::prefix('hiring-leads')->name('hiring-leads.')->group(function () {
+        Route::get('/', [HiringLeadController::class, 'index'])->name('index');
+        Route::get('/{hiring_lead}', [HiringLeadController::class, 'show'])->name('show');
+        Route::delete('/', [HiringLeadController::class, 'destroy'])->name('destroy');
+        Route::patch('/change-visibility', [HiringLeadController::class, 'changeVisibility'])->name('change-visibility');
+    });
+    Route::post('hiring-leads/{hiring_lead}/convert', [HiringLeadController::class, 'convert'])->name('hiring-leads.convert');
 
     // Catálogo
     Route::module(ProductController::class);

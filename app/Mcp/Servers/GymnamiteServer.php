@@ -4,10 +4,86 @@ declare(strict_types=1);
 
 namespace App\Mcp\Servers;
 
+use App\Mcp\Prompts\CollectReceivablePrompt;
+use App\Mcp\Prompts\CreateCostCenterPrompt;
+use App\Mcp\Prompts\CreateFinancialCategoryPrompt;
+use App\Mcp\Prompts\CreateProductPrompt;
+use App\Mcp\Prompts\FinancialOverviewPrompt;
+use App\Mcp\Prompts\OnboardClientPrompt;
+use App\Mcp\Prompts\RegisterTrainerPrompt;
+use App\Mcp\Resources\ClientResource;
+use App\Mcp\Resources\ClientsListResource;
+use App\Mcp\Resources\ContractResource;
+use App\Mcp\Resources\ContractsListResource;
+use App\Mcp\Resources\DirectLessonResource;
+use App\Mcp\Resources\GatewayAccountResource;
+use App\Mcp\Resources\HiringLeadsListResource;
+use App\Mcp\Resources\InvoiceResource;
+use App\Mcp\Resources\InvoicesListResource;
+use App\Mcp\Resources\ModalityResource;
+use App\Mcp\Resources\MovementResource;
+use App\Mcp\Resources\MovementsByDateResource;
+use App\Mcp\Resources\OverdueReceivablesResource;
+use App\Mcp\Resources\PayableResource;
+use App\Mcp\Resources\PayablesListResource;
+use App\Mcp\Resources\PlanResource;
+use App\Mcp\Resources\ProductResource;
+use App\Mcp\Resources\PurchaseResource;
+use App\Mcp\Resources\PurchasesListResource;
+use App\Mcp\Resources\ReceivableResource;
+use App\Mcp\Resources\ReceivablesListResource;
+use App\Mcp\Resources\SaleResource;
+use App\Mcp\Resources\SalesListResource;
+use App\Mcp\Tools\CancelContractTool;
+use App\Mcp\Tools\ConfigureFiscalDataTool;
+use App\Mcp\Tools\ConvertHiringLeadTool;
+use App\Mcp\Tools\CreateClientTool;
+use App\Mcp\Tools\CreateContractTool;
+use App\Mcp\Tools\CreateCostCenterTool;
+use App\Mcp\Tools\CreateCouponTool;
+use App\Mcp\Tools\CreateDirectLessonTool;
+use App\Mcp\Tools\CreateFinancialAccountTool;
+use App\Mcp\Tools\CreateFinancialCategoryTool;
+use App\Mcp\Tools\CreateGatewayAccountTool;
+use App\Mcp\Tools\CreateGatewayTransferTool;
+use App\Mcp\Tools\CreateModalityTool;
+use App\Mcp\Tools\CreatePayableTool;
+use App\Mcp\Tools\CreatePlanCategoryTool;
+use App\Mcp\Tools\CreatePlanTool;
+use App\Mcp\Tools\CreateProductTool;
+use App\Mcp\Tools\CreatePurchaseTool;
+use App\Mcp\Tools\CreateSaleTool;
+use App\Mcp\Tools\CreateSupplierTool;
+use App\Mcp\Tools\CreateTrainerTool;
+use App\Mcp\Tools\FindClientByDocumentTool;
+use App\Mcp\Tools\MarkReceivablePaidTool;
+use App\Mcp\Tools\RequestGatewayInvoiceTool;
+use App\Mcp\Tools\SaveUserTool;
+use App\Mcp\Tools\UpdateClientTool;
+use App\Mcp\Tools\UpdateContractTool;
+use App\Mcp\Tools\UpdateCostCenterTool;
+use App\Mcp\Tools\UpdateCouponTool;
+use App\Mcp\Tools\UpdateDirectLessonTool;
+use App\Mcp\Tools\UpdateFinancialAccountTool;
+use App\Mcp\Tools\UpdateFinancialCategoryTool;
+use App\Mcp\Tools\UpdateGatewayAccountTool;
+use App\Mcp\Tools\UpdateModalityTool;
+use App\Mcp\Tools\UpdatePayableTool;
+use App\Mcp\Tools\UpdatePlanCategoryTool;
+use App\Mcp\Tools\UpdatePlanTool;
+use App\Mcp\Tools\UpdateProductTool;
+use App\Mcp\Tools\UpdatePurchaseTool;
+use App\Mcp\Tools\UpdateRolePermissionsTool;
+use App\Mcp\Tools\UpdateSaleTool;
+use App\Mcp\Tools\UpdateSettingsTool;
+use App\Mcp\Tools\UpdateSupplierTool;
+use App\Mcp\Tools\UpdateTrainerTool;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
+use Laravel\Mcp\Server\Prompt;
+use Laravel\Mcp\Server\Tool;
 
 #[Name('Gymnamite')]
 #[Version('1.0.0')]
@@ -15,107 +91,110 @@ use Laravel\Mcp\Server\Attributes\Version;
 class GymnamiteServer extends Server
 {
     /**
-     * @var array<int, class-string<\Laravel\Mcp\Server\Tool>>
+     * @var array<int, class-string<Tool>>
      */
     protected array $tools = [
         // Clients
-        \App\Mcp\Tools\CreateClientTool::class,
-        \App\Mcp\Tools\UpdateClientTool::class,
+        CreateClientTool::class,
+        UpdateClientTool::class,
         // Contracts
-        \App\Mcp\Tools\CreateContractTool::class,
-        \App\Mcp\Tools\UpdateContractTool::class,
-        \App\Mcp\Tools\CancelContractTool::class,
-        \App\Mcp\Tools\FindClientByDocumentTool::class,
+        CreateContractTool::class,
+        UpdateContractTool::class,
+        CancelContractTool::class,
+        FindClientByDocumentTool::class,
         // Sales
-        \App\Mcp\Tools\CreateSaleTool::class,
-        \App\Mcp\Tools\UpdateSaleTool::class,
+        CreateSaleTool::class,
+        UpdateSaleTool::class,
         // Purchases
-        \App\Mcp\Tools\CreatePurchaseTool::class,
-        \App\Mcp\Tools\UpdatePurchaseTool::class,
+        CreatePurchaseTool::class,
+        UpdatePurchaseTool::class,
         // Direct Lessons
-        \App\Mcp\Tools\CreateDirectLessonTool::class,
-        \App\Mcp\Tools\UpdateDirectLessonTool::class,
+        CreateDirectLessonTool::class,
+        UpdateDirectLessonTool::class,
         // Plans
-        \App\Mcp\Tools\CreatePlanTool::class,
-        \App\Mcp\Tools\UpdatePlanTool::class,
+        CreatePlanTool::class,
+        UpdatePlanTool::class,
         // Modalities
-        \App\Mcp\Tools\CreateModalityTool::class,
-        \App\Mcp\Tools\UpdateModalityTool::class,
+        CreateModalityTool::class,
+        UpdateModalityTool::class,
         // Products
-        \App\Mcp\Tools\CreateProductTool::class,
-        \App\Mcp\Tools\UpdateProductTool::class,
+        CreateProductTool::class,
+        UpdateProductTool::class,
         // Gateway
-        \App\Mcp\Tools\CreateGatewayAccountTool::class,
-        \App\Mcp\Tools\UpdateGatewayAccountTool::class,
-        \App\Mcp\Tools\ConfigureFiscalDataTool::class,
-        \App\Mcp\Tools\CreateGatewayTransferTool::class,
+        CreateGatewayAccountTool::class,
+        UpdateGatewayAccountTool::class,
+        ConfigureFiscalDataTool::class,
+        CreateGatewayTransferTool::class,
         // Receivables
-        \App\Mcp\Tools\MarkReceivablePaidTool::class,
-        \App\Mcp\Tools\RequestGatewayInvoiceTool::class,
+        MarkReceivablePaidTool::class,
+        RequestGatewayInvoiceTool::class,
         // Reference Data
-        \App\Mcp\Tools\CreateCouponTool::class,
-        \App\Mcp\Tools\UpdateCouponTool::class,
-        \App\Mcp\Tools\CreateTrainerTool::class,
-        \App\Mcp\Tools\UpdateTrainerTool::class,
-        \App\Mcp\Tools\CreateSupplierTool::class,
-        \App\Mcp\Tools\UpdateSupplierTool::class,
-        \App\Mcp\Tools\CreateFinancialCategoryTool::class,
-        \App\Mcp\Tools\UpdateFinancialCategoryTool::class,
-        \App\Mcp\Tools\CreateCostCenterTool::class,
-        \App\Mcp\Tools\UpdateCostCenterTool::class,
-        \App\Mcp\Tools\CreatePlanCategoryTool::class,
-        \App\Mcp\Tools\UpdatePlanCategoryTool::class,
-        \App\Mcp\Tools\CreateFinancialAccountTool::class,
-        \App\Mcp\Tools\UpdateFinancialAccountTool::class,
+        CreateCouponTool::class,
+        UpdateCouponTool::class,
+        CreateTrainerTool::class,
+        UpdateTrainerTool::class,
+        CreateSupplierTool::class,
+        UpdateSupplierTool::class,
+        CreateFinancialCategoryTool::class,
+        UpdateFinancialCategoryTool::class,
+        CreateCostCenterTool::class,
+        UpdateCostCenterTool::class,
+        CreatePlanCategoryTool::class,
+        UpdatePlanCategoryTool::class,
+        CreateFinancialAccountTool::class,
+        UpdateFinancialAccountTool::class,
         // Payables
-        \App\Mcp\Tools\CreatePayableTool::class,
-        \App\Mcp\Tools\UpdatePayableTool::class,
+        CreatePayableTool::class,
+        UpdatePayableTool::class,
         // Admin
-        \App\Mcp\Tools\SaveUserTool::class,
-        \App\Mcp\Tools\UpdateRolePermissionsTool::class,
-        \App\Mcp\Tools\UpdateSettingsTool::class,
+        SaveUserTool::class,
+        UpdateRolePermissionsTool::class,
+        UpdateSettingsTool::class,
+        // Hiring Leads
+        ConvertHiringLeadTool::class,
     ];
 
     /**
-     * @var array<int, class-string<\Laravel\Mcp\Server\Resource>>
+     * @var array<int, class-string<Server\Resource>>
      */
     protected array $resources = [
         // Detail resources
-        \App\Mcp\Resources\ClientResource::class,
-        \App\Mcp\Resources\ContractResource::class,
-        \App\Mcp\Resources\InvoiceResource::class,
-        \App\Mcp\Resources\SaleResource::class,
-        \App\Mcp\Resources\PurchaseResource::class,
-        \App\Mcp\Resources\DirectLessonResource::class,
-        \App\Mcp\Resources\PlanResource::class,
-        \App\Mcp\Resources\ModalityResource::class,
-        \App\Mcp\Resources\ProductResource::class,
-        \App\Mcp\Resources\ReceivableResource::class,
-        \App\Mcp\Resources\PayableResource::class,
-        \App\Mcp\Resources\MovementsByDateResource::class,
-        \App\Mcp\Resources\MovementResource::class,
-        \App\Mcp\Resources\GatewayAccountResource::class,
+        ClientResource::class,
+        ContractResource::class,
+        InvoiceResource::class,
+        SaleResource::class,
+        PurchaseResource::class,
+        DirectLessonResource::class,
+        PlanResource::class,
+        ModalityResource::class,
+        ProductResource::class,
+        ReceivableResource::class,
+        PayableResource::class,
+        MovementsByDateResource::class,
+        MovementResource::class,
+        GatewayAccountResource::class,
         // List resources
-        \App\Mcp\Resources\ClientsListResource::class,
-        \App\Mcp\Resources\ContractsListResource::class,
-        \App\Mcp\Resources\InvoicesListResource::class,
-        \App\Mcp\Resources\SalesListResource::class,
-        \App\Mcp\Resources\PurchasesListResource::class,
-        \App\Mcp\Resources\ReceivablesListResource::class,
-        \App\Mcp\Resources\PayablesListResource::class,
-        \App\Mcp\Resources\OverdueReceivablesResource::class,
+        ClientsListResource::class,
+        ContractsListResource::class,
+        InvoicesListResource::class,
+        SalesListResource::class,
+        PurchasesListResource::class,
+        ReceivablesListResource::class,
+        PayablesListResource::class,
+        OverdueReceivablesResource::class,
+        HiringLeadsListResource::class,
     ];
 
     /**
-     * @var array<int, class-string<\Laravel\Mcp\Server\Prompt>>
+     * @var array<int, class-string<Prompt>>
      */
     protected array $prompts = [
-        \App\Mcp\Prompts\OnboardClientPrompt::class,
-        \App\Mcp\Prompts\CollectReceivablePrompt::class,
-        \App\Mcp\Prompts\FinancialOverviewPrompt::class,
-        \App\Mcp\Prompts\RegisterTrainerPrompt::class,
-        \App\Mcp\Prompts\CreateFinancialCategoryPrompt::class,
-        \App\Mcp\Prompts\CreateCostCenterPrompt::class,
-        \App\Mcp\Prompts\CreateProductPrompt::class,
+        OnboardClientPrompt::class,
+        CollectReceivablePrompt::class,
+        FinancialOverviewPrompt::class,
+        RegisterTrainerPrompt::class,
+        CreateFinancialCategoryPrompt::class,
+        CreateCostCenterPrompt::class,
+        CreateProductPrompt::class,
     ];
 }

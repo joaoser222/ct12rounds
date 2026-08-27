@@ -61,6 +61,7 @@ class ServerRegistrationTest extends TestCase
             'users.update', 'settings.update',
             'gateway_invoices.view',
             'movements.view',
+            'hiring_leads.update', 'hiring_leads.view',
         ];
 
         foreach ($permissions as $permission) {
@@ -78,7 +79,7 @@ class ServerRegistrationTest extends TestCase
             $cursor = $body['result']['nextCursor'] ?? null;
         } while ($cursor !== null);
 
-        $this->assertCount(43, $toolNames, 'Expected 43 tools, got: '.implode(', ', $toolNames));
+        $this->assertCount(44, $toolNames, 'Expected 44 tools, got: '.implode(', ', $toolNames));
 
         $concrete = $this->mcpCall($user, 'resources/list')->json('result.resources', []);
         $templates = $this->mcpCall($user, 'resources/templates/list')->json('result.resourceTemplates', []);
@@ -87,7 +88,7 @@ class ServerRegistrationTest extends TestCase
             array_column($templates, 'name'),
         );
 
-        $this->assertCount(22, $resourceNames, 'Expected 22 resources, got: '.implode(', ', $resourceNames));
+        $this->assertCount(23, $resourceNames, 'Expected 23 resources, got: '.implode(', ', $resourceNames));
     }
 
     public function test_server_registers_prompts_for_permitted_user(): void

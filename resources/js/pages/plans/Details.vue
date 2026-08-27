@@ -22,9 +22,10 @@ type Plan = {
     plan_modalities?: number[];
 };
 
-defineProps<{
+const props = defineProps<{
     plan?: Plan | null;
     routes: DetailsRoutes;
+    publicCadastroUrl?: string | null;
 }>();
 
 const { modalities } = useSharedOptions(usePage().props.options ?? {});
@@ -67,6 +68,11 @@ function validateTiers(value: unknown): true | string {
     }
 
     return true;
+}
+
+async function copyPublicLink(): Promise<void> {
+    if (!props.publicCadastroUrl) return;
+    await navigator.clipboard.writeText(props.publicCadastroUrl);
 }
 </script>
 
@@ -114,6 +120,27 @@ function validateTiers(value: unknown): true | string {
                         rows="3"
                         :error-messages="errors.description"
                     />
+                </v-col>
+                <v-col
+                    v-if="publicCadastroUrl"
+                    cols="12"
+                >
+                    <v-text-field
+                        :model-value="publicCadastroUrl"
+                        label="Link de cadastro"
+                        readonly
+                        persistent-hint
+                        hint="Envie este link ao cliente para ele preencher os dados e dar o aceite. O plano já vem selecionado."
+                    >
+                        <template #append-inner>
+                            <v-btn-icon
+                                icon="ti ti-copy"
+                                size="small"
+                                title="Copiar link"
+                                @click="copyPublicLink"
+                            />
+                        </template>
+                    </v-text-field>
                 </v-col>
                 <v-col cols="12">
                     <EditableRowsTable

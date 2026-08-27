@@ -89,6 +89,8 @@ function back(): void {
             >
                 Voltar
             </v-clipped-button>
+            <div class="flex-grow-1"></div>
+            <slot name="actions" :item="item" />
         </div>
     </div>
 </template>

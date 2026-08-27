@@ -99,6 +99,12 @@ const menuGroups: MenuGroup[] = [
                 permission: 'trainers.view',
             },
             {
+                title: 'Pré-cadastro de Clientes',
+                icon: 'ti ti-user-plus',
+                href: '/hiring-leads',
+                permission: 'hiring_leads.view',
+            },
+            {
                 title: 'Fornecedores',
                 icon: 'ti ti-buildings',
                 href: '/suppliers',

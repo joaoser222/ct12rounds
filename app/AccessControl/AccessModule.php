@@ -16,6 +16,7 @@ enum AccessModule: string
     case CLIENT = 'clients';
     case TRAINER = 'trainers';
     case SUPPLIER = 'suppliers';
+    case HIRING_LEAD = 'hiring_leads';
 
     // Catálogo
     case PRODUCT = 'products';
@@ -61,6 +62,7 @@ enum AccessModule: string
             self::CLIENT => 'Clientes',
             self::TRAINER => 'Treinadores',
             self::SUPPLIER => 'Fornecedores',
+            self::HIRING_LEAD => 'Pré-cadastro de Clientes',
             self::PRODUCT => 'Produtos',
             self::MODALITY => 'Modalidades',
             self::PLAN => 'Planos',
@@ -106,6 +108,12 @@ enum AccessModule: string
             self::CLIENT => $default_actions,
             self::TRAINER => $default_actions,
             self::SUPPLIER => $default_actions,
+            self::HIRING_LEAD => [
+                AccessAction::VIEW,
+                AccessAction::UPDATE,
+                AccessAction::DELETE,
+                AccessAction::VISIBILITY,
+            ],
             self::PRODUCT => $default_actions,
             self::MODALITY => $default_actions,
             self::PLAN => $default_actions,

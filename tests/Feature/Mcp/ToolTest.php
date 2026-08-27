@@ -104,6 +104,7 @@ class ToolTest extends TestCase
             'financial_accounts.create', 'financial_accounts.update',
             'payables.create', 'payables.update',
             'users.update', 'settings.update',
+            'hiring_leads.update',
         ];
 
         foreach ($allPermissions as $permission) {
@@ -145,9 +146,10 @@ class ToolTest extends TestCase
             'create-financial-account', 'update-financial-account',
             'create-payable', 'update-payable',
             'save-user', 'update-role-permissions', 'update-settings',
+            'convert-hiring-lead',
         ];
 
-        $this->assertCount(43, $allToolNames, 'Expected 43 tools, got: '.implode(', ', $allToolNames));
+        $this->assertCount(44, $allToolNames, 'Expected 44 tools, got: '.implode(', ', $allToolNames));
         foreach ($expectedTools as $toolName) {
             $this->assertContains($toolName, $allToolNames, "Tool '{$toolName}' not registered");
         }

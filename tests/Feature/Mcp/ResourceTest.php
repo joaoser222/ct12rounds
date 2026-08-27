@@ -54,7 +54,7 @@ class ResourceTest extends TestCase
             'clients.view', 'contracts.view', 'gateway_invoices.view', 'sales.view',
             'purchases.view', 'direct_lessons.view', 'plans.view', 'modalities.view',
             'products.view', 'receivables.view', 'payables.view', 'movements.view',
-            'gateway_accounts.view',
+            'gateway_accounts.view', 'hiring_leads.view',
         ];
 
         foreach ($viewPermissions as $permission) {
@@ -67,10 +67,10 @@ class ResourceTest extends TestCase
             'client', 'contract', 'invoice', 'sale', 'purchase', 'direct-lesson',
             'plan', 'modality', 'product', 'receivable', 'payable', 'movement', 'gateway-account',
             'clients', 'contracts', 'invoices', 'sales', 'purchases',
-            'receivables-pending', 'payables-pending', 'receivables-overdue', 'movements-range',
+            'receivables-pending', 'payables-pending', 'receivables-overdue', 'movements-range', 'hiring-leads',
         ];
 
-        $this->assertCount(22, $names, 'Expected 22 resources, got: '.implode(', ', $names));
+        $this->assertCount(23, $names, 'Expected 23 resources, got: '.implode(', ', $names));
         foreach ($expected as $name) {
             $this->assertContains($name, $names, "Resource '{$name}' not registered");
         }

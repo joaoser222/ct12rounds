@@ -73,6 +73,10 @@ function isSelectField(setting: SettingField): boolean {
     return setting.input_type === 'select' && Boolean(setting.select_object_name);
 }
 
+function isTextareaField(setting: SettingField): boolean {
+    return setting.object_type === 'textarea';
+}
+
 function submit(): void {
     if (!canSave.value) {
         return;
@@ -144,6 +148,16 @@ onMounted(() => {
                                 v-model="form.settings[setting.name]"
                                 :label="setting.label"
                                 type="number"
+                                persistent-hint
+                                :error-messages="form.errors[`settings.${setting.name}`]"
+                                :disabled="!hasPermission('update') || form.processing"
+                            />
+
+                            <v-textarea
+                                v-else-if="isTextareaField(setting)"
+                                v-model="form.settings[setting.name]"
+                                :label="setting.label"
+                                rows="4"
                                 persistent-hint
                                 :error-messages="form.errors[`settings.${setting.name}`]"
                                 :disabled="!hasPermission('update') || form.processing"

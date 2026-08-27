@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ClientSource;
 use App\Enums\ClientStatus;
 use App\Traits\HasVisibility;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,10 +35,12 @@ class Client extends Model
         'legal_representative_birth_date',
         'trainer_id',
         'status',
+        'client_source',
     ];
 
     protected $casts = [
         'legal_representative' => 'boolean',
+        'client_source' => ClientSource::class,
         'birth_date' => 'date:Y-m-d',
         'legal_representative_birth_date' => 'date:Y-m-d',
         'status' => ClientStatus::class,
