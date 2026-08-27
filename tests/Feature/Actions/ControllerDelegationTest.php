@@ -43,6 +43,8 @@ class ControllerDelegationTest extends TestCase
             'gender' => 'M',
             'birth_date' => '1990-01-01',
             'legal_representative' => false,
+            'address_postal_code' => '01001000',
+            'address_number' => '100',
         ])->assertRedirect(route('clients.index'));
 
         $this->assertDatabaseHas('clients', [
@@ -65,6 +67,8 @@ class ControllerDelegationTest extends TestCase
             'gender' => 'F',
             'birth_date' => '1995-05-15',
             'legal_representative' => false,
+            'address_postal_code' => '01001000',
+            'address_number' => '100',
         ])->assertRedirect(route('clients.index'));
 
         $this->assertDatabaseHas('clients', [
