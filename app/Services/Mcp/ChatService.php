@@ -280,6 +280,10 @@ class ChatService
             'max_tokens' => (int) $config['max_tokens'],
         ];
 
+        if (is_array($config['chat_template_kwargs'] ?? null) && $config['chat_template_kwargs'] !== []) {
+            $payload['chat_template_kwargs'] = $config['chat_template_kwargs'];
+        }
+
         if ($tools !== []) {
             $payload['tools'] = $tools;
             $payload['tool_choice'] = 'auto';
@@ -568,6 +572,10 @@ class ChatService
             'max_tokens' => (int) $config['max_tokens'],
             'stream' => true,
         ];
+
+        if (is_array($config['chat_template_kwargs'] ?? null) && $config['chat_template_kwargs'] !== []) {
+            $payload['chat_template_kwargs'] = $config['chat_template_kwargs'];
+        }
 
         if ($tools !== []) {
             $payload['tools'] = $tools;

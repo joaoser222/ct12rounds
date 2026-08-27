@@ -124,6 +124,10 @@ class ChatControllerTest extends TestCase
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
 
+        config([
+            'mcp_chat.providers' => ['primary/model', 'fallback/model'],
+        ]);
+
         Http::fake([
             '*' => Http::sequence()
                 ->push(['choices' => [['message' => ['role' => 'assistant', 'content' => 'erro']]]], 500)
@@ -540,6 +544,40 @@ class ChatControllerTest extends TestCase
         $this->assertSame('llama-3.3-70b-versatile', $body['model']);
         $this->assertArrayHasKey('tools', $body);
         $this->assertSame('auto', $body['tool_choice']);
+    }
+
+    public function test_chat_envia_chat_template_kwargs_do_config(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        config([
+            'mcp_chat.base_url' => 'https://fake.test/chat/completions',
+            'mcp_chat.providers' => ['some/model'],
+            'mcp_chat.chat_template_kwargs' => ['enable_thinking' => false],
+        ]);
+
+        Http::fake([
+            'https://fake.test/chat/completions' => Http::sequence()
+                ->push([
+                    'choices' => [[
+                        'message' => [
+                            'role' => 'assistant',
+                            'content' => 'Resposta final.',
+                        ],
+                    ]],
+                ]),
+        ]);
+
+        $this->actingAs($user)->postJson('/chat/message', [
+            'message' => 'Ola',
+        ])->assertOk()->assertJson(['reply' => 'Resposta final.']);
+
+        $recorded = Http::recorded()
+            ->first(fn ($pair) => str_contains($pair[0]->url(), 'fake.test'));
+
+        $this->assertNotNull($recorded, 'A requisição deve ir para o provedor configurado.');
+        $this->assertSame(['enable_thinking' => false], $recorded[0]->data()['chat_template_kwargs']);
     }
 
     public function test_chat_stream_emite_tokens_e_persiste_mensagem(): void
