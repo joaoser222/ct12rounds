@@ -10,6 +10,7 @@ use App\Traits\HasVisibility;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Contract extends Model implements BillingInvoiceSource
@@ -33,6 +34,7 @@ class Contract extends Model implements BillingInvoiceSource
         'plan_id',
         'client_id',
         'status',
+        'registration_token',
     ];
 
     protected $casts = [
@@ -68,6 +70,11 @@ class Contract extends Model implements BillingInvoiceSource
     public function invoices(): MorphMany
     {
         return $this->morphMany(Invoice::class, 'billable');
+    }
+
+    public function hiringLeads(): HasMany
+    {
+        return $this->hasMany(HiringLead::class);
     }
 
     public function billingHolder(): Model

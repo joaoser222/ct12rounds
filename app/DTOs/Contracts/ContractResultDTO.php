@@ -14,10 +14,11 @@ class ContractResultDTO extends Data
         public float $total,
         public int $installments,
         public string $first_due_date,
-        public int $client_id,
+        public ?int $client_id,
         public ?int $coupon_id,
         public int $plan_id,
         public string $created_at,
+        public ?string $registration_token,
     ) {}
 
     public static function fromModel(Contract $contract): static
@@ -33,6 +34,7 @@ class ContractResultDTO extends Data
             coupon_id: $contract->coupon_id,
             plan_id: $contract->plan_id,
             created_at: $contract->created_at?->toISOString() ?? '',
+            registration_token: $contract->registration_token,
         );
     }
 }

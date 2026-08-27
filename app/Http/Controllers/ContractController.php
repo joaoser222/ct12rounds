@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\AccessControl\AccessAction;
 use App\AccessControl\AccessModule;
+use App\Actions\Contracts\ApplyContractAction;
 use App\Actions\Contracts\CancelContractAction;
 use App\Actions\Contracts\CreateContractAction;
-use App\Actions\Contracts\FindClientAction;
 use App\Actions\Contracts\UpdateContractAction;
 use App\DTOs\Contracts\CancelContractDTO;
 use App\DTOs\Contracts\CreateContractDTO;
@@ -17,9 +17,12 @@ use App\Enums\PaymentMethod;
 use App\Http\Requests\ContractWizardRequest;
 use App\Models\Contract;
 use App\Models\Coupon;
+use App\Models\HiringLead;
 use App\Models\Plan;
 use App\Models\PlanTier;
 use App\Models\Uf;
+use App\Services\QrCodeService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -32,14 +35,15 @@ class ContractController extends CrudModuleController
     public function __construct(
         private readonly CreateContractAction $createContract,
         private readonly UpdateContractAction $updateContract,
-        private readonly FindClientAction $findClient,
         private readonly CancelContractAction $cancelContract,
+        private readonly ApplyContractAction $applyContract,
+        private readonly QrCodeService $qrCodeService,
     ) {}
 
     /**
      * @var array<int, string>
      */
-    protected array $fields = ['id', 'plan_name', 'total', 'first_due_date', 'installments', 'status', 'created_at'];
+    protected array $fields = ['id', 'plan_name', 'total', 'first_due_date', 'installments', 'status', 'accepted_terms', 'created_at'];
 
     protected array $joins = ['client'];
 
@@ -53,6 +57,7 @@ class ContractController extends CrudModuleController
         'first_due_date' => 'contracts.first_due_date',
         'installments' => 'contracts.installments',
         'status' => 'contracts.status',
+        'accepted_terms' => 'contracts.accepted_terms',
         'created_at' => 'contracts.created_at',
         'client_name' => 'clients.name',
     ];
@@ -65,7 +70,7 @@ class ContractController extends CrudModuleController
     /**
      * @var array<int, string>
      */
-    protected array $sortableFields = ['id', 'plan_name', 'first_due_date', 'created_at'];
+    protected array $sortableFields = ['id', 'plan_name', 'first_due_date', 'created_at', 'accepted_terms'];
 
     protected function accessModule(): AccessModule
     {
@@ -90,13 +95,10 @@ class ContractController extends CrudModuleController
                 'show' => route('contracts.show', ['contract' => '__id__']),
                 'destroy' => route('contracts.destroy'),
                 'changeVisibility' => route('contracts.change-visibility'),
-                'findClient' => route('contracts.find-client'),
-                'findCoupon' => route('contracts.find-coupon'),
             ],
             'options' => [
-                'genderTypes' => $this->enumOptions(GenderType::class),
-                'ufs' => $this->modelOptions(Uf::class),
                 'plans' => $this->planOptions(),
+                'coupons' => $this->couponOptions(),
             ],
         ]);
     }
@@ -120,52 +122,7 @@ class ContractController extends CrudModuleController
             'message' => $result->message,
         ]);
 
-        return redirect()->route('contracts.index');
-    }
-
-    public function findClient(Request $request): JsonResponse
-    {
-        $this->authorizeAccess(AccessAction::CREATE);
-
-        $document = preg_replace('/\D+/', '', (string) $request->query('document', ''));
-
-        if ($document === '' || strlen($document) !== 11) {
-            return response()->json(['client' => null]);
-        }
-
-        $result = $this->findClient->execute($document);
-
-        return response()->json([
-            'client' => $result->data,
-        ]);
-    }
-
-    public function findCoupon(Request $request): JsonResponse
-    {
-        $this->authorizeAccess(AccessAction::CREATE);
-
-        $code = mb_strtoupper((string) $request->query('code', ''));
-
-        if ($code === '') {
-            return response()->json(['coupon' => null]);
-        }
-
-        /** @var Coupon|null $coupon */
-        $coupon = Coupon::query()
-            ->where('code', $code)
-            ->where('visibility', 'visible')
-            ->first();
-
-        return response()->json([
-            'coupon' => $coupon?->only([
-                'id',
-                'code',
-                'percent',
-                'discount_limit',
-                'duration',
-                'expiration_date',
-            ]),
-        ]);
+        return redirect()->route('contracts.show', ['contract' => $result->data->id]);
     }
 
     public function cancel(Request $request): RedirectResponse|JsonResponse
@@ -197,6 +154,32 @@ class ContractController extends CrudModuleController
         ]);
 
         return redirect()->route('contracts.index');
+    }
+
+    public function apply(Request $request): RedirectResponse|JsonResponse
+    {
+        $this->authorizeAccess(AccessAction::UPDATE);
+
+        $contract = $this->modelFromRoute($request);
+
+        $result = $this->applyContract->execute($contract->getKey());
+
+        if (! $result->success) {
+            return $this->actionFailureResponse($request, $result->errors, $result->message, 422);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $result->message,
+            ]);
+        }
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $result->message,
+        ]);
+
+        return redirect()->route('contracts.show', ['contract' => $contract]);
     }
 
     public function update(Request $request): RedirectResponse|JsonResponse
@@ -231,7 +214,7 @@ class ContractController extends CrudModuleController
     /**
      * @param  array<string, mixed>|null  $errors
      */
-    private function actionFailureResponse(Request $request, ?array $errors, ?string $message): RedirectResponse|JsonResponse
+    private function actionFailureResponse(Request $request, ?array $errors, ?string $message, int $status = 422): RedirectResponse|JsonResponse
     {
         $message ??= 'Não foi possível concluir a operação.';
 
@@ -239,7 +222,7 @@ class ContractController extends CrudModuleController
             return response()->json([
                 'message' => $message,
                 'errors' => $errors,
-            ], 422);
+            ], $status);
         }
 
         return back()->withErrors($errors ?? ['contract' => $message])->withInput();
@@ -271,8 +254,7 @@ class ContractController extends CrudModuleController
             'id' => $model->getKey(),
             'routes' => [
                 ...$this->getModuleRoutes(),
-                'findClient' => route('contracts.find-client'),
-                'findCoupon' => route('contracts.find-coupon'),
+                'apply' => route('contracts.apply', ['contract' => $model]),
             ],
             ...$this->moduleDetailsProps($model),
         ]);
@@ -282,6 +264,9 @@ class ContractController extends CrudModuleController
     {
         $clientInfo = null;
         $couponInfo = null;
+        $registration = null;
+        $linkedLead = null;
+        $applyRoute = null;
 
         if ($model instanceof Contract) {
             $model->load(['client', 'coupon']);
@@ -289,20 +274,57 @@ class ContractController extends CrudModuleController
                 ? "{$model->client->name} - {$model->client->document}"
                 : null;
             $couponInfo = $model->coupon?->code;
+
+            if ($model->registration_token !== null && $model->client_id === null) {
+                $registrationUrl = route('public.cadastro', ['contract' => $model->registration_token]);
+
+                $registration = [
+                    'url' => $registrationUrl,
+                    'qr' => $this->qrCodeService->dataUri($registrationUrl),
+                ];
+
+                $applyRoute = route('contracts.apply', ['contract' => $model]);
+
+                /** @var Collection<int, HiringLead> $leads */
+                $leads = $model->hiringLeads()->latest('id')->get();
+                $latestLead = $leads->first();
+
+                if ($latestLead !== null) {
+                    $linkedLead = [
+                        'id' => $latestLead->id,
+                        'name' => $latestLead->name,
+                        'email' => $latestLead->email,
+                        'phone' => $latestLead->phone,
+                        'document' => $latestLead->document,
+                        'gender' => $latestLead->gender,
+                        'birth_date' => $latestLead->birth_date?->format('Y-m-d'),
+                        'address' => $latestLead->address,
+                        'address_number' => $latestLead->address_number,
+                        'address_complement' => $latestLead->address_complement,
+                        'address_district' => $latestLead->address_district,
+                        'address_state' => $latestLead->address_state,
+                        'address_city' => $latestLead->address_city,
+                        'address_postal_code' => $latestLead->address_postal_code,
+                        'status' => $latestLead->status->value,
+                    ];
+                }
+            }
         }
 
         return [
             'cancelRoute' => $model instanceof Contract
                 ? route('contracts.cancel', ['contract' => $model])
                 : null,
+            'applicationRoute' => $applyRoute,
+            'registration' => $registration,
+            'linkedLead' => $linkedLead,
             'clientInfo' => $clientInfo,
             'couponInfo' => $couponInfo,
             'options' => [
                 'billableStatus' => $this->enumOptions(BillableStatus::class),
                 'paymentMethods' => $this->enumOptions(PaymentMethod::class),
                 'plans' => $this->planOptions(),
-                'genderTypes' => $this->enumOptions(GenderType::class),
-                'ufs' => $this->modelOptions(Uf::class),
+                'coupons' => $this->couponOptions(),
             ],
         ];
     }
@@ -331,6 +353,29 @@ class ContractController extends CrudModuleController
                         ])
                         ->values()
                         ->all(),
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function couponOptions(): array
+    {
+        return Coupon::query()
+            ->where('visibility', 'visible')
+            ->orderBy('code')
+            ->get()
+            ->map(function (Coupon $coupon): array {
+                return [
+                    'value' => $coupon->id,
+                    'title' => $coupon->code,
+                    'code' => $coupon->code,
+                    'percent' => (float) $coupon->percent,
+                    'discount_limit' => (float) ($coupon->discount_limit ?? 0),
+                    'duration' => $coupon->duration,
+                    'expiration_date' => $coupon->expiration_date?->format('Y-m-d'),
                 ];
             })
             ->all();

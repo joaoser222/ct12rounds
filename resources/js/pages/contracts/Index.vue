@@ -58,7 +58,10 @@ const { billableStatus } = useSharedOptions(sharedProps.options ?? {});
             {{ formatDate(item.first_due_date) }}
         </template>
         <template #column-status="{ item }">
-            <v-chip :color="findOption(billableStatus, item.status)?.color">
+            <v-chip v-if="item.accepted_terms === 'pending'" color="warning">
+                Pendente
+            </v-chip>
+            <v-chip v-else :color="findOption(billableStatus, item.status)?.color">
                 {{ findLabel(billableStatus, item.status) }}
             </v-chip>
         </template>

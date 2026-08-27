@@ -1,17 +1,15 @@
 <script setup lang="ts">
 defineProps<{
     processing?: boolean;
-    showContinue?: boolean;
     showSave?: boolean;
-    showFinalize?: boolean;
+    showApply?: boolean;
     showCancel?: boolean;
 }>();
 
 defineEmits<{
     back: [];
-    continue: [];
     save: [];
-    finalize: [];
+    apply: [];
     cancel: [];
 }>();
 </script>
@@ -24,14 +22,11 @@ defineEmits<{
         </v-clipped-button>
 
         <div class="flex-grow-1"></div>
-        <v-clipped-button v-if="showContinue" color="primary" append-icon="ti ti-arrow-right" @click="$emit('continue')">
-            Continuar
+        <v-clipped-button v-if="showApply" color="success" prepend-icon="ti ti-user-check" :loading="processing" @click="$emit('apply')">
+            Aplicar contrato
         </v-clipped-button>
         <v-clipped-button v-if="showSave" color="primary" prepend-icon="ti ti-device-floppy" :loading="processing" @click="$emit('save')">
             Salvar
-        </v-clipped-button>
-        <v-clipped-button v-if="showFinalize" color="success" prepend-icon="ti ti-receipt-2" :loading="processing" @click="$emit('finalize')">
-            Finalizar
         </v-clipped-button>
         <v-clipped-button v-if="showCancel" color="error" prepend-icon="ti ti-x" :disabled="processing" @click="$emit('cancel')">
             Cancelar contrato

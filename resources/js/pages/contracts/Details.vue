@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
-import ClientFormFields from '@/components/clients/ClientFormFields.vue';
 import ContractActions from '@/pages/contracts/ContractActions.vue';
 import ContractSummary from '@/pages/contracts/ContractSummary.vue';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
-import { formatCurrency, formatDateTime, onlyDigits } from '@/plugins/formatters';
-import { masks } from '@/plugins/masks';
-import { cpf, required } from '@/plugins/validators';
+import { formatCurrency, formatDateTime } from '@/plugins/formatters';
+import { required } from '@/plugins/validators';
 import { findLabel, findOption, useSharedOptions, type LabeledOption, type Option } from '@/shared/options';
 import { useModulePermissions } from '@/composables/useModulePermissions';
 
@@ -26,35 +24,37 @@ type PlanOption = {
     tiers: PlanTier[];
 };
 
-type ClientLookup = {
+type CouponOption = {
+    value: number;
+    title: string;
+    code: string;
+    percent?: number | string | null;
+    discount_limit?: number | string | null;
+    duration?: number | string | null;
+    expiration_date?: string | null;
+};
+
+type Registration = {
+    url: string;
+    qr: string;
+};
+
+type LinkedLead = {
     id: number;
     name: string;
     email: string;
     phone: string;
     document: string;
-    gender: string;
-    birth_date: string;
-    legal_representative: boolean;
-    legal_representative_name?: string | null;
-    legal_representative_document?: string | null;
-    legal_representative_birth_date?: string | null;
-    address_postal_code?: string | null;
+    gender?: string | null;
+    birth_date?: string | null;
     address?: string | null;
     address_number?: string | null;
     address_complement?: string | null;
     address_district?: string | null;
     address_state?: string | null;
     address_city?: string | null;
-    status?: string | null;
-};
-
-type CouponOption = {
-    id: number;
-    code: string;
-    percent?: number | string | null;
-    discount_limit?: number | string | null;
-    duration?: number | string | null;
-    expiration_date?: string | null;
+    address_postal_code?: string | null;
+    status: string;
 };
 
 type Contract = {
@@ -66,13 +66,14 @@ type Contract = {
     total?: number;
     first_due_date?: string | null;
     installments?: number;
-    accepted_terms?: boolean | string | null;
+    accepted_terms?: string | null;
     annotations?: string | null;
     status?: string | null;
     payment_method?: string | null;
     coupon_id?: number | null;
     plan_id?: number;
-    client_id?: number;
+    client_id?: number | null;
+    registration_token?: string | null;
     created_at?: string | null;
     updated_at?: string | null;
 };
@@ -84,19 +85,22 @@ type VForm = {
 const props = defineProps<{
     contract?: Contract | null;
     cancelRoute?: string | null;
+    applicationRoute?: string | null;
+    registration?: Registration | null;
+    linkedLead?: LinkedLead | null;
     clientInfo?: string | null;
     couponInfo?: string | null;
     routes: {
         index: string;
         store: string;
         update: string;
-        findClient: string;
-        findCoupon: string;
+        apply: string;
     };
     options: {
-        genderTypes: LabeledOption<string>[];
-        ufs: LabeledOption<string>[];
         plans: PlanOption[];
+        coupons: CouponOption[];
+        genderTypes?: LabeledOption<string>[];
+        ufs?: LabeledOption<string>[];
         billableStatus?: Option[];
         paymentMethods?: Option[];
     };
@@ -104,79 +108,35 @@ const props = defineProps<{
 
 const isCreating = !props.contract?.id;
 
-const { genderTypes, ufs, billableStatus, paymentMethods } = useSharedOptions({
-    genderTypes: props.options.genderTypes,
-    ufs: props.options.ufs,
+const isPending = computed(() => {
+    return !isCreating && props.contract?.client_id == null && !!props.registration;
+});
+
+const { billableStatus, paymentMethods } = useSharedOptions({
     billableStatus: props.options.billableStatus,
     paymentMethods: props.options.paymentMethods,
 });
 
-const { hasPermission: canCancel, ensurePermissionsLoaded: ensureCancelLoaded } = useModulePermissions<'cancel'>({
+const { hasPermission: canApply, ensurePermissionsLoaded: ensureApplyLoaded } = useModulePermissions<'apply'>({
     module: () => 'contracts',
     permissions: () => undefined,
-    permissionMap: () => undefined,
+    permissionMap: () => ({ apply: 'contracts.update' }),
 });
 
-const step = ref(isCreating ? 1 : 2);
-const isSearchingClient = ref(false);
-const clientLookupState = ref<'idle' | 'found' | 'missing'>('idle');
-const clientFormRef = ref<VForm | null>(null);
-const contractFormRef = ref<VForm | null>(null);
-const lastLoadedDocument = ref('');
+const formRef = ref<VForm | null>(null);
 const selectedCoupon = ref<CouponOption | null>(null);
-const requiresAcceptedTerms = ref(false);
+const copied = ref(false);
 
 const form = useForm(
     isCreating
         ? {
-            client_id: null as number | null,
-            name: '',
-            email: '',
-            phone: '',
-            document: '',
-            gender: '',
-            birth_date: '',
-            legal_representative: false,
-            legal_representative_name: '',
-            legal_representative_document: '',
-            legal_representative_birth_date: '',
-            address_postal_code: '',
-            address: '',
-            address_number: '',
-            address_complement: '',
-            address_district: '',
-            address_state: '',
-            address_city: '',
-            coupon_code: '',
             plan_id: null as number | null,
             installments: null as number | null,
+            coupon_id: null as number | null,
             annotations: '',
-            accepted_terms: false,
-            generate_invoices: false,
         }
         : {
-            client_id: null as number | null,
-            name: '',
-            email: '',
-            phone: '',
-            document: '',
-            gender: '',
-            birth_date: '',
-            legal_representative: false,
-            legal_representative_name: '',
-            legal_representative_document: '',
-            legal_representative_birth_date: '',
-            address_postal_code: '',
-            address: '',
-            address_number: '',
-            address_complement: '',
-            address_district: '',
-            address_state: '',
-            address_city: '',
-            plan_id: props.contract?.plan_id ?? null,
-            installments: props.contract?.installments ?? null,
             annotations: props.contract?.annotations ?? '',
-            coupon_code: props.couponInfo ?? '',
         },
 );
 
@@ -283,208 +243,62 @@ const discountedInstallmentsSummary = computed(() => {
     return `${discountedInstallments} de ${form.installments} parcelas com desconto.`;
 });
 
-const acceptedTermsRule = (value: boolean) => {
-    return !requiresAcceptedTerms.value || value || 'Você precisa aceitar os termos da contratação.';
-};
+watchSelectedCoupon();
 
-watch(selectedPlan, (plan) => {
-    if (plan === null) {
+function watchSelectedCoupon(): void {
+    selectedCoupon.value = props.options.coupons.find((coupon) => coupon.value === form.coupon_id) ?? null;
+}
+
+function onPlanChange(): void {
+    if (selectedPlan.value === null) {
         form.installments = null;
 
         return;
     }
 
-    if (!plan.tiers.some((tier) => tier.quantity === Number(form.installments))) {
+    if (!selectedPlan.value.tiers.some((tier) => tier.quantity === Number(form.installments))) {
         form.installments = null;
     }
-});
-
-watch(
-    () => form.document,
-    (value) => {
-        const normalized = onlyDigits(value);
-
-        if (normalized !== lastLoadedDocument.value) {
-            form.client_id = null;
-            clientLookupState.value = 'idle';
-        }
-    },
-);
-
-watch(
-    () => form.coupon_code,
-    (value) => {
-        if (value !== selectedCoupon.value?.code) {
-            selectedCoupon.value = null;
-        }
-    },
-);
-
-if (!isCreating) {
-    watch(
-        () => form.data(),
-        (current, previous) => {
-            for (const key of Object.keys(current)) {
-                if (key in previous && current[key] !== previous[key] && form.errors[key]) {
-                    form.clearErrors(key);
-                }
-            }
-        },
-        { deep: true },
-    );
 }
 
-function applyClient(client: ClientLookup): void {
-    form.client_id = client.id;
-    form.name = client.name ?? '';
-    form.email = client.email ?? '';
-    form.phone = client.phone ?? '';
-    form.document = client.document ?? '';
-    form.gender = client.gender ?? '';
-    form.birth_date = client.birth_date ?? '';
-    form.legal_representative = Boolean(client.legal_representative);
-    form.legal_representative_name = client.legal_representative_name ?? '';
-    form.legal_representative_document = client.legal_representative_document ?? '';
-    form.legal_representative_birth_date = client.legal_representative_birth_date ?? '';
-    form.address_postal_code = client.address_postal_code ?? '';
-    form.address = client.address ?? '';
-    form.address_number = client.address_number ?? '';
-    form.address_complement = client.address_complement ?? '';
-    form.address_district = client.address_district ?? '';
-    form.address_state = client.address_state ?? '';
-    form.address_city = client.address_city ?? '';
-    lastLoadedDocument.value = onlyDigits(client.document);
-    clientLookupState.value = 'found';
+function onCouponChange(value: number | null): void {
+    selectedCoupon.value = props.options.coupons.find((coupon) => coupon.value === value) ?? null;
 }
 
-function clearClientFields(): void {
-    form.client_id = null;
-    form.name = '';
-    form.email = '';
-    form.phone = '';
-    form.gender = '';
-    form.birth_date = '';
-    form.legal_representative = false;
-    form.legal_representative_name = '';
-    form.legal_representative_document = '';
-    form.legal_representative_birth_date = '';
-    form.address_postal_code = '';
-    form.address = '';
-    form.address_number = '';
-    form.address_complement = '';
-    form.address_district = '';
-    form.address_state = '';
-    form.address_city = '';
-}
+async function submit(): Promise<void> {
+    if (isCreating) {
+        const result = await formRef.value?.validate();
 
-async function searchClient(): Promise<void> {
-    const document = onlyDigits(form.document);
-
-    if (document.length !== 11) {
-        clientLookupState.value = 'idle';
-
-        return;
-    }
-
-    isSearchingClient.value = true;
-
-    try {
-        const params = new URLSearchParams({ document });
-        const response = await fetch(`${props.routes.findClient}?${params}`, {
-            credentials: 'same-origin',
-            headers: { Accept: 'application/json' },
-        });
-        const payload = (await response.json()) as { client: ClientLookup | null };
-
-        if (payload.client !== null) {
-            applyClient(payload.client);
-
+        if (!result?.valid) {
             return;
         }
 
-        clearClientFields();
-        form.document = document;
-        lastLoadedDocument.value = '';
-        clientLookupState.value = 'missing';
-    } finally {
-        isSearchingClient.value = false;
-    }
-}
-
-function goBack(){
-    if (step.value === 1 || !isCreating) router.get(props.routes.index);
-    else step.value -= 1;
-}
-
-async function goToContractStep(): Promise<void> {
-    const result = await clientFormRef.value?.validate();
-
-    if (result?.valid) {
-        step.value = 2;
-    }
-}
-
-async function submit(generateInvoices = false): Promise<void> {
-    if (isCreating) {
-        requiresAcceptedTerms.value = generateInvoices;
-    }
-
-    const result = await contractFormRef.value?.validate();
-
-    if (!result?.valid) {
-        return;
-    }
-
-    if (isCreating) {
-        form.transform((data) => ({
-            ...data,
-            generate_invoices: generateInvoices,
-        })).post(props.routes.store, {
-            preserveScroll: true,
-            onError: (errors) => {
-                const contractFields = [
-                    'coupon_code',
-                    'plan_id',
-                    'installments',
-                    'annotations',
-                    'accepted_terms',
-                ];
-
-                step.value = Object.keys(errors).some((field) => contractFields.includes(field))
-                    ? 2
-                    : 1;
-            },
-            onFinish: () => form.transform((data) => data),
-        });
-    } else {
-        form.transform((data) => ({
-            annotations: data.annotations,
-        })).put(props.routes.update.replace(':id', String(props.contract!.id)), {
+        form.post(props.routes.store, {
             preserveScroll: true,
             onFinish: () => form.transform((data) => data),
         });
-    }
-}
-
-async function searchCoupon(): Promise<void> {
-    const code = String(form.coupon_code ?? '').trim().toUpperCase();
-
-    form.coupon_code = code;
-
-    if (code === '') {
-        selectedCoupon.value = null;
 
         return;
     }
 
-    const params = new URLSearchParams({ code });
-    const response = await fetch(`${props.routes.findCoupon}?${params}`, {
-        credentials: 'same-origin',
-        headers: { Accept: 'application/json' },
+    form.put(props.routes.update.replace(':id', String(props.contract!.id)), {
+        preserveScroll: true,
+        onFinish: () => form.transform((data) => data),
     });
-    const payload = (await response.json()) as { coupon: CouponOption | null };
+}
 
-    selectedCoupon.value = payload.coupon;
+function applyContract(): void {
+    if (!props.applicationRoute) {
+        return;
+    }
+
+    if (!confirm('Aplicar o contrato? Será criado o cliente a partir do cadastro, aceitos os termos e geradas as faturas.')) {
+        return;
+    }
+
+    router.patch(props.applicationRoute, {}, {
+        preserveScroll: true,
+    });
 }
 
 function cancelContract(route: string): void {
@@ -495,6 +309,18 @@ function cancelContract(route: string): void {
     router.patch(route, {}, {
         preserveScroll: true,
     });
+}
+
+function copyRegistrationLink(): void {
+    if (!props.registration) {
+        return;
+    }
+
+    navigator.clipboard?.writeText(props.registration.url).then(() => {
+        copied.value = true;
+
+        setTimeout(() => (copied.value = false), 2000);
+    }).catch(() => {});
 }
 
 function splitAmount(amount: number, installments: number): number[] {
@@ -509,7 +335,7 @@ function splitAmount(amount: number, installments: number): number[] {
 }
 
 onMounted(() => {
-    void ensureCancelLoaded();
+    void ensureApplyLoaded();
 });
 </script>
 
@@ -518,7 +344,7 @@ onMounted(() => {
         <div class="d-flex align-center justify-space-between ga-4 my-4 flex-wrap">
             <div>
                 <h1 class="text-h5 font-weight-medium">
-                    {{ isCreating ? 'Novo contrato' : `Editar contrato #${contract?.id}` }}
+                    {{ isCreating ? 'Novo contrato' : `Contrato #${contract?.id}` }}
                 </h1>
             </div>
         </div>
@@ -526,7 +352,10 @@ onMounted(() => {
         <v-row>
             <v-col cols="12" lg="8">
                 <v-card>
-                    <v-card-text class="pb-0">
+                    <v-card-text
+                        v-if="!isCreating"
+                        class="pb-0"
+                    >
                         <v-row class="ma-0">
                             <v-col cols="12" md="3">
                                 <v-label class="text-caption text-medium-emphasis">ID do contrato</v-label>
@@ -535,12 +364,23 @@ onMounted(() => {
                             <v-col cols="12" md="3">
                                 <v-label class="text-caption text-medium-emphasis">Status</v-label>
                                 <div class="mb-3">
-                                    <v-chip :color="findOption(billableStatus, contract?.status)?.color ?? 'secondary'">{{ findLabel(billableStatus, contract?.status) ?? contract?.status ?? '-' }}</v-chip>
+                                    <v-chip
+                                        v-if="contract?.accepted_terms === 'pending' && contract?.client_id == null"
+                                        color="warning"
+                                    >
+                                        Pendente
+                                    </v-chip>
+                                    <v-chip
+                                        v-else
+                                        :color="findOption(billableStatus, contract?.status)?.color ?? 'secondary'"
+                                    >
+                                        {{ findLabel(billableStatus, contract?.status) ?? contract?.status ?? '-' }}
+                                    </v-chip>
                                 </div>
                             </v-col>
                             <v-col cols="12" md="6">
                                 <v-label class="text-caption text-medium-emphasis">Cliente</v-label>
-                                <div class="text-body-1 mb-3">{{ clientInfo ?? contract?.client_id ?? '-' }}</div>
+                                <div class="text-body-1 mb-3">{{ clientInfo ?? 'Aguardando cadastro via QR Code' }}</div>
                             </v-col>
                             <v-col cols="12" md="3">
                                 <v-label class="text-caption text-medium-emphasis">Plano</v-label>
@@ -563,159 +403,191 @@ onMounted(() => {
                     </v-card-text>
 
                     <v-card-text>
-                        <v-stepper v-model="step" flat>
-                            <v-stepper-header>
-                                <v-stepper-item :complete="step > 1 || !isCreating" :value="1" title="Cliente" subtitle="Dados do cliente" />
-                                <v-divider />
-                                <v-stepper-item :value="2" title="Contrato" subtitle="Plano e vigência" />
-                            </v-stepper-header>
+                        <template v-if="isCreating">
+                            <v-form ref="formRef">
+                                <v-row class="ma-0 mt-4">
+                                    <v-col cols="12" md="6">
+                                        <v-select
+                                            v-model="form.plan_id"
+                                            label="Plano"
+                                            :items="props.options.plans"
+                                            item-title="title"
+                                            item-value="value"
+                                            :rules="[required]"
+                                            :error-messages="form.errors.plan_id"
+                                            @update:model-value="onPlanChange"
+                                        />
+                                    </v-col>
+                                    <v-col cols="12" md="6">
+                                        <v-select
+                                            v-model="form.installments"
+                                            label="Duração"
+                                            :items="durationOptions"
+                                            item-title="title"
+                                            item-value="value"
+                                            :rules="[required]"
+                                            :disabled="selectedPlan === null"
+                                            :error-messages="form.errors.installments"
+                                        />
+                                    </v-col>
+                                    <v-col cols="12" md="6">
+                                        <v-select
+                                            v-model="form.coupon_id"
+                                            label="Cupom (opcional)"
+                                            :items="props.options.coupons"
+                                            item-title="title"
+                                            item-value="value"
+                                            clearable
+                                            :error-messages="form.errors.coupon_id"
+                                            @update:model-value="onCouponChange"
+                                        />
+                                    </v-col>
+                                    <v-col v-if="selectedCoupon" cols="12">
+                                        <v-alert color="info" variant="tonal" border="start">
+                                            <div class="d-flex flex-column ga-1">
+                                                <div>
+                                                    Desconto: {{ formatCurrency(discountValuePreview) }}
+                                                </div>
+                                                <div>
+                                                    Valor final: {{ formatCurrency(totalValuePreview) }}
+                                                </div>
+                                                <div>
+                                                    {{ discountedInstallmentsSummary }}
+                                                </div>
+                                                <div v-if="couponPartialDurationMessage">
+                                                    {{ couponPartialDurationMessage }}
+                                                </div>
+                                            </div>
+                                        </v-alert>
+                                    </v-col>
+                                    <v-col cols="12">
+                                        <v-textarea
+                                            v-model="form.annotations"
+                                            label="Anotações"
+                                            rows="3"
+                                            :error-messages="form.errors.annotations"
+                                        />
+                                    </v-col>
+                                    <v-col cols="12">
+                                        <v-alert color="primary" variant="tonal" border="start">
+                                            Após salvar, um QR Code será gerado para o cliente preencher o cadastro e o contrato ficará pendente até a aplicação.
+                                        </v-alert>
+                                    </v-col>
+                                </v-row>
+                            </v-form>
+                        </template>
 
-                            <v-stepper-window>
-                                <v-stepper-window-item :value="1">
-                                    <v-form ref="clientFormRef">
-                                        <v-row class="ma-0 mt-4">
-                                            <v-col cols="12" class="mb-3">
-                                                <v-alert border="start">
-                                                    Informe o CPF do cliente. Se ele já existir, os dados serão carregados automaticamente.
-                                                </v-alert>
-                                            </v-col>
-                                            <v-col cols="12">
-                                                <v-row dense>
-                                                    <v-col cols="12" sm="7" md="9">
-                                                        <MaskedTextField
-                                                            v-model="form.document"
-                                                            label="CPF do cliente"
-                                                            :mask="masks.cpf"
-                                                            :rules="[required, cpf]"
-                                                            :disabled="!isCreating"
-                                                            :error-messages="form.errors.document"
-                                                        />
-                                                    </v-col>
-                                                    <v-col cols="12" sm="5" md="3" class="pl-2">
-                                                        <v-clipped-button
-                                                            block
-                                                            color="primary"
-                                                            prepend-icon="ti ti-search"
-                                                            :loading="isSearchingClient"
-                                                            :disabled="!isCreating"
-                                                            @click="searchClient"
-                                                        >
-                                                            Buscar CPF
-                                                        </v-clipped-button>
-                                                    </v-col>
-                                                </v-row>
-                                            </v-col>
+                        <template v-else-if="isPending">
+                            <v-row class="ma-0">
+                                <v-col cols="12" md="6">
+                                    <v-alert color="warning" variant="tonal" border="start">
+                                        Autorize o contrato exibindo o QR Code abaixo para o cliente preencher o cadastro.
+                                    </v-alert>
 
-                                            <v-col v-if="clientLookupState === 'found'" cols="12">
-                                                <v-alert color="success" variant="tonal" border="start">
-                                                    Cliente encontrado. Os dados abaixo foram carregados e podem ser ajustados antes de salvar o contrato.
-                                                </v-alert>
-                                            </v-col>
-                                            <v-col v-else-if="clientLookupState === 'missing'" cols="12">
-                                                <v-alert color="warning" variant="tonal" border="start">
-                                                    Nenhum cliente encontrado para este CPF. Continue preenchendo o cadastro para criar um novo cliente.
-                                                </v-alert>
-                                            </v-col>
-                                            <ClientFormFields
-                                                :form="form"
-                                                :errors="form.errors"
-                                                :gender-types="genderTypes"
-                                                :ufs="ufs"
-                                                :disabled="!isCreating"
-                                            />
-                                        </v-row>
-                                    </v-form>
-                                </v-stepper-window-item>
+                                    <div class="d-flex flex-column align-center my-4">
+                                        <v-img
+                                            :src="registration?.qr"
+                                            width="220"
+                                            alt="QR Code de cadastro"
+                                            class="border rounded"
+                                        />
+                                        <div class="text-body-2 text-medium-emphasis text-center my-3">
+                                            Escaneie ou compartilhe o link de cadastro com o cliente.
+                                        </div>
+                                        <v-clipped-button
+                                            color="primary"
+                                            :prepend-icon="copied ? 'ti ti-check' : 'ti ti-link'"
+                                            @click="copyRegistrationLink"
+                                        >
+                                            {{ copied ? 'Link copiado!' : 'Copiar link de cadastro' }}
+                                        </v-clipped-button>
+                                    </div>
+                                </v-col>
 
-                                <v-stepper-window-item :value="2">
-                                    <v-form ref="contractFormRef">
-                                        <v-row class="ma-0 mt-4">
-                                            <v-col cols="12" md="6">
-                                                <v-select
-                                                    v-model="form.plan_id"
-                                                    label="Plano"
-                                                    :items="props.options.plans"
-                                                    item-title="title"
-                                                    item-value="value"
-                                                    :disabled="!isCreating"
-                                                    :rules="isCreating ? [required] : []"
-                                                    :error-messages="form.errors.plan_id"
-                                                />
-                                            </v-col>
-                                            <v-col cols="12" md="6">
-                                                <v-select
-                                                    v-model="form.installments"
-                                                    label="Duração"
-                                                    :items="durationOptions"
-                                                    item-title="title"
-                                                    item-value="value"
-                                                    :disabled="!isCreating || selectedPlan === null"
-                                                    :rules="isCreating ? [required] : []"
-                                                    :error-messages="form.errors.installments"
-                                                />
-                                            </v-col>
-                                            <v-col cols="12">
-                                                <MaskedTextField
-                                                    v-model="form.coupon_code"
-                                                    label="Cupom"
-                                                    :mask="'X*'"
-                                                    clearable
-                                                    :disabled="!isCreating"
-                                                    :error-messages="form.errors.coupon_code"
-                                                    @blur="searchCoupon"
-                                                />
-                                            </v-col>
-                                            <v-col v-if="selectedCoupon" cols="12">
+                                <v-col cols="12" md="6">
+                                    <v-card variant="tonal">
+                                        <v-card-item>
+                                            <v-card-title class="text-subtitle-1">
+                                                Cadastro do cliente
+                                            </v-card-title>
+                                        </v-card-item>
+                                        <v-card-text>
+                                            <template v-if="linkedLead">
+                                                <div class="text-body-2 text-medium-emphasis">Nome</div>
+                                                <div class="text-body-1 mb-2">{{ linkedLead.name }}</div>
+                                                <div class="text-body-2 text-medium-emphasis">CPF</div>
+                                                <div class="text-body-1 mb-2">{{ linkedLead.document }}</div>
+                                                <div class="text-body-2 text-medium-emphasis">E-mail</div>
+                                                <div class="text-body-1 mb-2">{{ linkedLead.email }}</div>
+                                                <div class="text-body-2 text-medium-emphasis">Telefone</div>
+                                                <div class="text-body-1 mb-2">{{ linkedLead.phone }}</div>
+
+                                                <v-divider class="my-3" />
+
+                                                <div class="text-body-2 text-medium-emphasis">Endereço</div>
+                                                <div class="text-body-1 mb-2">
+                                                    {{ linkedLead.address ?? 'Não informado' }},
+                                                    {{ linkedLead.address_number ?? '-' }}
+                                                    <span v-if="linkedLead.address_complement">
+                                                        - {{ linkedLead.address_complement }}
+                                                    </span>
+                                                </div>
+                                                <div class="text-body-1 mb-2">
+                                                    {{ linkedLead.address_district ?? '' }}
+                                                    {{ linkedLead.address_city ?? '' }}
+                                                    {{ linkedLead.address_state ?? '' }}
+                                                    {{ linkedLead.address_postal_code ?? '' }}
+                                                </div>
+
+                                                <v-alert color="success" variant="tonal" border="start" class="mt-4">
+                                                    Cliente já preencheu o cadastro. Aplique o contrato para criar o cliente e gerar as faturas.
+                                                </v-alert>
+                                            </template>
+
+                                            <template v-else>
                                                 <v-alert color="info" variant="tonal" border="start">
-                                                    <div class="d-flex flex-column ga-1">
-                                                        <div>
-                                                            Desconto: {{ formatCurrency(discountValuePreview) }}
-                                                        </div>
-                                                        <div>
-                                                            Valor final: {{ formatCurrency(totalValuePreview) }}
-                                                        </div>
-                                                        <div>
-                                                            {{ discountedInstallmentsSummary }}
-                                                        </div>
-                                                        <div v-if="couponPartialDurationMessage">
-                                                            {{ couponPartialDurationMessage }}
-                                                        </div>
-                                                    </div>
+                                                    Nenhum cadastro recebido até o momento. O contrato será aplicado quando o cliente preencher o formulário.
                                                 </v-alert>
-                                            </v-col>
-                                            <v-col cols="12">
-                                                <v-textarea
-                                                    v-model="form.annotations"
-                                                    label="Anotações"
-                                                    rows="3"
-                                                    :error-messages="form.errors.annotations"
-                                                />
-                                            </v-col>
-                                            <v-col v-if="isCreating" cols="12">
-                                                <v-checkbox
-                                                    v-model="form.accepted_terms"
-                                                    label="Confirmo o aceite dos termos da contratação"
-                                                    :rules="[acceptedTermsRule]"
-                                                    :error-messages="form.errors.accepted_terms"
-                                                />
-                                            </v-col>
-                                        </v-row>
-                                    </v-form>
-                                </v-stepper-window-item>
-                            </v-stepper-window>
-                        </v-stepper>
+                                            </template>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+
+                            <v-row class="ma-0">
+                                <v-col cols="12">
+                                    <v-textarea
+                                        v-model="form.annotations"
+                                        label="Anotações"
+                                        rows="3"
+                                        :error-messages="form.errors.annotations"
+                                    />
+                                </v-col>
+                            </v-row>
+                        </template>
+
+                        <template v-else>
+                            <v-row class="ma-0">
+                                <v-col cols="12">
+                                    <v-textarea
+                                        v-model="form.annotations"
+                                        label="Anotações"
+                                        rows="3"
+                                        :error-messages="form.errors.annotations"
+                                    />
+                                </v-col>
+                            </v-row>
+                        </template>
                     </v-card-text>
 
                     <ContractActions
                         :processing="form.processing"
-                        :show-continue="step === 1 && isCreating"
-                        :show-save="step === 2"
-                        :show-finalize="step === 2 && isCreating"
-                        :show-cancel="step === 2 && !isCreating && Boolean(contract && cancelRoute && contract.status !== 'canceled' && canCancel('cancel'))"
-                        @back="goBack"
-                        @continue="goToContractStep"
-                        @save="submit(false)"
-                        @finalize="submit(true)"
+                        :show-save="isCreating || !isPending"
+                        :show-apply="!isCreating && isPending && Boolean(linkedLead) && canApply('apply')"
+                        :show-cancel="!isCreating && Boolean(cancelRoute && contract?.status !== 'canceled' && contract?.client_id != null)"
+                        @back="router.get(props.routes.index)"
+                        @save="submit"
+                        @apply="applyContract"
                         @cancel="cancelContract(cancelRoute!)"
                     />
                 </v-card>
@@ -724,22 +596,17 @@ onMounted(() => {
             <v-col cols="12" lg="4">
                 <ContractSummary
                     :is-creating="isCreating"
-                    :client-name="form.name"
-                    :client-email="form.email"
-                    :client-info="clientInfo"
-                    :plan-title="selectedPlan?.title"
-                    :plan-name="contract?.plan_name"
+                    :plan-title="isCreating ? selectedPlan?.title : contract?.plan_name"
                     :plan-category="selectedPlan?.category"
                     :modality-quantity="isCreating ? selectedPlan?.modality_quantity : contract?.modality_quantity"
-                    :installments="form.installments"
-                    :has-selected-tier="selectedTier !== null"
+                    :installments="isCreating ? form.installments : contract?.installments"
+                    :has-selected-tier="isCreating ? selectedTier !== null : true"
                     :gross-value="isCreating ? grossValuePreview : contract?.gross_value"
                     :discount-value="isCreating ? discountValuePreview : contract?.discount_value"
                     :total-value="isCreating ? totalValuePreview : contract?.total"
-                    :selected-coupon="selectedCoupon"
-                    :coupon-info="couponInfo"
-                    :discounted-installments-summary="discountedInstallmentsSummary"
-                    :coupon-partial-duration-message="couponPartialDurationMessage"
+                    :coupon-code="isCreating ? (selectedCoupon?.code ?? null) : (couponInfo ?? null)"
+                    :discounted-installments-summary="isCreating ? discountedInstallmentsSummary : null"
+                    :coupon-partial-duration-message="isCreating ? couponPartialDurationMessage : null"
                 />
             </v-col>
         </v-row>

@@ -6,16 +6,13 @@ use App\Actions\BaseAction;
 use App\DTOs\Contracts\ActionResultDTO;
 use App\DTOs\Contracts\ContractResultDTO;
 use App\DTOs\Contracts\CreateContractDTO;
-use App\Models\Client;
 use App\Models\Contract;
 use App\Models\PlanTier;
-use App\Repositories\Contracts\ClientRepositoryInterface;
 use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Repositories\Contracts\CouponRepositoryInterface;
 use App\Repositories\Contracts\PlanRepositoryInterface;
-use App\Services\Billing\DiscountCalculator;
-use App\Services\Billing\InstallmentSplitter;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Str;
 
 class CreateContractAction extends BaseAction
 {
@@ -26,12 +23,8 @@ class CreateContractAction extends BaseAction
 
     public function __construct(
         private readonly ContractRepositoryInterface $contractRepository,
-        private readonly ClientRepositoryInterface $clientRepository,
         private readonly PlanRepositoryInterface $planRepository,
         private readonly CouponRepositoryInterface $couponRepository,
-        private readonly GenerateContractInvoicesAction $generateContractInvoices,
-        private readonly DiscountCalculator $discountCalculator,
-        private readonly InstallmentSplitter $installmentSplitter,
     ) {}
 
     protected function handle(mixed $input): ActionResultDTO
@@ -60,58 +53,28 @@ class CreateContractAction extends BaseAction
 
         $coupon = null;
 
-        if (! empty($dto->coupon_code)) {
+        if ($dto->coupon_id !== null) {
             $coupon = $this->couponRepository->newQuery()
-                ->where('code', mb_strtoupper((string) $dto->coupon_code))
                 ->where('visibility', 'visible')
+                ->whereKey($dto->coupon_id)
                 ->first();
 
             if ($coupon === null) {
                 return ActionResultDTO::failure(
                     'O cupom informado não está disponível.',
-                    ['coupon_code' => 'O cupom informado não está disponível.']
+                    ['coupon_id' => 'O cupom informado não está disponível.']
                 );
             }
 
             if ($coupon->expiration_date !== null && $coupon->expiration_date->isBefore(CarbonImmutable::today())) {
                 return ActionResultDTO::failure(
                     'O cupom informado está expirado.',
-                    ['coupon_code' => 'O cupom informado está expirado.']
+                    ['coupon_id' => 'O cupom informado está expirado.']
                 );
             }
         }
 
         $grossValue = round((float) $tier->price * (int) $dto->installments, 4);
-
-        $clientData = [
-            'name' => $dto->name,
-            'email' => $dto->email,
-            'phone' => $dto->phone,
-            'document' => $dto->document,
-            'gender' => $dto->gender,
-            'birth_date' => $dto->birth_date,
-            'legal_representative' => $dto->legal_representative,
-            'legal_representative_name' => $dto->legal_representative_name,
-            'legal_representative_document' => $dto->legal_representative_document,
-            'legal_representative_birth_date' => $dto->legal_representative_birth_date,
-            'address_postal_code' => $dto->address_postal_code,
-            'address' => $dto->address,
-            'address_number' => $dto->address_number,
-            'address_complement' => $dto->address_complement,
-            'address_district' => $dto->address_district,
-            'address_state' => $dto->address_state,
-            'address_city' => $dto->address_city,
-        ];
-
-        $client = $dto->client_id
-            ? $this->clientRepository->findOrFail($dto->client_id)
-            : new Client;
-
-        if ($client->exists) {
-            $client->update($clientData);
-        } else {
-            $client = $this->clientRepository->create($clientData);
-        }
 
         $contract = $this->contractRepository->create([
             'plan_name' => $plan->name,
@@ -122,32 +85,17 @@ class CreateContractAction extends BaseAction
             'payment_method' => 'cash',
             'first_due_date' => CarbonImmutable::today()->format('Y-m-d'),
             'installments' => $dto->installments,
-            'accepted_terms' => $dto->generate_invoices ? 'accepted' : 'pending',
+            'accepted_terms' => 'pending',
             'annotations' => $dto->annotations,
             'coupon_id' => $coupon?->id,
             'plan_id' => $plan->id,
-            'client_id' => $client->id,
+            'registration_token' => Str::random(64),
             'visibility' => 'visible',
         ]);
 
-        if ($dto->generate_invoices) {
-            $this->generateContractInvoices->execute($contract->id);
-        } else {
-            $grossInstallments = $this->installmentSplitter->split($grossValue, $dto->installments);
-            $discountTotal = round(array_sum($this->discountCalculator->calculate(
-                $contract->loadMissing('coupon'),
-                $grossInstallments,
-            )), 4);
-
-            $this->contractRepository->update($contract, [
-                'discount_value' => $discountTotal,
-                'total' => round($grossValue - $discountTotal, 4),
-            ]);
-        }
-
         return ActionResultDTO::success(
             ContractResultDTO::fromModel($contract->refresh()),
-            'Contrato criado com sucesso.'
+            'Contrato criado com sucesso. Compartilhe o QR Code para o cadastro do cliente.'
         );
     }
 }
