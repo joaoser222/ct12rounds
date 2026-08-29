@@ -1,9 +1,4 @@
 :80 {
-    @vite path /@vite/* /@id/* /@fs/* /__laravel_vite_plugin__/* /node_modules/* /resources/* /vite-hmr*
-    handle @vite {
-        reverse_proxy frontend:5173
-    }
-
     root * /var/www/html/public
     encode zstd gzip
     php_fastcgi app:9000

@@ -14,31 +14,11 @@ services:
       - composer_vendor:/var/www/html/vendor
       - laravel_storage:/var/www/html/storage
       - bootstrap_cache:/var/www/html/bootstrap/cache
-      - vite_hot:/var/www/html/storage/vite
   caddy:
     container_name: gymnamite_caddy
     volumes:
       - ./public:/var/www/html/public:ro
-  frontend:
-    container_name: gymnamite_frontend
-    build:
-      context: .
-      target: frontend
-    image: gymnamite-frontend:local
-    working_dir: /app
-    env_file:
-      - develop.env
-    command: >-
-      sh -c 'mkdir -p storage/vite && npm run dev -- --host=0.0.0.0'
-    ports:
-      - "5173:5173"
-    environment:
-      VITE_HOT_FILE: /app/storage/vite/hot
-    volumes:
-      - ./:/app:ro
-      - frontend_node_modules:/app/node_modules
-      - vite_hot:/app/storage/vite
-    profiles: ["frontend"]
+      - laravel_storage:/var/www/html/storage:ro
   db:
     env_file:
       - develop.env
@@ -73,9 +53,5 @@ volumes:
     name: gymnamite_composer_vendor
   bootstrap_cache:
     name: gymnamite_bootstrap_cache
-  frontend_node_modules:
-    name: gymnamite_frontend_node_modules
   laravel_storage:
     name: gymnamite_laravel_storage
-  vite_hot:
-    name: gymnamite_vite_hot
