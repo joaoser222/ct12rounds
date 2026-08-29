@@ -21,8 +21,5 @@ class UpdateModalityDTO extends BaseDTO
 
         #[Nullable, StringType, Max(7)]
         public ?string $color = null,
-
-        #[Nullable, StringType, Max(255)]
-        public ?string $icon = null,
     ) {}
 }

@@ -31,7 +31,6 @@ class UpdateModalityAction extends BaseAction
         $this->modalityRepository->update($modality, [
             'name' => $dto->name,
             'color' => $dto->color,
-            'icon' => $dto->icon,
         ]);
 
         return ActionResultDTO::success(

@@ -23,14 +23,13 @@ class CreateModalityActionTest extends TestCase
         $this->assertDatabaseHas('modalities', ['name' => 'Pilates']);
     }
 
-    public function test_creates_a_modality_with_color_and_icon(): void
+    public function test_creates_a_modality_with_color(): void
     {
         $action = app(CreateModalityAction::class);
 
         $dto = new CreateModalityDTO(
             name: 'Pilates',
             color: '#FF5733',
-            icon: 'modalities/abc123.png',
         );
         $result = $action->execute($dto);
 
@@ -38,7 +37,6 @@ class CreateModalityActionTest extends TestCase
         $this->assertDatabaseHas('modalities', [
             'name' => 'Pilates',
             'color' => '#FF5733',
-            'icon' => 'modalities/abc123.png',
         ]);
     }
 
