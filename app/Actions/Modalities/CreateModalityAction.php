@@ -28,6 +28,8 @@ class CreateModalityAction extends BaseAction
         $dto = $input;
         $modality = $this->modalityRepository->create([
             'name' => $dto->name,
+            'color' => $dto->color,
+            'icon' => $dto->icon,
         ]);
 
         return ActionResultDTO::success(

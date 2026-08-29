@@ -12,6 +12,8 @@ use App\Models\Modality;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class ModalityController extends CrudModuleController
@@ -24,7 +26,7 @@ class ModalityController extends CrudModuleController
     /**
      * @var array<int, string>
      */
-    protected array $fields = ['id', 'name', 'created_at'];
+    protected array $fields = ['id', 'name', 'color', 'icon', 'created_at'];
 
     /**
      * @var array<int, string>
@@ -50,10 +52,22 @@ class ModalityController extends CrudModuleController
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'icon' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+        ]);
+
+        $iconPath = $request->hasFile('icon')
+            ? $this->storeIcon($request->file('icon'))
+            : null;
+
         $result = $this->createModality->execute(
-            CreateModalityDTO::from($request->validate([
-                'name' => ['required', 'string', 'max:255'],
-            ]))
+            CreateModalityDTO::from([
+                'name' => $validated['name'],
+                'color' => $validated['color'] ?? null,
+                'icon' => $iconPath,
+            ])
         );
 
         if ($request->expectsJson()) {
@@ -75,12 +89,30 @@ class ModalityController extends CrudModuleController
         /** @var Modality $modality */
         $modality = $this->modelFromRoute($request);
 
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'icon' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            'remove_icon' => ['nullable', 'boolean'],
+        ]);
+
+        $removeIcon = (bool) ($validated['remove_icon'] ?? false);
+
+        $iconPath = $modality->icon;
+        if ($request->hasFile('icon')) {
+            $this->deleteIcon($modality->icon);
+            $iconPath = $this->storeIcon($request->file('icon'));
+        } elseif ($removeIcon) {
+            $this->deleteIcon($modality->icon);
+            $iconPath = null;
+        }
+
         $result = $this->updateModality->execute(
             UpdateModalityDTO::from([
-                ...$request->validate([
-                    'name' => ['required', 'string', 'max:255'],
-                ]),
                 'id' => $modality->getKey(),
+                'name' => $validated['name'],
+                'color' => $validated['color'] ?? null,
+                'icon' => $iconPath,
             ])
         );
 
@@ -94,5 +126,22 @@ class ModalityController extends CrudModuleController
         ]);
 
         return redirect()->route($this->routePrefix().'.index');
+    }
+
+    /**
+     * Stores the uploaded icon under a deterministic md5 filename keeping the original extension.
+     */
+    private function storeIcon(UploadedFile $file): string
+    {
+        $name = md5_file($file->getRealPath()).'.'.$file->getClientOriginalExtension();
+
+        return $file->storeAs('modalities', $name, 'public');
+    }
+
+    private function deleteIcon(?string $icon): void
+    {
+        if ($icon !== null && Storage::disk('public')->exists($icon)) {
+            Storage::disk('public')->delete($icon);
+        }
     }
 }

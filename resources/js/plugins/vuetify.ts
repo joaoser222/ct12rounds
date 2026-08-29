@@ -1,11 +1,13 @@
-import 'vuetify/styles';
 import '@tabler/icons-webfont/dist/tabler-icons.scss';
-import {tabler} from './tabler';
+import 'vuetify/styles';
+import { createVuetify } from 'vuetify';
+import type { ThemeDefinition } from 'vuetify';
 import { VBtn } from 'vuetify/components';
-import { aliases } from 'vuetify/iconsets/mdi'
+import { aliases } from 'vuetify/iconsets/mdi';
+import { VFileUpload } from 'vuetify/labs/VFileUpload';
 import { pt } from 'vuetify/locale';
-import { createVuetify, type ThemeDefinition } from 'vuetify';
 import themes from '../themes/index';
+import { tabler } from './tabler';
 
 /**
  * Configuração central do Vuetify da aplicação.
@@ -20,6 +22,9 @@ import themes from '../themes/index';
 const typedThemes = themes as Record<string, ThemeDefinition>;
 
 export default createVuetify({
+    components: {
+        VFileUpload,
+    },
     icons: {
         defaultSet: 'tabler',
         aliases,

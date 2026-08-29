@@ -25,6 +25,28 @@ class UpdateModalityActionTest extends TestCase
         $this->assertDatabaseHas('modalities', ['id' => $modality->id, 'name' => 'Pilates Avançado']);
     }
 
+    public function test_updates_a_modality_with_color_and_icon(): void
+    {
+        $modality = Modality::query()->create(['name' => 'Yoga', 'visibility' => 'visible']);
+        $action = app(UpdateModalityAction::class);
+
+        $dto = new UpdateModalityDTO(
+            id: $modality->id,
+            name: 'Yoga Terapêutico',
+            color: '#00AAFF',
+            icon: 'modalities/xyz789.jpg',
+        );
+        $result = $action->execute($dto);
+
+        $this->assertTrue($result->success);
+        $this->assertDatabaseHas('modalities', [
+            'id' => $modality->id,
+            'name' => 'Yoga Terapêutico',
+            'color' => '#00AAFF',
+            'icon' => 'modalities/xyz789.jpg',
+        ]);
+    }
+
     public function test_returns_success_message(): void
     {
         $modality = Modality::query()->create(['name' => 'Yoga', 'visibility' => 'visible']);
