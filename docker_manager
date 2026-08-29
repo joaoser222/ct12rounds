@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+# Detecta o ambiente a partir do APP_ENV do .env do projeto.
+# production => modo production; qualquer outro (local/develop) => modo develop.
+detect_environment() {
+    local app_env
+    app_env="$(grep -E '^APP_ENV=' "$project_dir/.env" 2>/dev/null | head -n1 | cut -d= -f2- | tr -d '[:space:]\r"')"
+
+    if [[ "$app_env" == "production" ]]; then
+        printf 'production'
+    else
+        printf 'develop'
+    fi
+}
+
+environment="$(detect_environment)"
+
+# Permite forçar o ambiente explicitamente como primeiro argumento.
+if [[ "$1" == "develop" || "$1" == "production" ]]; then
+    environment="$1"
+    shift
+fi
+
+case "$environment" in
+    develop)
+        environment_file="develop.env"
+        compose_override="compose.develop.yaml"
+        profile=""
+        ;;
+    production)
+        environment_file="production.env"
+        compose_override="compose.production.yaml"
+        profile="worker"
+        ;;
+esac
+
+command="${1:-}"
+
+# Comando dedicado para buildar o frontend dentro de um container Node.
+if [[ "$command" == "build:frontend" ]]; then
+    docker run --rm \
+        -v "$project_dir":/app \
+        -w /app \
+        node:22 sh -c 'npm ci --legacy-peer-deps && npm run build'
+    exit 0
+fi
+
+# O frontend é compilado (Vite build) e servido estaticamente; não há profile de dev.
+if [[ -n "$profile" ]]; then
+    exec docker compose \
+        --project-directory "$project_dir" \
+        --env-file "$project_dir/$environment_file" \
+        -f "$project_dir/compose.yaml" \
+        -f "$project_dir/$compose_override" \
+        --profile "$profile" \
+        "$@"
+fi
+
+exec docker compose \
+    --project-directory "$project_dir" \
+    --env-file "$project_dir/$environment_file" \
+    -f "$project_dir/compose.yaml" \
+    -f "$project_dir/$compose_override" \
+    "$@"
