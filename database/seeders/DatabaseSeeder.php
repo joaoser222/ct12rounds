@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             TrainerSeeder::class,
             ModalitySeeder::class,
+            PlanCategorySeeder::class,
+            PlanSeeder::class,
             SettingSeeder::class,
         ]);
     }

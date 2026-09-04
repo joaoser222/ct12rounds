@@ -16,10 +16,10 @@ class ModalitySeeder extends Seeder
      * @var array<int, array{name: string, color: string}>
      */
     private const MODALITIES = [
-        ['name' => 'Boxe', 'color' => '#DC2626'],
-        ['name' => 'Jiu-jitsu', 'color' => '#0D9488'],
-        ['name' => 'Kickboxing', 'color' => '#EA580C'],
-        ['name' => 'MMA', 'color' => '#2563EB'],
+        ['name' => 'Boxe', 'color' => '#5d00ff'],
+        ['name' => 'Jiu-jitsu', 'color' => '#7400e2'],
+        ['name' => 'Kickboxing', 'color' => '#ff9c00'],
+        ['name' => 'MMA', 'color' => '#db0000'],
     ];
 
     /**
