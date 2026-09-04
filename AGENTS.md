@@ -1,4 +1,4 @@
-# Gymnamite Project Index
+# Ct12rounds Project Index
 
 This repository uses direct, demand-triggered skills. Do not use role-based
 agents, orchestration chains, or subagent handoffs. Work in the current
@@ -39,7 +39,7 @@ multiple domains.
 | User explicitly asks to plan, design, organize, estimate, or discuss implementation before coding | `project-planning` |
 | User asks to implement a plan or any code/configuration change | `direct-implementation` |
 | Laravel/PHP changes, code review, migrations, Eloquent, validation, jobs, security, tests, or performance | `laravel-best-practices` |
-| Any Gymnamite application module, access control, report, service, command, route, Inertia page, or project test | `gymnamite-project-patterns` |
+| Any Ct12rounds application module, access control, report, service, command, route, Inertia page, or project test | `ct12rounds-project-patterns` |
 | SaaS modules, tenants, organizations, subscriptions, billing, queues, integrations, or production hardening | `saas-php-laravel` |
 | Vue, Inertia, Vuetify, layouts, forms, tables, dialogs, navigation, responsive UI, or icons | `vuetify-development` |
 | Asaas, `app/PaymentGateways`, gateway billing, payment sync, gateway accounts, cards, transfers, customers, or postbacks | `asaas-payment-gateway` |

@@ -2,7 +2,7 @@
 name: plan-execution
 description: >
   Executes a user-provided or previously agreed implementation plan directly in
-  the current Gymnamite workspace. Use when the user asks to proceed, implement,
+  the current Ct12rounds workspace. Use when the user asks to proceed, implement,
   or execute an existing plan. It validates the plan, works through dependencies,
   applies relevant domain skills, and reports results without delegating to agents
   or creating planner, commander, or executor loops.

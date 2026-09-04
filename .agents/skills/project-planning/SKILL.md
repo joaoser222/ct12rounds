@@ -1,13 +1,13 @@
 ---
 name: project-planning
 description: >
-  Plans, scopes, and sequences development work in the Gymnamite Laravel,
+  Plans, scopes, and sequences development work in the Ct12rounds Laravel,
   Inertia Vue, and Vuetify project. Use this skill only when the user explicitly
   asks to plan, organize, design, architect, estimate, or discuss an implementation
   before coding. It produces a plan for the current conversation and never delegates
   work to agents or starts implementation without a direct user request.
 ---
-# Gymnamite Project Planning
+# Ct12rounds Project Planning
 
 Analyze the request and produce a practical implementation plan before code is
 written. This is a consultation skill, not an orchestration workflow.
@@ -24,7 +24,7 @@ Backend stack: PHP 8.3, PostgreSQL, CRUD/read-only modules with access control.
 
 Load only the skills relevant to the requested work:
 
-1. **gymnamite-project-patterns** — Module controllers (CrudModuleController,
+1. **ct12rounds-project-patterns** — Module controllers (CrudModuleController,
    ReadOnlyModuleController, AbstractModuleController), access control (AccessModule,
    AccessAction), services, reports, payment gateways, frontend (TablePage,
    DetailsPage, ReadOnlyDetailsPage), menus, commands, tests.

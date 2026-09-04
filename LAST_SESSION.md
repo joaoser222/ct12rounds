@@ -1,4 +1,4 @@
-# LAST SESSION — Gymnamite (Chat em tela cheia + histórico + interrupção)
+# LAST SESSION — Ct12rounds (Chat em tela cheia + histórico + interrupção)
 
 > Resumo compacto da sessão. Use para retomar o trabalho.
 

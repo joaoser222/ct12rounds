@@ -16,7 +16,7 @@ compatibility:
   - angular-convention
 ---
 
-# Commit Skill — Gymnamite
+# Commit Skill — Ct12rounds
 
 ## When to use
 
@@ -52,7 +52,7 @@ should trigger this skill.
 ### Scope
 
 The scope must reflect the affected module or domain area of the
-Gymnamite project. Use one of the following (snake_case, matching the
+Ct12rounds project. Use one of the following (snake_case, matching the
 module slugs in `app/AccessControl/AccessModule.php`):
 
 - **Pessoas**: `clients`, `trainers`, `suppliers`

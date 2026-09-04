@@ -1,12 +1,12 @@
 ---
-name: gymnamite-project-patterns
-description: "Use for Gymnamite project-specific implementation patterns: module controllers, access control, reports, payment gateways, Inertia Vue pages, Vuetify tables/forms, services, commands, tests, and naming conventions in this repository."
+name: ct12rounds-project-patterns
+description: "Use for Ct12rounds project-specific implementation patterns: module controllers, access control, reports, payment gateways, Inertia Vue pages, Vuetify tables/forms, services, commands, tests, and naming conventions in this repository."
 license: MIT
 metadata:
   author: project
 ---
 
-# Gymnamite Project Patterns
+# Ct12rounds Project Patterns
 
 ## When to Apply
 

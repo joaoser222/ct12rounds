@@ -18,7 +18,7 @@ Build SaaS features as complete, maintainable application workflows rather than 
 - Use PHPUnit 12 test classes, Larastan-compatible PHP, and Pint formatting.
 - Search version-specific Laravel and Inertia documentation before relying on unfamiliar APIs.
 - Read sibling files and existing project skills before creating a new controller, service, component, test, or shared UI pattern. Existing application conventions override generic preferences.
-- Pair this skill with `gymnamite-project-patterns` for repository-specific modules and `laravel-best-practices` for detailed Laravel rules. Pair with `inertia-vue-development` and `vuetify-development` for frontend work.
+- Pair this skill with `ct12rounds-project-patterns` for repository-specific modules and `laravel-best-practices` for detailed Laravel rules. Pair with `inertia-vue-development` and `vuetify-development` for frontend work.
 
 ## Delivery Workflow
 

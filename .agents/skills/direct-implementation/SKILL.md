@@ -1,7 +1,7 @@
 ---
 name: direct-implementation
 description: >
-  Implements an application change directly in the current Gymnamite workspace.
+  Implements an application change directly in the current Ct12rounds workspace.
   Use this skill whenever the user asks to create, modify, fix, refactor, test,
   or execute a Laravel, Vue, Vuetify, Inertia, or project configuration change,
   including implementation of an existing plan. It performs the work end-to-end
