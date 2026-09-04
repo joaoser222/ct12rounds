@@ -49,7 +49,7 @@ const defaults = {
                         :error-messages="errors.color"
                     />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col cols="12">
                     <div class="text-subtitle-2 text-medium-emphasis mb-2">
                         Pré-visualização
                     </div>

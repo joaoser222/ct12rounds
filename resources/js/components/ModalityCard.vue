@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import logo from '@/assets/logo.webp';
 
 const props = withDefaults(
     defineProps<{
         name: string;
         color?: string | null;
-        dense?: boolean;
+        scale?: number;
     }>(),
     {
         color: null,
-        dense: false,
+        scale: 1,
     },
 );
 
@@ -19,46 +20,60 @@ const accent = computed<string>(() =>
 
 const cardStyle = computed<Record<string, string>>(() => ({
     '--modality-accent': accent.value,
+    '--modality-scale': String(props.scale),
 }));
 </script>
 
 <template>
-    <div
-        class="modality-card rounded-lg"
-        :class="{ 'pa-2': dense, 'pa-4': !dense }"
-        :style="cardStyle"
-    >
-        <span class="modality-dot" aria-hidden="true" />
-        <span class="modality-name" :class="dense ? 'text-body-1' : 'text-subtitle-1'">
-            {{ name || 'Nome da modalidade' }}
-        </span>
+    <div class="modality-card rounded-lg w-100" :style="cardStyle">
+        <div class="modality-card__inner">
+            <img :src="logo" alt="" class="modality-logo" />
+            <span class="modality-name">{{ name || 'Nome da modalidade' }}</span>
+        </div>
     </div>
 </template>
 
 <style scoped>
+/* Scale via transform (origem central): reduz o card inteiro — texto, logo,
+ * padding e borda — para uso compacto em documentos. A altura acompanha a escala. */
 .modality-card {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 10px;
-    max-width: 100%;
-    background: color-mix(in srgb, var(--modality-accent) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--modality-accent) 35%, transparent);
+    justify-content: center;
+    width: 100%;
+    max-height: calc(300px * var(--modality-scale));
+    padding: calc(24px * var(--modality-scale));
+    background: #000000;
+    border: calc(2px * var(--modality-scale)) solid rgb(var(--v-theme-primary));
+    transform: scale(var(--modality-scale));
+    transform-origin: center;
+    overflow: hidden;
 }
 
-.modality-dot {
-    flex: 0 0 auto;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: var(--modality-accent);
+.modality-card__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.modality-logo {
+    height: 2vmax;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
 }
 
 .modality-name {
+    font-family: 'Bebas Neue', 'Barlow Condensed', sans-serif;
+    text-transform: uppercase;
     font-weight: 600;
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    letter-spacing: 0.015em;
+    font-size: clamp(2.5rem, 10vw, 6rem);
+    line-height: 1;
+    text-align: center;
     color: var(--modality-accent);
+    overflow: hidden;
 }
 </style>

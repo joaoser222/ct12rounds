@@ -92,7 +92,7 @@ async function copyPublicLink(): Promise<void> {
                         label="Nome"
                         :rules="[required]"
                         :error-messages="errors.name"
-                        v-text-case="'capitalize'"
+                        v-text-case="'upper'"
                     />
                 </v-col>
                 <v-col cols="12" md="3">
