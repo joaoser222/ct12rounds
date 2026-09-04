@@ -25,7 +25,7 @@ class DirectLessonResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://direct-lessons/{id}');
+        return new UriTemplate('ct12rounds://direct-lessons/{id}');
     }
 
     public function shouldRegister(): bool

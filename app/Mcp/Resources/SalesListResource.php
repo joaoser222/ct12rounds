@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Resource;
 #[Name('sales')]
 #[Description('Lista paginada de vendas')]
 #[MimeType('application/json')]
-#[Uri('gymnamite://sales')]
+#[Uri('ct12rounds://sales')]
 class SalesListResource extends Resource
 {
     public function __construct(

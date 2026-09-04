@@ -25,7 +25,7 @@ class ContractResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://contracts/{id}');
+        return new UriTemplate('ct12rounds://contracts/{id}');
     }
 
     public function shouldRegister(): bool

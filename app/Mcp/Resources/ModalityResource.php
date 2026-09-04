@@ -25,7 +25,7 @@ class ModalityResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://modalities/{id}');
+        return new UriTemplate('ct12rounds://modalities/{id}');
     }
 
     public function shouldRegister(): bool

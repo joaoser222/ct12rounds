@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Resource;
 #[Name('contracts')]
 #[Description('Lista paginada de contratos')]
 #[MimeType('application/json')]
-#[Uri('gymnamite://contracts')]
+#[Uri('ct12rounds://contracts')]
 class ContractsListResource extends Resource
 {
     public function __construct(

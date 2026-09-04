@@ -15,7 +15,7 @@ use App\PaymentGateways\Adapters\AsaasPaymentGatewayAdapter;
 use Carbon\CarbonImmutable;
 
 /**
- * Imports data already issued in Asaas into Gymnamite.
+ * Imports data already issued in Asaas into Ct12rounds.
  *
  * Each concern is exposed as an independent method so it can be run on its own
  * command: customers, payments (as receivable invoices) and transfers.

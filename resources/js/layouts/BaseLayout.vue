@@ -10,7 +10,7 @@
             <div class="d-flex justify-center align-center px-4">
                 <v-img
                     :src="logo"
-                    alt="Gymnamite"
+                    alt="Ct12rounds"
                     contain
                     height="64px"
                     max-width="132"

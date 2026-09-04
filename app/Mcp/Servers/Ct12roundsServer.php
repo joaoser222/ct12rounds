@@ -85,10 +85,10 @@ use Laravel\Mcp\Server\Attributes\Version;
 use Laravel\Mcp\Server\Prompt;
 use Laravel\Mcp\Server\Tool;
 
-#[Name('Gymnamite')]
+#[Name('Ct12rounds')]
 #[Version('1.0.0')]
 #[Instructions('Gestão de academia: clientes, contratos, planos, modalidades, produtos, vendas, compras, aulas diretas, cupons, fornecedores, treinadores, categorias financeiras, centros de custo, contas financeiras, contas a pagar, contas a receber, movimentações e gateway de pagamento.')]
-class GymnamiteServer extends Server
+class Ct12roundsServer extends Server
 {
     /**
      * @var array<int, class-string<Tool>>

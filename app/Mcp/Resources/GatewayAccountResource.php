@@ -25,7 +25,7 @@ class GatewayAccountResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://gateway-accounts/{id}');
+        return new UriTemplate('ct12rounds://gateway-accounts/{id}');
     }
 
     public function shouldRegister(): bool

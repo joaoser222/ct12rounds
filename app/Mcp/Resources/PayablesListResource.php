@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Resource;
 #[Name('payables-pending')]
 #[Description('Contas a pagar pendentes')]
 #[MimeType('application/json')]
-#[Uri('gymnamite://payables/pending')]
+#[Uri('ct12rounds://payables/pending')]
 class PayablesListResource extends Resource
 {
     public function __construct(

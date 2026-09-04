@@ -26,7 +26,7 @@ class ServerRegistrationTest extends TestCase
 
     private function mcpCall(User $user, string $method, array $params = []): TestResponse
     {
-        return $this->actingAs($user)->postJson('/mcp/gymnamite', [
+        return $this->actingAs($user)->postJson('/mcp/ct12rounds', [
             'jsonrpc' => '2.0',
             'id' => 1,
             'method' => $method,

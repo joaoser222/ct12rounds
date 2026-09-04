@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Mcp;
 
-use App\Mcp\Servers\GymnamiteServer;
+use App\Mcp\Servers\Ct12roundsServer;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response as McpResponse;
 use Laravel\Mcp\ResponseFactory;
@@ -94,7 +94,7 @@ class ChatPromptProvider
      */
     private function promptClassList(): array
     {
-        $defaults = (new ReflectionClass(GymnamiteServer::class))
+        $defaults = (new ReflectionClass(Ct12roundsServer::class))
             ->getDefaultProperties();
 
         return $defaults['prompts'] ?? [];

@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Resource;
 #[Name('receivables-pending')]
 #[Description('Contas a receber pendentes')]
 #[MimeType('application/json')]
-#[Uri('gymnamite://receivables/pending')]
+#[Uri('ct12rounds://receivables/pending')]
 class ReceivablesListResource extends Resource
 {
     public function __construct(

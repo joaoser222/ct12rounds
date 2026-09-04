@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Resource;
 #[Name('hiring-leads')]
 #[Description('Lista paginada de pré-cadastros de clientes (hiring_leads)')]
 #[MimeType('application/json')]
-#[Uri('gymnamite://hiring-leads')]
+#[Uri('ct12rounds://hiring-leads')]
 class HiringLeadsListResource extends Resource
 {
     public function shouldRegister(): bool

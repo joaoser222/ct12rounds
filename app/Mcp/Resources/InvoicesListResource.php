@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Resource;
 #[Name('invoices')]
 #[Description('Lista paginada de notas fiscais')]
 #[MimeType('application/json')]
-#[Uri('gymnamite://invoices')]
+#[Uri('ct12rounds://invoices')]
 class InvoicesListResource extends Resource
 {
     public function __construct(

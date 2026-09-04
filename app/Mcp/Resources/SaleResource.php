@@ -25,7 +25,7 @@ class SaleResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://sales/{id}');
+        return new UriTemplate('ct12rounds://sales/{id}');
     }
 
     public function shouldRegister(): bool

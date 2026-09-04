@@ -10,7 +10,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('gateway:import-transfers {--account=Asaas : Gateway account name to import from}')]
-#[Description('Import Asaas transfers into Gymnamite gateway transfers')]
+#[Description('Import Asaas transfers into Ct12rounds gateway transfers')]
 class ImportGatewayTransfers extends Command
 {
     public function handle(): int

@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Resource;
 #[Name('receivables-overdue')]
 #[Description('Contas a receber vencidas')]
 #[MimeType('application/json')]
-#[Uri('gymnamite://receivables/overdue')]
+#[Uri('ct12rounds://receivables/overdue')]
 class OverdueReceivablesResource extends Resource
 {
     public function __construct(

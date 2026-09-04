@@ -25,7 +25,7 @@ class InvoiceResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://invoices/{id}');
+        return new UriTemplate('ct12rounds://invoices/{id}');
     }
 
     public function shouldRegister(): bool

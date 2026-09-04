@@ -25,7 +25,7 @@ class MovementResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://movements/{id}');
+        return new UriTemplate('ct12rounds://movements/{id}');
     }
 
     public function shouldRegister(): bool

@@ -27,7 +27,7 @@ class ResourceTest extends TestCase
 
     private function mcpCall(User $user, string $method, array $params = []): TestResponse
     {
-        return $this->actingAs($user)->postJson('/mcp/gymnamite', [
+        return $this->actingAs($user)->postJson('/mcp/ct12rounds', [
             'jsonrpc' => '2.0',
             'id' => 1,
             'method' => $method,
@@ -84,7 +84,7 @@ class ResourceTest extends TestCase
         $client = Client::factory()->create();
 
         $response = $this->mcpCall($user, 'resources/read', [
-            'uri' => "gymnamite://clients/{$client->id}",
+            'uri' => "ct12rounds://clients/{$client->id}",
         ]);
 
         $response->assertOk();
@@ -103,7 +103,7 @@ class ResourceTest extends TestCase
         $this->givePermission($user, 'movements.view');
 
         $response = $this->mcpCall($user, 'resources/read', [
-            'uri' => 'gymnamite://movements/range/2026-01-01/2026-01-31',
+            'uri' => 'ct12rounds://movements/range/2026-01-01/2026-01-31',
         ]);
 
         $response->assertOk();
@@ -130,7 +130,7 @@ class ResourceTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->mcpCall($user, 'resources/read', [
-            'uri' => 'gymnamite://clients/1',
+            'uri' => 'ct12rounds://clients/1',
         ]);
 
         $response->assertOk();

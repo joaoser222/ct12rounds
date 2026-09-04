@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Mcp;
 
-use App\Mcp\Servers\GymnamiteServer;
+use App\Mcp\Servers\Ct12roundsServer;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
-use Laravel\Mcp\Request;
 use Laravel\Mcp\Server\Resource;
 use Laravel\Mcp\Server\Tool;
 use ReflectionClass;
@@ -17,7 +16,7 @@ class ChatToolSchemaProvider
      * Build OpenAI-compatible tool definitions from the read-only MCP resources
      * that the current user is allowed to access.
      *
-     * @return array{tools: array<int, array>, map: array<string, array{resource: Resource, params: array<int, string>}>}
+     * @return array{tools: array<int, array>, map: array<string, array{resource: resource, params: array<int, string>}>}
      */
     public function readOnlyResourcesForCurrentUser(): array
     {
@@ -29,7 +28,7 @@ class ChatToolSchemaProvider
                 continue;
             }
 
-            /** @var Resource $resource */
+            /** @var resource $resource */
             $resource = app($class);
 
             if (! $resource->eligibleForRegistration()) {
@@ -80,7 +79,7 @@ class ChatToolSchemaProvider
                 continue;
             }
 
-            $jsonSchema = new JsonSchemaTypeFactory();
+            $jsonSchema = new JsonSchemaTypeFactory;
             $objectType = $jsonSchema->object($tool->schema($jsonSchema));
 
             $tools[] = [
@@ -103,7 +102,7 @@ class ChatToolSchemaProvider
      */
     private function resourceClassList(): array
     {
-        $defaults = (new ReflectionClass(GymnamiteServer::class))
+        $defaults = (new ReflectionClass(Ct12roundsServer::class))
             ->getDefaultProperties();
 
         return $defaults['resources'] ?? [];
@@ -114,7 +113,7 @@ class ChatToolSchemaProvider
      */
     private function toolClassList(): array
     {
-        $defaults = (new ReflectionClass(GymnamiteServer::class))
+        $defaults = (new ReflectionClass(Ct12roundsServer::class))
             ->getDefaultProperties();
 
         return $defaults['tools'] ?? [];

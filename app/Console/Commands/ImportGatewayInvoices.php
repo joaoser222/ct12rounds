@@ -10,7 +10,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('gateway:import-invoices {--account=Asaas : Gateway account name to import from}')]
-#[Description('Import already-issued Asaas payments as receivable invoices into Gymnamite')]
+#[Description('Import already-issued Asaas payments as receivable invoices into Ct12rounds')]
 class ImportGatewayInvoices extends Command
 {
     public function handle(): int

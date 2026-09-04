@@ -25,7 +25,7 @@ class ReceivableResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://receivables/{id}');
+        return new UriTemplate('ct12rounds://receivables/{id}');
     }
 
     public function shouldRegister(): bool

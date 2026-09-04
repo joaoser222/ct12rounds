@@ -25,7 +25,7 @@ class ClientResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://clients/{id}');
+        return new UriTemplate('ct12rounds://clients/{id}');
     }
 
     public function shouldRegister(): bool

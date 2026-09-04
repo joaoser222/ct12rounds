@@ -25,7 +25,7 @@ class PurchaseResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://purchases/{id}');
+        return new UriTemplate('ct12rounds://purchases/{id}');
     }
 
     public function shouldRegister(): bool

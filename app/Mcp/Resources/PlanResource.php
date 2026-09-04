@@ -25,7 +25,7 @@ class PlanResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://plans/{id}');
+        return new UriTemplate('ct12rounds://plans/{id}');
     }
 
     public function shouldRegister(): bool

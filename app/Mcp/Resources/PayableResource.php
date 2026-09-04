@@ -25,7 +25,7 @@ class PayableResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://payables/{id}');
+        return new UriTemplate('ct12rounds://payables/{id}');
     }
 
     public function shouldRegister(): bool

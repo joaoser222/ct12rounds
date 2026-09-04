@@ -25,7 +25,7 @@ class ProductResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://products/{id}');
+        return new UriTemplate('ct12rounds://products/{id}');
     }
 
     public function shouldRegister(): bool

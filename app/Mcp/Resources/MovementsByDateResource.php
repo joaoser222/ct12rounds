@@ -25,7 +25,7 @@ class MovementsByDateResource extends Resource implements HasUriTemplate
 
     public function uriTemplate(): UriTemplate
     {
-        return new UriTemplate('gymnamite://movements/range/{start}/{end}');
+        return new UriTemplate('ct12rounds://movements/range/{start}/{end}');
     }
 
     public function shouldRegister(): bool
