@@ -1,7 +1,8 @@
 services:
   app:
     env_file:
-      - develop.env
+      - path: develop.env
+        required: false
     command: >-
       sh -c 'set -e;
       [ -f vendor/autoload.php ] || composer install --no-interaction --prefer-dist;
@@ -15,43 +16,47 @@ services:
       - laravel_storage:/var/www/html/storage
       - bootstrap_cache:/var/www/html/bootstrap/cache
   caddy:
-    container_name: gymnamite_caddy
+    container_name: ct12rounds_caddy
     volumes:
       - ./public:/var/www/html/public:ro
       - laravel_storage:/var/www/html/storage:ro
   db:
     env_file:
-      - develop.env
+      - path: develop.env
+        required: false
   queue:
     env_file:
-      - develop.env
+      - path: develop.env
+        required: false
   test:
-    container_name: gymnamite_test
+    container_name: ct12rounds_test
     build:
       context: .
-    image: ${APP_IMAGE:-gymnamite:local}
+    image: ${APP_IMAGE:-ct12rounds:local}
     command: >-
-      sh -c 'ln -sfn /opt/public /var/www/html/public && php artisan migrate:fresh --force --env=testing && php artisan test --compact'
+      sh -c 'php artisan migrate:fresh --force --env=testing && php artisan test --compact'
     depends_on:
       db:
         condition: service_healthy
     env_file:
-      - develop.env
+      - path: develop.env
+        required: false
     environment:
       APP_ENV: testing
-      DB_DATABASE: gymnamite_test
+      DB_DATABASE: ct12rounds_test
       CACHE_STORE: array
       MAIL_MAILER: array
       QUEUE_CONNECTION: sync
       SESSION_DRIVER: array
     volumes:
+      - ./public/build:/var/www/html/public/build:ro
       - ./docker/php/test-memory-limit.ini:/usr/local/etc/php/conf.d/zz-test-memory-limit.ini:ro
     profiles: ["test"]
 
 volumes:
   composer_vendor:
-    name: gymnamite_composer_vendor
+    name: ct12rounds_composer_vendor
   bootstrap_cache:
-    name: gymnamite_bootstrap_cache
+    name: ct12rounds_bootstrap_cache
   laravel_storage:
-    name: gymnamite_laravel_storage
+    name: ct12rounds_laravel_storage

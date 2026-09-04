@@ -1,13 +1,3 @@
-FROM node:22-bookworm-slim AS frontend
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
-
-COPY . .
-RUN npm run build
-
 FROM php:8.3-fpm-bookworm
 
 WORKDIR /var/www/html
@@ -24,6 +14,3 @@ RUN composer install --no-interaction --prefer-dist --no-scripts
 
 COPY . .
 RUN composer dump-autoload --optimize --no-scripts
-
-COPY --from=frontend /app/public/build ./public/build
-RUN mv public /opt/public

@@ -1,1 +1,1 @@
-CREATE DATABASE gymnamite_test OWNER gymnamite;
+CREATE DATABASE ct12rounds_test OWNER ct12rounds;

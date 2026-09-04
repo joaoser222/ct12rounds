@@ -6,15 +6,15 @@ services:
       sh -c 'set -e;
       mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache;
       chown -R www-data:www-data storage bootstrap/cache;
-      cp -a /opt/public/. /var/www/html/public/;
       exec php-fpm'
     volumes:
-      - public_assets:/var/www/html/public
       - laravel_storage:/var/www/html/storage
   caddy:
-    container_name: gymnamite_caddy
+    container_name: ct12rounds_caddy
+    ports:
+      - "80:80"
     volumes:
-      - public_assets:/var/www/html/public:ro
+      - ./public:/var/www/html/public:ro
   db:
     env_file:
       - production.env
@@ -24,6 +24,4 @@ services:
 
 volumes:
   laravel_storage:
-    name: gymnamite_laravel_storage
-  public_assets:
-    name: gymnamite_public_assets
+    name: ct12rounds_laravel_storage

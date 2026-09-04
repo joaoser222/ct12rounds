@@ -27,42 +27,36 @@ fi
 
 case "$environment" in
     develop)
-        environment_file="develop.env"
+        environment_file=".env"
         compose_override="compose.develop.yaml"
+        compose_local="compose.local.yaml"
         profile=""
         ;;
     production)
         environment_file="production.env"
         compose_override="compose.production.yaml"
+        compose_local=""
         profile="worker"
         ;;
 esac
 
-command="${1:-}"
+# O frontend é compilado pelo ambiente de desenvolvimento (npm run build no
+# host) e os assets são fornecidos aos containers via volume; o Docker não
+# builda o frontend. Não há profile de dev.
+compose_files=("$project_dir/compose.yaml" "$project_dir/$compose_override")
 
-# Comando dedicado para buildar o frontend dentro de um container Node.
-if [[ "$command" == "build:frontend" ]]; then
-    docker run --rm \
-        -v "$project_dir":/app \
-        -w /app \
-        node:22 sh -c 'npm ci --legacy-peer-deps && npm run build'
-    exit 0
+if [[ -n "$compose_local" ]]; then
+    compose_files+=("$project_dir/$compose_local")
 fi
 
-# O frontend é compilado (Vite build) e servido estaticamente; não há profile de dev.
+docker_compose=(docker compose --project-directory "$project_dir" --env-file "$project_dir/$environment_file")
+
+for file in "${compose_files[@]}"; do
+    docker_compose+=(-f "$file")
+done
+
 if [[ -n "$profile" ]]; then
-    exec docker compose \
-        --project-directory "$project_dir" \
-        --env-file "$project_dir/$environment_file" \
-        -f "$project_dir/compose.yaml" \
-        -f "$project_dir/$compose_override" \
-        --profile "$profile" \
-        "$@"
+    docker_compose+=(--profile "$profile")
 fi
 
-exec docker compose \
-    --project-directory "$project_dir" \
-    --env-file "$project_dir/$environment_file" \
-    -f "$project_dir/compose.yaml" \
-    -f "$project_dir/$compose_override" \
-    "$@"
+exec "${docker_compose[@]}" "$@"

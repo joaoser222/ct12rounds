@@ -48,22 +48,35 @@ modalidade usando a cor definida.
   - `php artisan test --compact --filter='Modality'` → **19 passed** (43 assertions).
   - `npx vue-tsc --noEmit` → sem erros.
   - `npx vite build` → build de produção gerado (servido via Caddy).
+- [x] **Remover componente não utilizado** `resources/js/components/inputs/ImageUploadField.vue`
+  - Já não existia no projeto (nem no histórico git) quando verificado.
+- [x] **Remover PNGs de seed não utilizados** em `database/seeders/assets/modalities/`
+  - Diretório removido no commit `82d4f9c`; verificado ausente.
+- [x] **Rodar a suíte completa de testes** (`php artisan test --compact`) via Docker
+  - Serviço `test` (`docker compose -f compose.yaml -f compose.develop.yaml --profile test run --rm test`).
+  - Resultado: **408 passed, 1 failed (1899 assertions)**.
+  - Falha única: `Tests\Feature\Mcp\ServerRegistrationTest::test_server_registers_prompts_for_permitted_user`
+    — espera 5 prompts e recebe 4 (o prompt `register-sale` não está registrado).
+    Pré-existente e **fora do escopo de modalidades**.
 
 ---
 
 ## ⏳ Pendente
 
-- [ ] **Remover componente não utilizado** `resources/js/components/inputs/ImageUploadField.vue`.
-- [ ] **Remover PNGs de seed não utilizados** em `database/seeders/assets/modalities/`
-      (`boxe.png`, `jiu-jitsu.png`, `kickboxing.png`, `mma.png`).
-- [ ] **Rodar a suíte completa de testes** (`php artisan test --compact`) para garantir que
-      nada mais quebrou fora do escopo de modalidades.
 - [ ] **Verificação manual no UI**: abrir criar/editar modalidade, digitar nome e escolher
       cor, conferir o preview do card e o salvamento.
+- [ ] **Decidir correção da falha MCP** `ServerRegistrationTest` (prompt `register-sale`): ou criar a
+      classe de prompt faltante, ou ajustar a expectativa do teste — fora do escopo atual.
+- [ ] **Ajustar container de testes** (opcional): montar `.env` no serviço `test` do
+      `compose.develop.yaml` para eliminar os 405 warnings de `file_get_contents(/var/www/html/.env)`.
 
 ---
 
 ## Notas
 - O ambiente Docker não precisou de restart para as mudanças de código PHP (não houve
   mudança de config no container). A migration já foi aplicada.
+- Durante a verificação foi criado o `develop.env` local (ignorado pelo git, derivado do
+  `.env` com `DB_HOST=db` e variáveis `POSTGRES_*`), necessário para o
+  `compose.develop.yaml`. Nenhum arquivo versionado fora alterado além deste documento.
+- Sobra volume antigo do stack MySQL (`ct12rounds_mysql_data`), candidato a limpeza.
 - Não houve commit nem push destas alterações (aguarda aprovação).
