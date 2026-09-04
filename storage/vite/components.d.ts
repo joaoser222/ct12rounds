@@ -17,7 +17,6 @@ declare module 'vue' {
     EditableRowsTable: typeof import('./../../resources/js/components/EditableRowsTable.vue')['default']
     GlobalDialog: typeof import('./../../resources/js/components/GlobalDialog.vue')['default']
     GlobalToast: typeof import('./../../resources/js/components/GlobalToast.vue')['default']
-    ImageUploadField: typeof import('./../../resources/js/components/inputs/ImageUploadField.vue')['default']
     MaskedTextField: typeof import('./../../resources/js/components/inputs/MaskedTextField.vue')['default']
     ModalityCard: typeof import('./../../resources/js/components/ModalityCard.vue')['default']
     PasswordField: typeof import('./../../resources/js/components/inputs/PasswordField.vue')['default']
