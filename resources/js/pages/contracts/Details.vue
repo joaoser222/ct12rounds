@@ -139,30 +139,6 @@ const selectedPlan = computed<PlanOption | null>(() => {
     return props.options.plans.find((plan) => plan.value === form.plan_id) ?? null;
 });
 
-const durationOptions = computed(() => {
-    if (!selectedPlan.value) return [];
-
-    const months = selectedPlan.value.duration_months;
-
-    return Array.from({ length: months }, (_, index) => {
-        const quantity = index + 1;
-        const price = selectedPlan.value!.price * quantity;
-
-        return {
-            title: `${quantity} ${quantity === 1 ? 'mes' : 'meses'} - ${formatCurrency(price)}`,
-            value: quantity,
-        };
-    });
-});
-
-const durationLabel = computed(() => {
-    if (!selectedPlan.value) return null;
-
-    const months = selectedPlan.value.duration_months;
-
-    return `${months} ${months === 1 ? 'mes' : 'meses'}`;
-});
-
 const grossValuePreview = computed(() => {
     if (selectedPlan.value === null || form.installments === null) {
         return 0;
@@ -417,10 +393,6 @@ onMounted(() => {
                                             :error-messages="form.errors.plan_id"
                                             @update:model-value="onPlanChange"
                                         />
-                                    </v-col>
-                                    <v-col cols="12" md="6">
-                                        <v-label class="text-caption text-medium-emphasis">Duração</v-label>
-                                        <div class="text-body-1 mb-3">{{ durationLabel ?? '-' }}</div>
                                     </v-col>
                                     <v-col cols="12" md="6">
                                         <v-select
