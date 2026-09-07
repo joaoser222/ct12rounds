@@ -36,10 +36,51 @@ services:
       db:
         condition: service_healthy
     profiles: ["worker"]
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: ct12rounds_loki
+    volumes:
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+    profiles: ["monitoring"]
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: ct12rounds_promtail
+    volumes:
+      - ./docker/promtail/config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - promtail_data:/tmp
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    profiles: ["monitoring"]
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ct12rounds_grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    depends_on:
+      - loki
+    profiles: ["monitoring"]
 
 volumes:
   postgres_data:
     name: ct12rounds_postgres_data
+  loki_data:
+    name: ct12rounds_loki_data
+  promtail_data:
+    name: ct12rounds_promtail_data
+  grafana_data:
+    name: ct12rounds_grafana_data
 
 networks:
   default:
