@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -31,9 +30,6 @@ class ContractWizardRequest extends FormRequest
                 'required',
                 'integer',
                 'min:1',
-                Rule::exists('plan_tiers', 'quantity')->where(
-                    fn (Builder $query): Builder => $query->where('plan_id', $this->integer('plan_id'))
-                ),
             ],
             'coupon_id' => ['nullable', 'integer', 'exists:coupons,id'],
             'annotations' => ['nullable', 'string', 'max:500'],

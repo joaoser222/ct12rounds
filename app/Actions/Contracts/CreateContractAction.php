@@ -7,7 +7,6 @@ use App\DTOs\Contracts\ActionResultDTO;
 use App\DTOs\Contracts\ContractResultDTO;
 use App\DTOs\Contracts\CreateContractDTO;
 use App\Models\Contract;
-use App\Models\PlanTier;
 use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Repositories\Contracts\CouponRepositoryInterface;
 use App\Repositories\Contracts\PlanRepositoryInterface;
@@ -36,18 +35,15 @@ class CreateContractAction extends BaseAction
         $dto = $input;
 
         $plan = $this->planRepository->newQuery()
-            ->with(['tiers', 'planCategory'])
+            ->with(['planCategory', 'modalities.modality'])
             ->where('visibility', 'visible')
             ->whereKey($dto->plan_id)
             ->firstOrFail();
 
-        /** @var PlanTier|null $tier */
-        $tier = $plan->tiers->firstWhere('quantity', $dto->installments);
-
-        if ($tier === null) {
+        if ($dto->installments > $plan->duration_months) {
             return ActionResultDTO::failure(
-                'A duração selecionada não está disponível para este plano.',
-                ['installments' => 'A duração selecionada não está disponível para este plano.']
+                'O número de parcelas não pode exceder a duração do plano.',
+                ['installments' => 'O número de parcelas não pode exceder a duração do plano.']
             );
         }
 
@@ -74,11 +70,10 @@ class CreateContractAction extends BaseAction
             }
         }
 
-        $grossValue = round((float) $tier->price * (int) $dto->installments, 4);
+        $grossValue = round((float) $plan->price * (int) $dto->installments, 4);
 
         $contract = $this->contractRepository->create([
             'plan_name' => $plan->name,
-            'modality_quantity' => (string) $plan->modality_quantity,
             'gross_value' => $grossValue,
             'discount_value' => 0,
             'total' => $grossValue,
@@ -93,8 +88,15 @@ class CreateContractAction extends BaseAction
             'visibility' => 'visible',
         ]);
 
+        foreach ($plan->modalities as $planModality) {
+            $contract->modalities()->create([
+                'modality_id' => $planModality->modality_id,
+                'week_days' => 1,
+            ]);
+        }
+
         return ActionResultDTO::success(
-            ContractResultDTO::fromModel($contract->refresh()),
+            ContractResultDTO::fromModel($contract->refresh()->load('modalities.modality')),
             'Contrato criado com sucesso. Compartilhe o QR Code para o cadastro do cliente.'
         );
     }

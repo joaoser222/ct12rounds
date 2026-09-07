@@ -12,15 +12,12 @@ use App\DTOs\Contracts\CancelContractDTO;
 use App\DTOs\Contracts\CreateContractDTO;
 use App\DTOs\Contracts\UpdateContractDTO;
 use App\Enums\BillableStatus;
-use App\Enums\GenderType;
 use App\Enums\PaymentMethod;
 use App\Http\Requests\ContractWizardRequest;
 use App\Models\Contract;
 use App\Models\Coupon;
 use App\Models\HiringLead;
 use App\Models\Plan;
-use App\Models\PlanTier;
-use App\Models\Uf;
 use App\Services\QrCodeService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -335,7 +332,7 @@ class ContractController extends CrudModuleController
     private function planOptions(): array
     {
         return Plan::query()
-            ->with(['tiers', 'planCategory'])
+            ->with(['planCategory', 'modalities.modality'])
             ->where('visibility', 'visible')
             ->orderBy('name')
             ->get()
@@ -344,15 +341,13 @@ class ContractController extends CrudModuleController
                     'value' => $plan->id,
                     'title' => $plan->name,
                     'category' => $plan->planCategory?->name,
-                    'modality_quantity' => $plan->modality_quantity,
-                    'tiers' => $plan->tiers
-                        ->sortBy('quantity')
-                        ->map(fn (PlanTier $tier): array => [
-                            'quantity' => $tier->quantity,
-                            'price' => (float) $tier->price,
-                        ])
-                        ->values()
-                        ->all(),
+                    'modality_quantity' => $plan->modalities()->count(),
+                    'modalities' => $plan->modalities->map(fn ($pm) => [
+                        'id' => $pm->modality->id,
+                        'name' => $pm->modality->name,
+                    ])->all(),
+                    'price' => (float) $plan->price,
+                    'duration_months' => $plan->duration_months,
                 ];
             })
             ->all();

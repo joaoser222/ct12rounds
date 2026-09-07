@@ -21,7 +21,6 @@ class Contract extends Model implements BillingInvoiceSource
 
     protected $fillable = [
         'plan_name',
-        'modality_quantity',
         'gross_value',
         'discount_value',
         'total',
@@ -75,6 +74,11 @@ class Contract extends Model implements BillingInvoiceSource
     public function hiringLeads(): HasMany
     {
         return $this->hasMany(HiringLead::class);
+    }
+
+    public function modalities(): HasMany
+    {
+        return $this->hasMany(ContractModality::class);
     }
 
     public function billingHolder(): Model
