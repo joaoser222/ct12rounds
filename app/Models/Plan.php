@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasVisibility;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -16,7 +17,8 @@ class Plan extends Model
         'name',
         'description',
         'public_slug',
-        'modality_quantity',
+        'price',
+        'duration_months',
         'plan_category_id',
     ];
 
@@ -45,9 +47,9 @@ class Plan extends Model
         });
     }
 
-    public function tiers()
+    protected function modalityQuantity(): Attribute
     {
-        return $this->hasMany(PlanTier::class);
+        return Attribute::get(fn (): int => $this->modalities()->count());
     }
 
     public function planCategory()

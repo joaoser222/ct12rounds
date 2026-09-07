@@ -5,7 +5,6 @@ namespace App\Actions\Plans;
 use App\Actions\BaseAction;
 use App\DTOs\Plans\ActionResultDTO;
 use App\DTOs\Plans\CreatePlanDTO;
-use App\DTOs\Plans\PlanTierDTO;
 use App\Models\Plan;
 use App\Repositories\Contracts\PlanRepositoryInterface;
 
@@ -31,14 +30,10 @@ class CreatePlanAction extends BaseAction
         $plan = $this->planRepository->create([
             'name' => $dto->name,
             'description' => $dto->description,
-            'modality_quantity' => $dto->modality_quantity,
+            'price' => $dto->price,
+            'duration_months' => $dto->duration_months,
             'plan_category_id' => $dto->plan_category_id,
         ]);
-
-        $plan->tiers()->createMany(array_map(
-            fn (PlanTierDTO $tier): array => ['quantity' => $tier->quantity, 'price' => $tier->price],
-            $dto->tiers,
-        ));
 
         $plan->modalities()->createMany(array_map(
             fn (int $modalityId): array => ['modality_id' => $modalityId],
@@ -46,7 +41,7 @@ class CreatePlanAction extends BaseAction
         ));
 
         return ActionResultDTO::success(
-            $plan->refresh()->load(['tiers', 'modalities']),
+            $plan->refresh()->load('modalities'),
             'Plano criado com sucesso.'
         );
     }

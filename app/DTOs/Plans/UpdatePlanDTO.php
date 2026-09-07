@@ -8,12 +8,13 @@ use Spatie\LaravelData\Attributes\Validation\IntegerType;
 use Spatie\LaravelData\Attributes\Validation\Max;
 use Spatie\LaravelData\Attributes\Validation\Min;
 use Spatie\LaravelData\Attributes\Validation\Nullable;
+use Spatie\LaravelData\Attributes\Validation\Numeric;
 use Spatie\LaravelData\Attributes\Validation\Required;
 use Spatie\LaravelData\Attributes\Validation\StringType;
 
 class UpdatePlanDTO extends BaseDTO
 {
-    /** @param array<int, PlanTierDTO> $tiers @param array<int, int> $plan_modalities */
+    /** @param array<int, int> $plan_modalities */
     public function __construct(
         #[Required, IntegerType, Min(1)]
         public int $id,
@@ -25,13 +26,13 @@ class UpdatePlanDTO extends BaseDTO
         public int $plan_category_id,
 
         #[Nullable, StringType, Max(500)]
-        public ?string $description = null,
+        public ?string $description,
+
+        #[Required, Numeric, Min(0)]
+        public float $price,
 
         #[Required, IntegerType, Min(1)]
-        public int $modality_quantity = 1,
-
-        #[Required, ArrayType(PlanTierDTO::class), Min(1)]
-        public array $tiers = [],
+        public int $duration_months,
 
         #[ArrayType(IntegerType::class)]
         public array $plan_modalities = [],
@@ -45,11 +46,8 @@ class UpdatePlanDTO extends BaseDTO
             name: $data['name'],
             plan_category_id: $data['plan_category_id'],
             description: $data['description'] ?? null,
-            modality_quantity: $data['modality_quantity'],
-            tiers: array_map(
-                fn (array $tier): PlanTierDTO => PlanTierDTO::from($tier),
-                $data['tiers'],
-            ),
+            price: $data['price'],
+            duration_months: $data['duration_months'],
             plan_modalities: array_map(
                 fn (mixed $modalityId): int => (int) $modalityId,
                 $data['plan_modalities'] ?? [],
