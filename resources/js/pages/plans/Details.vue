@@ -7,18 +7,13 @@ import { useSharedOptions } from '@/shared/options';
 
 defineOptions({ layout: AuthenticatedLayout });
 
-type PlanTier = {
-    quantity: number | null;
-    price: number;
-};
-
 type Plan = {
     id?: number;
     name?: string;
     plan_category_id?: number;
-    modality_quantity?: number;
     description?: string;
-    tiers?: PlanTier[];
+    price?: number;
+    duration_months?: number;
     plan_modalities?: number[];
 };
 
@@ -33,42 +28,11 @@ const { modalities } = useSharedOptions(usePage().props.options ?? {});
 const defaults = {
     name: '',
     plan_category_id: null,
-    modality_quantity: 1,
     description: '',
-    tiers: [],
+    price: 0,
+    duration_months: 1,
     plan_modalities: [],
 };
-
-const tierColumns = [
-    { title: 'Meses', width: '180px', align: 'right' as const },
-    { title: 'Preço', width: '220px', align: 'right' as const },
-];
-
-function addTier(form: Record<string, unknown>): void {
-    const tiers = form.tiers as PlanTier[];
-
-    tiers.push({ quantity: null, price: 0 });
-}
-
-function removeTier(form: Record<string, unknown>, index: number): void {
-    const tiers = form.tiers as PlanTier[];
-
-    tiers.splice(index, 1);
-}
-
-function validateTiers(value: unknown): true | string {
-    if (!Array.isArray(value) || value.length === 0) {
-        return 'Adicione pelo menos uma duração com preço.';
-    }
-
-    if (
-        value.some((tier) => !tier || !tier.quantity || Number(tier.price) < 0)
-    ) {
-        return 'Preencha meses e preço de todas as durações.';
-    }
-
-    return true;
-}
 
 async function copyPublicLink(): Promise<void> {
     if (!props.publicCadastroUrl) return;
@@ -104,21 +68,29 @@ async function copyPublicLink(): Promise<void> {
                         :error-messages="errors.plan_category_id"
                     />
                 </v-col>
-                <v-col cols="12" md="3">
-                    <v-text-field
-                        v-model="form.modality_quantity"
-                        label="Qtd. Modalidades"
-                        :rules="[required]"
-                        type="number"
-                        :error-messages="errors.modality_quantity"
-                    />
-                </v-col>
                 <v-col cols="12">
                     <v-textarea
                         v-model="form.description"
                         label="Descrição"
                         rows="3"
                         :error-messages="errors.description"
+                    />
+                </v-col>
+                <v-col cols="12" md="6">
+                    <CurrencyField
+                        v-model="form.price"
+                        label="Preço"
+                        :rules="[required]"
+                        :error-messages="errors.price"
+                    />
+                </v-col>
+                <v-col cols="12" md="6">
+                    <v-text-field
+                        v-model="form.duration_months"
+                        label="Duração (meses)"
+                        type="number"
+                        :rules="[required]"
+                        :error-messages="errors.duration_months"
                     />
                 </v-col>
                 <v-col
@@ -141,50 +113,6 @@ async function copyPublicLink(): Promise<void> {
                             />
                         </template>
                     </v-text-field>
-                </v-col>
-                <v-col cols="12">
-                    <EditableRowsTable
-                        :items="form.tiers"
-                        :columns="tierColumns"
-                        title="Durações e Preços"
-                        description="Cada linha define o preço do plano para uma quantidade de meses."
-                        add-label="Adicionar duração"
-                        empty-message="Configure pelo menos uma faixa de meses com preço para salvar o plano."
-                        @add="addTier(form)"
-                        @remove="removeTier(form, $event)"
-                    >
-                        <template #row="{ item, index }">
-                            <td>
-                                <v-text-field
-                                    v-model="item.quantity"
-                                    label="Meses"
-                                    type="number"
-                                    :rules="[required]"
-                                    hide-details="auto"
-                                    :error-messages="
-                                        errors[`tiers.${index}.quantity`]
-                                    "
-                                />
-                            </td>
-                            <td>
-                                <CurrencyField
-                                    v-model="item.price"
-                                    label="Preço"
-                                    :rules="[required]"
-                                    hide-details="auto"
-                                    :error-messages="
-                                        errors[`tiers.${index}.price`]
-                                    "
-                                />
-                            </td>
-                        </template>
-                    </EditableRowsTable>
-
-                    <v-input
-                        :model-value="form.tiers"
-                        :rules="[validateTiers]"
-                        :error-messages="errors.tiers"
-                    />
                 </v-col>
                 <v-col cols="12">
                     <v-autocomplete

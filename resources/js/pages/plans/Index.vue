@@ -14,7 +14,8 @@ const props = defineProps<{
 const headers: TableHeader[] = [
     { title: 'ID', key: 'id', sortable: true, width: '80px' },
     { title: 'Nome', key: 'name', sortable: true, searchable: true },
-    { title: 'Modalidades', key: 'modality_quantity', sortable: true },
+    { title: 'Preço', key: 'price', sortable: true },
+    { title: 'Duração', key: 'duration_months', sortable: true },
     { title: 'Criado em', key: 'created_at', sortable: true },
 ];
 
