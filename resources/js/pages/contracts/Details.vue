@@ -155,6 +155,14 @@ const durationOptions = computed(() => {
     });
 });
 
+const durationLabel = computed(() => {
+    if (!selectedPlan.value) return null;
+
+    const months = selectedPlan.value.duration_months;
+
+    return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+});
+
 const grossValuePreview = computed(() => {
     if (selectedPlan.value === null || form.installments === null) {
         return 0;
@@ -250,9 +258,7 @@ function onPlanChange(): void {
         return;
     }
 
-    if (form.installments !== null && form.installments > selectedPlan.value.duration_months) {
-        form.installments = null;
-    }
+    form.installments = selectedPlan.value.duration_months;
 }
 
 function onCouponChange(value: number | null): void {
@@ -413,16 +419,8 @@ onMounted(() => {
                                         />
                                     </v-col>
                                     <v-col cols="12" md="6">
-                                        <v-select
-                                            v-model="form.installments"
-                                            label="Duração"
-                                            :items="durationOptions"
-                                            item-title="title"
-                                            item-value="value"
-                                            :rules="[required]"
-                                            :disabled="selectedPlan === null"
-                                            :error-messages="form.errors.installments"
-                                        />
+                                        <v-label class="text-caption text-medium-emphasis">Duração</v-label>
+                                        <div class="text-body-1 mb-3">{{ durationLabel ?? '-' }}</div>
                                     </v-col>
                                     <v-col cols="12" md="6">
                                         <v-select

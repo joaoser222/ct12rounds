@@ -59,7 +59,7 @@ async function copyPublicLink(): Promise<void> {
                         v-text-case="'upper'"
                     />
                 </v-col>
-                <v-col cols="12" md="3">
+                <v-col cols="12" md="6">
                     <ServerAutocomplete
                         v-model="form.plan_category_id"
                         object-name="plan-category"
