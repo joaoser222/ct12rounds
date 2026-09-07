@@ -229,7 +229,6 @@ class PublicHiringLeadStoreTest extends TestCase
     {
         return Contract::query()->create([
             'plan_name' => $plan->name,
-            'modality_quantity' => '1',
             'gross_value' => 100,
             'discount_value' => 0,
             'total' => 100,

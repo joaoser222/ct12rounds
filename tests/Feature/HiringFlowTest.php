@@ -8,10 +8,11 @@ use App\Models\Contract;
 use App\Models\Coupon;
 use App\Models\HiringLead;
 use App\Models\Invoice;
+use App\Models\Modality;
 use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\PlanCategory;
-use App\Models\PlanTier;
+use App\Models\PlanModality;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Date;
@@ -41,22 +42,19 @@ class HiringFlowTest extends TestCase
         $plan = Plan::query()->create([
             'name' => 'Plano Performance',
             'plan_category_id' => $planCategory->id,
-            'modality_quantity' => 3,
-            'description' => 'Plano com multiplas duracoes.',
+            'description' => 'Plano com múltiplas durações.',
+            'price' => 699.9,
+            'duration_months' => 12,
             'visibility' => 'visible',
         ]);
 
-        PlanTier::query()->create([
-            'plan_id' => $plan->id,
-            'quantity' => 3,
-            'price' => 199.9,
-        ]);
+        $modality1 = Modality::query()->create(['name' => 'Boxe', 'visibility' => 'visible']);
+        $modality2 = Modality::query()->create(['name' => 'Jiu-jitsu', 'visibility' => 'visible']);
+        $modality3 = Modality::query()->create(['name' => 'MMA', 'visibility' => 'visible']);
 
-        PlanTier::query()->create([
-            'plan_id' => $plan->id,
-            'quantity' => 12,
-            'price' => 699.9,
-        ]);
+        PlanModality::query()->create(['plan_id' => $plan->id, 'modality_id' => $modality1->id]);
+        PlanModality::query()->create(['plan_id' => $plan->id, 'modality_id' => $modality2->id]);
+        PlanModality::query()->create(['plan_id' => $plan->id, 'modality_id' => $modality3->id]);
 
         return $plan;
     }
@@ -69,7 +67,7 @@ class HiringFlowTest extends TestCase
         return [
             'plan_id' => $plan->id,
             'installments' => 12,
-            'annotations' => 'Contratacao criada pelo wizard.',
+            'annotations' => 'Contratação criada pelo wizard.',
         ];
     }
 
@@ -119,7 +117,6 @@ class HiringFlowTest extends TestCase
         $this->assertNotNull($contract->registration_token);
         $this->assertSame($plan->id, $contract->plan_id);
         $this->assertSame('Plano Performance', $contract->plan_name);
-        $this->assertSame('3', $contract->modality_quantity);
         $this->assertSame($coupon->id, $contract->coupon_id);
         $this->assertSame(12, $contract->installments);
         $this->assertSame(Date::today()->format('Y-m-d'), $contract->first_due_date?->format('Y-m-d'));
@@ -128,6 +125,7 @@ class HiringFlowTest extends TestCase
         $this->assertEquals(8398.8, $contract->total);
         $this->assertDatabaseCount('clients', 0);
         $this->assertDatabaseCount('invoices', 0);
+        $this->assertDatabaseCount('contract_modalities', 3);
     }
 
     public function test_contract_wizard_validates_the_selected_plan_duration_combination(): void
@@ -137,7 +135,7 @@ class HiringFlowTest extends TestCase
         $plan = $this->createPlan();
 
         $payload = $this->validPayload($plan);
-        $payload['installments'] = 6;
+        $payload['installments'] = 13;
 
         $response = $this->actingAs($user)->post(route('contracts.store'), $payload);
 
@@ -161,7 +159,6 @@ class HiringFlowTest extends TestCase
 
         $contract = Contract::query()->create([
             'plan_name' => 'Plano Performance',
-            'modality_quantity' => '3',
             'gross_value' => 8398.8,
             'discount_value' => 0,
             'total' => 8398.8,
@@ -237,7 +234,6 @@ class HiringFlowTest extends TestCase
 
         $contract = Contract::query()->create([
             'plan_name' => 'Plano Performance',
-            'modality_quantity' => '3',
             'gross_value' => 8398.8,
             'discount_value' => 0,
             'total' => 8398.8,
@@ -273,7 +269,6 @@ class HiringFlowTest extends TestCase
 
         $contract = Contract::query()->create([
             'plan_name' => 'Plano Performance',
-            'modality_quantity' => '3',
             'gross_value' => 8398.8,
             'discount_value' => 0,
             'total' => 8398.8,
@@ -319,7 +314,6 @@ class HiringFlowTest extends TestCase
         $client = Client::factory()->create();
         $contract = Contract::query()->create([
             'plan_name' => 'Plano Teste',
-            'modality_quantity' => '1',
             'gross_value' => 300,
             'discount_value' => 0,
             'total' => 300,

@@ -86,7 +86,6 @@ class InvoiceGeneratorTest extends TestCase
 
         $contract = Contract::query()->create([
             'plan_name' => 'Plano Gold',
-            'modality_quantity' => '2',
             'gross_value' => 300,
             'discount_value' => 0,
             'total' => 300,
@@ -114,7 +113,6 @@ class InvoiceGeneratorTest extends TestCase
 
         $contract = Contract::query()->create([
             'plan_name' => 'Plano Silver',
-            'modality_quantity' => '1',
             'gross_value' => 180,
             'discount_value' => 0,
             'total' => 180,
@@ -147,7 +145,6 @@ class InvoiceGeneratorTest extends TestCase
 
         $contract = Contract::query()->create([
             'plan_name' => 'Plano Parcial',
-            'modality_quantity' => '1',
             'gross_value' => 120,
             'discount_value' => 0,
             'total' => 120,

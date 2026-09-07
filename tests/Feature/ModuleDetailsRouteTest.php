@@ -194,7 +194,6 @@ class ModuleDetailsRouteTest extends TestCase
 
         $contract = Contract::query()->create([
             'plan_name' => 'Plano Teste',
-            'modality_quantity' => '1',
             'gross_value' => 120,
             'discount_value' => 10,
             'total' => 110,
