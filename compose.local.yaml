@@ -3,7 +3,7 @@
 # Uso: docker compose -f compose.yaml -f compose.develop.yaml -f compose.local.yaml up -d
 #
 # Lê as variáveis do .env do projeto (dispensando criar develop.env na mão),
-# expõe o Caddy em http://localhost:8000 e mantém o APP_ENV em development.
+# expõe o Caddy em http://localhost:80 e mantém o APP_ENV em development.
 
 services:
   app:
@@ -24,7 +24,7 @@ services:
       DB_PORT: 5432
   caddy:
     ports:
-      - "8000:80"
+      - "80:80"
   db:
     environment:
       POSTGRES_USER: ${DB_USERNAME}
