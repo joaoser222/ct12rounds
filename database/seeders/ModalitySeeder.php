@@ -3,35 +3,35 @@
 namespace Database\Seeders;
 
 use App\Models\Modality;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ModalitySeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
-     * Modalidades pré-definidas com cor.
+     * Modalidades pré-definidas.
      *
-     * @var array<int, array{name: string, color: string}>
+     * @var array<string, string>
      */
     private const MODALITIES = [
-        ['name' => 'Boxe', 'color' => '#5d00ff'],
-        ['name' => 'Jiu-jitsu', 'color' => '#7400e2'],
-        ['name' => 'Kickboxing', 'color' => '#ff9c00'],
-        ['name' => 'MMA', 'color' => '#db0000'],
+        'Boxe',
+        'Jiu-jitsu',
+        'Kickboxing',
+        'MMA',
     ];
 
     /**
      * Run the database seeds.
+     *
+     * @return array<string, Modality>
      */
-    public function run(): void
+    public function run(): array
     {
-        foreach (self::MODALITIES as $modalityData) {
-            Modality::updateOrCreate(
-                ['name' => $modalityData['name']],
-                ['color' => $modalityData['color']]
-            );
+        $modalities = [];
+
+        foreach (self::MODALITIES as $name) {
+            $modalities[$name] = Modality::firstOrCreate(['name' => $name]);
         }
+
+        return $modalities;
     }
 }

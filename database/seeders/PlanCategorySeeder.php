@@ -3,32 +3,33 @@
 namespace Database\Seeders;
 
 use App\Models\PlanCategory;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PlanCategorySeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
-     * Categorias pré-definidas
+     * Categorias de planos pré-definidas.
      *
-     * @var array<int, array{name: string}>
+     * @var list<string>
      */
     private const CATEGORIES = [
-        ['name' => 'Adulto'],
-        ['name' => 'Infantil'],
+        'Adulto',
+        'Infantil',
     ];
 
     /**
      * Run the database seeds.
+     *
+     * @return array<string, PlanCategory>
      */
-    public function run(): void
+    public function run(): array
     {
-        foreach (self::CATEGORIES as $categoryData) {
-            PlanCategory::updateOrCreate(
-                ['name' => $categoryData['name']],
-            );
+        $categories = [];
+
+        foreach (self::CATEGORIES as $name) {
+            $categories[$name] = PlanCategory::firstOrCreate(['name' => $name]);
         }
+
+        return $categories;
     }
 }

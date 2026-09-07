@@ -14,190 +14,138 @@ class PlanSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Planos pré-definidos com suas configurações.
-     *
-     * @var array<string, array{
-     *     name: string,
-     *     description: string,
-     *     category: string,
-     *     price: float,
-     *     duration_months: int,
-     *     modalities: list<string>
-     * }>
-     */
-    private const PLANS = [
-        [
-            'name' => 'MMA TUDÃO - 1 Mês',
-            'description' => 'Acesso ilimitado a todas as modalidades por 1 mês',
-            'category' => 'Adulto',
-            'price' => 149.90,
-            'duration_months' => 1,
-            'modalities' => ['Boxe', 'Jiu-jitsu', 'Kickboxing', 'MMA'],
-        ],
-        [
-            'name' => 'MMA TUDÃO - 3 Meses',
-            'description' => 'Acesso ilimitado a todas as modalidades por 3 meses',
-            'category' => 'Adulto',
-            'price' => 139.90,
-            'duration_months' => 3,
-            'modalities' => ['Boxe', 'Jiu-jitsu', 'Kickboxing', 'MMA'],
-        ],
-        [
-            'name' => 'MMA TUDÃO - 6 Meses',
-            'description' => 'Acesso ilimitado a todas as modalidades por 6 meses',
-            'category' => 'Adulto',
-            'price' => 129.90,
-            'duration_months' => 6,
-            'modalities' => ['Boxe', 'Jiu-jitsu', 'Kickboxing', 'MMA'],
-        ],
-        [
-            'name' => 'MMA TUDÃO - 12 Meses',
-            'description' => 'Acesso ilimitado a todas as modalidades por 12 meses',
-            'category' => 'Adulto',
-            'price' => 119.90,
-            'duration_months' => 12,
-            'modalities' => ['Boxe', 'Jiu-jitsu', 'Kickboxing', 'MMA'],
-        ],
-        [
-            'name' => 'Boxe Essential - 1 Mês',
-            'description' => 'Acesso a aulas de boxe por 1 mês',
-            'category' => 'Adulto',
-            'price' => 89.90,
-            'duration_months' => 1,
-            'modalities' => ['Boxe'],
-        ],
-        [
-            'name' => 'Boxe Essential - 3 Meses',
-            'description' => 'Acesso a aulas de boxe por 3 meses',
-            'category' => 'Adulto',
-            'price' => 84.90,
-            'duration_months' => 3,
-            'modalities' => ['Boxe'],
-        ],
-        [
-            'name' => 'Jiu-jitsu Pro - 1 Mês',
-            'description' => 'Acesso a aulas de jiu-jitsu por 1 mês',
-            'category' => 'Adulto',
-            'price' => 99.90,
-            'duration_months' => 1,
-            'modalities' => ['Jiu-jitsu'],
-        ],
-        [
-            'name' => 'Jiu-jitsu Pro - 3 Meses',
-            'description' => 'Acesso a aulas de jiu-jitsu por 3 meses',
-            'category' => 'Adulto',
-            'price' => 94.90,
-            'duration_months' => 3,
-            'modalities' => ['Jiu-jitsu'],
-        ],
-        [
-            'name' => 'Kickboxing Plus - 1 Mês',
-            'description' => 'Acesso a aulas de kickboxing por 1 mês',
-            'category' => 'Adulto',
-            'price' => 94.90,
-            'duration_months' => 1,
-            'modalities' => ['Kickboxing'],
-        ],
-        [
-            'name' => 'Kickboxing Plus - 3 Meses',
-            'description' => 'Acesso a aulas de kickboxing por 3 meses',
-            'category' => 'Adulto',
-            'price' => 89.90,
-            'duration_months' => 3,
-            'modalities' => ['Kickboxing'],
-        ],
-        [
-            'name' => 'MMA Basic - 1 Mês',
-            'description' => 'Acesso a aulas de MMA por 1 mês',
-            'category' => 'Adulto',
-            'price' => 89.90,
-            'duration_months' => 1,
-            'modalities' => ['MMA'],
-        ],
-        [
-            'name' => 'MMA Basic - 3 Meses',
-            'description' => 'Acesso a aulas de MMA por 3 meses',
-            'category' => 'Adulto',
-            'price' => 84.90,
-            'duration_months' => 3,
-            'modalities' => ['MMA'],
-        ],
-        [
-            'name' => 'Infantil Boxe - 1 Mês',
-            'description' => 'Aulas de boxe para crianças por 1 mês',
-            'category' => 'Infantil',
-            'price' => 69.90,
-            'duration_months' => 1,
-            'modalities' => ['Boxe'],
-        ],
-        [
-            'name' => 'Infantil Boxe - 3 Meses',
-            'description' => 'Aulas de boxe para crianças por 3 meses',
-            'category' => 'Infantil',
-            'price' => 64.90,
-            'duration_months' => 3,
-            'modalities' => ['Boxe'],
-        ],
-        [
-            'name' => 'Infantil Jiu-jitsu - 1 Mês',
-            'description' => 'Aulas de jiu-jitsu para crianças por 1 mês',
-            'category' => 'Infantil',
-            'price' => 79.90,
-            'duration_months' => 1,
-            'modalities' => ['Jiu-jitsu'],
-        ],
-        [
-            'name' => 'Infantil Jiu-jitsu - 3 Meses',
-            'description' => 'Aulas de jiu-jitsu para crianças por 3 meses',
-            'category' => 'Infantil',
-            'price' => 74.90,
-            'duration_months' => 3,
-            'modalities' => ['Jiu-jitsu'],
-        ],
-        [
-            'name' => 'Infantil Combo - 1 Mês',
-            'description' => 'Acesso a boxe e jiu-jitsu para crianças por 1 mês',
-            'category' => 'Infantil',
-            'price' => 109.90,
-            'duration_months' => 1,
-            'modalities' => ['Boxe', 'Jiu-jitsu'],
-        ],
-        [
-            'name' => 'Infantil Combo - 3 Meses',
-            'description' => 'Acesso a boxe e jiu-jitsu para crianças por 3 meses',
-            'category' => 'Infantil',
-            'price' => 99.90,
-            'duration_months' => 3,
-            'modalities' => ['Boxe', 'Jiu-jitsu'],
-        ],
-    ];
-
-    /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        foreach (self::PLANS as $planData) {
+        $categories = $this->getCategories();
+        $modalities = $this->getModalities();
+        $plans = $this->getPlans($categories, $modalities);
+
+        foreach ($plans as $planData) {
             $this->createPlan($planData);
         }
     }
 
     /**
+     * Obtém as categorias criadas pelo PlanCategorySeeder.
+     *
+     * @return array<string, PlanCategory>
+     */
+    private function getCategories(): array
+    {
+        return [
+            'Adulto' => PlanCategory::where('name', 'Adulto')->firstOrFail(),
+            'Infantil' => PlanCategory::where('name', 'Infantil')->firstOrFail(),
+        ];
+    }
+
+    /**
+     * Obtém as modalidades criadas pelo ModalitySeeder.
+     *
+     * @return array<string, Modality>
+     */
+    private function getModalities(): array
+    {
+        return [
+            'Boxe' => Modality::where('name', 'Boxe')->firstOrFail(),
+            'Jiu-jitsu' => Modality::where('name', 'Jiu-jitsu')->firstOrFail(),
+            'Kickboxing' => Modality::where('name', 'Kickboxing')->firstOrFail(),
+            'MMA' => Modality::where('name', 'MMA')->firstOrFail(),
+        ];
+    }
+
+    /**
+     * Retorna a lista de planos com IDs de categorias e modalidades.
+     *
+     * @param  array<string, PlanCategory>  $categories
+     * @param  array<string, Modality>  $modalities
+     * @return list<array{name: string, description: string, category_id: int, price: float, duration_months: int, modalities: list<int>}>
+     */
+    private function getPlans(array $categories, array $modalities): array
+    {
+        $adulto = $categories['Adulto']->id;
+        $infantil = $categories['Infantil']->id;
+
+        $boxe = $modalities['Boxe']->id;
+        $jj = $modalities['Jiu-jitsu']->id;
+        $kb = $modalities['Kickboxing']->id;
+        $mma = $modalities['MMA']->id;
+
+        return [
+            [
+                'name' => 'MMA - Tudão',
+                'description' => 'Acesso a todas as modalidades por 1 mês',
+                'category_id' => $adulto,
+                'price' => 239.99,
+                'duration_months' => 1,
+                'modalities' => [$boxe, $jj, $kb, $mma],
+            ],
+            [
+                'name' => 'MMA - Desafiante',
+                'description' => 'Acesso a aulas de MMA por 4 meses',
+                'category_id' => $adulto,
+                'price' => 199.99,
+                'duration_months' => 4,
+                'modalities' => [$mma],
+            ],
+            [
+                'name' => 'MMA - Dominador',
+                'description' => 'Acesso a aulas de MMA por 6 meses',
+                'category_id' => $adulto,
+                'price' => 189.99,
+                'duration_months' => 6,
+                'modalities' => [$mma],
+            ],
+            [
+                'name' => 'MMA - Campeão',
+                'description' => 'Acesso a aulas de MMA por 12 meses',
+                'category_id' => $adulto,
+                'price' => 179.99,
+                'duration_months' => 12,
+                'modalities' => [$mma],
+            ],
+            [
+                'name' => 'KIDS - Mensal',
+                'description' => 'Acesso a aulas de jiu-jitsu por 1 meses',
+                'category_id' => $infantil,
+                'price' => 164.99,
+                'duration_months' => 1,
+                'modalities' => [$jj],
+            ],
+            [
+                'name' => 'KIDS - Mirim',
+                'description' => 'Acesso a aulas de jiu-jitsu por 4 meses',
+                'category_id' => $infantil,
+                'price' => 164.99,
+                'duration_months' => 4,
+                'modalities' => [$jj],
+            ],
+            [
+                'name' => 'KIDS - Dominador Mirim',
+                'description' => 'Acesso a aulas de jiu-jitsu por 6 meses',
+                'category_id' => $infantil,
+                'price' => 164.99,
+                'duration_months' => 6,
+                'modalities' => [$jj],
+            ],
+        ];
+    }
+
+    /**
      * Cria um plano com sua categoria e modalidades.
      *
-     * @param  array{name: string, description: string, category: string, price: float, duration_months: int, modalities: list<string>}  $planData
+     * @param  array{name: string, description: string, category_id: int, price: float, duration_months: int, modalities: list<int>}  $planData
      */
     private function createPlan(array $planData): void
     {
-        $category = PlanCategory::firstOrCreate(['name' => $planData['category']]);
-
         $plan = Plan::updateOrCreate(
             ['name' => $planData['name']],
             [
                 'description' => $planData['description'],
                 'price' => $planData['price'],
                 'duration_months' => $planData['duration_months'],
-                'plan_category_id' => $category->id,
+                'plan_category_id' => $planData['category_id'],
             ],
         );
 
@@ -207,18 +155,14 @@ class PlanSeeder extends Seeder
     /**
      * Associa modalidades ao plano.
      *
-     * @param  list<string>  $modalityNames
+     * @param  list<int>  $modalityIds
      */
-    private function attachModalities(Plan $plan, array $modalityNames): void
+    private function attachModalities(Plan $plan, array $modalityIds): void
     {
-        foreach ($modalityNames as $modalityName) {
-            $modality = Modality::where('name', $modalityName)->first();
-
-            if ($modality) {
-                PlanModality::updateOrCreate(
-                    ['plan_id' => $plan->id, 'modality_id' => $modality->id],
-                );
-            }
+        foreach ($modalityIds as $modalityId) {
+            PlanModality::updateOrCreate(
+                ['plan_id' => $plan->id, 'modality_id' => $modalityId],
+            );
         }
     }
 }
