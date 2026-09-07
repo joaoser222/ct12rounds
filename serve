@@ -25,6 +25,26 @@ if [[ "$1" == "develop" || "$1" == "production" ]]; then
     shift
 fi
 
+# Comando especial: build - compila frontend e reinicia app
+if [[ "${1:-}" == "build" ]]; then
+    shift
+    echo "▶ Instalando dependências..."
+    npm ci
+    echo "▶ Compilando frontend..."
+    npm run build
+    echo "▶ Reconstruindo e reiniciando containers..."
+    exec "$project_dir/serve" "$environment" up -d --build app "$@"
+fi
+
+# Monitoramento habilitado por padrão; use --no-monitoring para desativar.
+monitoring=true
+for arg in "$@"; do
+    if [[ "$arg" == "--no-monitoring" ]]; then
+        monitoring=false
+        break
+    fi
+done
+
 case "$environment" in
     develop)
         environment_file=".env"
@@ -39,6 +59,15 @@ case "$environment" in
         profile="worker"
         ;;
 esac
+
+# Adiciona profile de monitoramento (padrão)
+if [[ "$monitoring" == true ]]; then
+    if [[ -n "$profile" ]]; then
+        profile="$profile,monitoring"
+    else
+        profile="monitoring"
+    fi
+fi
 
 # O frontend é compilado pelo ambiente de desenvolvimento (npm run build no
 # host) e os assets são fornecidos aos containers via volume; o Docker não
