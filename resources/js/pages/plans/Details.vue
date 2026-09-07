@@ -69,10 +69,10 @@ async function copyPublicLink(): Promise<void> {
                     />
                 </v-col>
                 <v-col cols="12">
-                    <v-textarea
+                    <QuillEditor
                         v-model="form.description"
                         label="Descrição"
-                        rows="3"
+                        rows="5"
                         :error-messages="errors.description"
                     />
                 </v-col>
