@@ -28,7 +28,7 @@ class PlanController extends CrudModuleController
     /**
      * @var array<int, string>
      */
-    protected array $fields = ['id', 'name', 'description', 'modality_quantity', 'created_at'];
+    protected array $fields = ['id', 'name', 'description', 'created_at'];
 
     /**
      * @var array<int, string>
@@ -95,7 +95,7 @@ class PlanController extends CrudModuleController
         $this->authorizeAccess(AccessAction::VIEW);
 
         /** @var Plan $plan */
-        $plan = $this->modelFromRoute($request)->load(['tiers', 'modalities']);
+        $plan = $this->modelFromRoute($request)->load('modalities');
         $plan->setAttribute('plan_modalities', $plan->modalities->pluck('modality_id')->all());
 
         if ($request->expectsJson()) {
