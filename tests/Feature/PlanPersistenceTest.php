@@ -7,7 +7,6 @@ use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\PlanCategory;
 use App\Models\PlanModality;
-use App\Models\PlanTier;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -39,17 +38,14 @@ class PlanPersistenceTest extends TestCase
         return [
             'name' => 'Plano Gold',
             'plan_category_id' => $planCategory->id,
-            'description' => 'Plano com durações variáveis.',
-            'modality_quantity' => 2,
-            'tiers' => [
-                ['quantity' => 1, 'price' => 99.9],
-                ['quantity' => 12, 'price' => 999.9],
-            ],
+            'description' => 'Plano com duração variável.',
+            'price' => 99.9,
+            'duration_months' => 1,
             'plan_modalities' => [],
         ];
     }
 
-    public function test_authenticated_users_can_create_plan_with_required_tiers_and_empty_modalities(): void
+    public function test_authenticated_users_can_create_plan_with_required_fields_and_empty_modalities(): void
     {
         $user = User::factory()->create();
         $this->grantPermission($user, 'plans.create');
@@ -58,46 +54,39 @@ class PlanPersistenceTest extends TestCase
 
         $response->assertRedirect(route('plans.index'));
 
-        $plan = Plan::query()->with(['tiers', 'modalities'])->firstOrFail();
+        $plan = Plan::query()->with('modalities')->firstOrFail();
 
         $this->assertSame('Plano Gold', $plan->name);
-        $this->assertSame(2, $plan->modality_quantity);
-        $this->assertSame(2, $plan->tiers->count());
+        $this->assertSame(99.9, $plan->price);
+        $this->assertSame(1, $plan->duration_months);
         $this->assertCount(0, $plan->modalities);
-
-        $this->assertDatabaseHas('plan_tiers', [
-            'plan_id' => $plan->id,
-            'quantity' => 1,
-            'price' => 99.9,
-        ]);
     }
 
-    public function test_tiers_are_required_when_creating_a_plan(): void
+    public function test_price_is_required_when_creating_a_plan(): void
     {
         $user = User::factory()->create();
         $this->grantPermission($user, 'plans.create');
 
         $payload = $this->validPayload();
-        $payload['tiers'] = [];
+        unset($payload['price']);
 
         $response = $this->actingAs($user)->post(route('plans.store'), $payload);
 
-        $response->assertSessionHasErrors(['tiers']);
+        $response->assertSessionHasErrors(['price']);
         $this->assertDatabaseCount('plans', 0);
-        $this->assertDatabaseCount('plan_tiers', 0);
     }
 
-    public function test_modality_quantity_must_be_a_positive_integer_when_creating_a_plan(): void
+    public function test_duration_months_is_required_when_creating_a_plan(): void
     {
         $user = User::factory()->create();
         $this->grantPermission($user, 'plans.create');
 
         $payload = $this->validPayload();
-        $payload['modality_quantity'] = 0;
+        unset($payload['duration_months']);
 
         $response = $this->actingAs($user)->post(route('plans.store'), $payload);
 
-        $response->assertSessionHasErrors(['modality_quantity']);
+        $response->assertSessionHasErrors(['duration_months']);
         $this->assertDatabaseCount('plans', 0);
     }
 
@@ -125,13 +114,9 @@ class PlanPersistenceTest extends TestCase
             'name' => 'Plano Inicial',
             'plan_category_id' => $planCategory->id,
             'description' => 'Descrição inicial',
+            'price' => 100.0,
+            'duration_months' => 1,
             'visibility' => 'visible',
-        ]);
-
-        PlanTier::query()->create([
-            'plan_id' => $plan->id,
-            'quantity' => 3,
-            'price' => 250,
         ]);
 
         PlanModality::query()->create([
@@ -148,10 +133,8 @@ class PlanPersistenceTest extends TestCase
             'name' => 'Plano Atualizado',
             'plan_category_id' => $planCategory->id,
             'description' => 'Sem modalidades específicas.',
-            'modality_quantity' => 3,
-            'tiers' => [
-                ['quantity' => 6, 'price' => 450],
-            ],
+            'price' => 150.0,
+            'duration_months' => 3,
             'plan_modalities' => [],
         ]);
 
@@ -160,16 +143,8 @@ class PlanPersistenceTest extends TestCase
         $plan->refresh();
 
         $this->assertSame('Plano Atualizado', $plan->name);
-        $this->assertSame(3, $plan->modality_quantity);
-        $this->assertDatabaseHas('plan_tiers', [
-            'plan_id' => $plan->id,
-            'quantity' => 6,
-            'price' => 450,
-        ]);
-        $this->assertDatabaseMissing('plan_tiers', [
-            'plan_id' => $plan->id,
-            'quantity' => 3,
-        ]);
+        $this->assertSame(150.0, $plan->price);
+        $this->assertSame(3, $plan->duration_months);
         $this->assertDatabaseCount('plan_modalities', 0);
     }
 }

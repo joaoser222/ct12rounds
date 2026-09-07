@@ -7,8 +7,6 @@ use App\Models\Modality;
 use App\Models\Permission;
 use App\Models\Plan;
 use App\Models\PlanCategory;
-use App\Models\PlanTier;
-use App\Models\Product;
 use App\Models\ProductUnity;
 use App\Models\Role;
 use App\Models\Setting;
@@ -109,14 +107,15 @@ class ControllerDelegationTest extends TestCase
         $this->actingAs($user)->post(route('plans.store'), [
             'name' => 'Plano Delegation',
             'plan_category_id' => $category->id,
-            'modality_quantity' => 1,
-            'tiers' => [['quantity' => 1, 'price' => 100]],
+            'price' => 100.0,
+            'duration_months' => 1,
             'plan_modalities' => [],
         ])->assertRedirect(route('plans.index'));
 
         $plan = Plan::query()->where('name', 'Plano Delegation')->first();
         $this->assertNotNull($plan);
-        $this->assertDatabaseHas('plan_tiers', ['plan_id' => $plan->id, 'price' => 100]);
+        $this->assertSame(100.0, $plan->price);
+        $this->assertSame(1, $plan->duration_months);
     }
 
     public function test_product_store_persists_via_create_product_action(): void
