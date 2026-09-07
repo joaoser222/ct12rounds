@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { formatCurrency } from '@/plugins/formatters';
 
+type Modality = {
+    id: number;
+    name: string;
+};
+
 defineProps<{
     isCreating: boolean;
     planTitle?: string | null;
     planCategory?: string | null;
-    modalityQuantity?: number | string | null;
+    modalities?: Modality[];
     installments?: number | null;
     hasSelectedTier: boolean;
     grossValue?: number;
@@ -34,9 +39,18 @@ defineProps<{
                 <div class="text-body-2 text-medium-emphasis">{{ planCategory || 'Sem categoria' }}</div>
             </div>
 
-            <div>
-                <div class="text-caption text-medium-emphasis">Qtd. modalidades</div>
-                <div class="text-body-2 text-medium-emphasis">{{ modalityQuantity ?? '-' }}</div>
+            <div v-if="modalities && modalities.length > 0">
+                <div class="text-caption text-medium-emphasis">Modalidades</div>
+                <div class="d-flex flex-wrap ga-1 mt-1">
+                    <v-chip
+                        v-for="modality in modalities"
+                        :key="modality.id"
+                        size="small"
+                        variant="tonal"
+                    >
+                        {{ modality.name }}
+                    </v-chip>
+                </div>
             </div>
 
             <div>

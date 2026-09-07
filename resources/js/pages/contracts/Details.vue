@@ -11,17 +11,13 @@ import { useModulePermissions } from '@/composables/useModulePermissions';
 
 defineOptions({ layout: AuthenticatedLayout });
 
-type PlanTier = {
-    quantity: number;
-    price: number;
-};
-
 type PlanOption = {
     value: number;
     title: string;
     category?: string | null;
-    modality_quantity: number;
-    tiers: PlanTier[];
+    modalities: { id: number; name: string }[];
+    price: number;
+    duration_months: number;
 };
 
 type CouponOption = {
@@ -60,7 +56,6 @@ type LinkedLead = {
 type Contract = {
     id?: number;
     plan_name?: string;
-    modality_quantity?: number | string;
     gross_value?: number;
     discount_value?: number;
     total?: number;
@@ -145,34 +140,33 @@ const selectedPlan = computed<PlanOption | null>(() => {
 });
 
 const durationOptions = computed(() => {
-    return (
-        selectedPlan.value?.tiers.map((tier) => ({
-            title: `${tier.quantity} ${tier.quantity === 1 ? 'mes' : 'meses'} - ${formatCurrency(tier.price)}`,
-            value: tier.quantity,
-        })) ?? []
-    );
-});
+    if (!selectedPlan.value) return [];
 
-const selectedTier = computed<PlanTier | null>(() => {
-    return (
-        selectedPlan.value?.tiers.find(
-            (tier) => tier.quantity === Number(form.installments),
-        ) ?? null
-    );
+    const months = selectedPlan.value.duration_months;
+
+    return Array.from({ length: months }, (_, index) => {
+        const quantity = index + 1;
+        const price = selectedPlan.value!.price * quantity;
+
+        return {
+            title: `${quantity} ${quantity === 1 ? 'mes' : 'meses'} - ${formatCurrency(price)}`,
+            value: quantity,
+        };
+    });
 });
 
 const grossValuePreview = computed(() => {
-    if (selectedTier.value === null || form.installments === null) {
+    if (selectedPlan.value === null || form.installments === null) {
         return 0;
     }
 
-    return selectedTier.value.price * Number(form.installments);
+    return selectedPlan.value.price * Number(form.installments);
 });
 
 const grossInstallmentValues = computed(() => {
     const installments = Number(form.installments ?? 0);
 
-    if (!selectedTier.value || installments < 1) {
+    if (!selectedPlan.value || installments < 1) {
         return [];
     }
 
@@ -256,7 +250,7 @@ function onPlanChange(): void {
         return;
     }
 
-    if (!selectedPlan.value.tiers.some((tier) => tier.quantity === Number(form.installments))) {
+    if (form.installments !== null && form.installments > selectedPlan.value.duration_months) {
         form.installments = null;
     }
 }
@@ -598,9 +592,9 @@ onMounted(() => {
                     :is-creating="isCreating"
                     :plan-title="isCreating ? selectedPlan?.title : contract?.plan_name"
                     :plan-category="selectedPlan?.category"
-                    :modality-quantity="isCreating ? selectedPlan?.modality_quantity : contract?.modality_quantity"
+                    :modalities="isCreating ? selectedPlan?.modalities : undefined"
                     :installments="isCreating ? form.installments : contract?.installments"
-                    :has-selected-tier="isCreating ? selectedTier !== null : true"
+                    :has-selected-tier="isCreating ? form.installments !== null : true"
                     :gross-value="isCreating ? grossValuePreview : contract?.gross_value"
                     :discount-value="isCreating ? discountValuePreview : contract?.discount_value"
                     :total-value="isCreating ? totalValuePreview : contract?.total"
