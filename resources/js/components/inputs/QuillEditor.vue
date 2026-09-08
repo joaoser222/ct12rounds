@@ -88,10 +88,6 @@ onBeforeUnmount(() => {
 <style>
 @import 'quill/dist/quill.snow.css';
 
-.quill-editor-wrapper {
-    padding: 0;
-}
-
 .quill-editor .ql-toolbar.ql-snow {
     border: none;
     border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
@@ -145,48 +141,10 @@ onBeforeUnmount(() => {
 .quill-editor .ql-snow .ql-active {
     color: rgb(var(--v-theme-primary));
 }
+</style>
 
-.v-field {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 56px;
-    border-radius: 4px;
-    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-    background-color: rgb(var(--v-theme-surface));
-    transition: border-color 0.2s ease;
-}
-
-.v-field--focused {
-    border-color: rgb(var(--v-theme-primary));
-    border-width: 2px;
-}
-
-.v-label {
-    position: absolute;
-    left: 12px;
-    top: -8px;
-    padding: 0 4px;
-    background-color: rgb(var(--v-theme-surface));
-    font-size: 12px;
-    color: rgba(var(--v-theme-on-surface), 0.7);
-    z-index: 1;
-}
-
-.v-field--focused .v-label {
-    color: rgb(var(--v-theme-primary));
-}
-
-.v-field__input {
-    display: flex;
-    flex-direction: column;
-}
-
-.v-messages {
-    font-size: 12px;
-    padding-left: 16px;
-    padding-top: 4px;
-    color: rgb(var(--v-theme-error));
+<style scoped>
+.quill-editor-wrapper {
+    padding: 0;
 }
 </style>
