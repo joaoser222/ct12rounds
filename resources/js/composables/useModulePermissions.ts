@@ -11,7 +11,7 @@ type ModulePermissionsOptions<TAction extends string> = {
     permissionMap: () => ModulePermissionMap<TAction> | undefined;
 };
 
-// Reúne a convenção `modulo.acao` e os overrides usados pelos componentes genéricos.
+// Gathers the `module.action` convention and the overrides used by generic components.
 export function useModulePermissions<TAction extends string>(
     options: ModulePermissionsOptions<TAction>,
 ) {

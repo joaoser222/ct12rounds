@@ -62,8 +62,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('throttle:30,1')->group(function () {
-    Route::get('cadastro', [PublicHiringLeadController::class, 'create'])->name('public.cadastro');
-    Route::post('cadastro', [PublicHiringLeadController::class, 'store'])->name('public.cadastro.store');
+    Route::get('register', [PublicHiringLeadController::class, 'create'])->name('public.register');
+    Route::post('register', [PublicHiringLeadController::class, 'store'])->name('public.register.store');
+    Route::post('register/retry-payment', [PublicHiringLeadController::class, 'retryPayment'])->name('public.register.retry');
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {

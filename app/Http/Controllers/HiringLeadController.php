@@ -11,7 +11,7 @@ use App\Enums\HiringLeadStatus;
 use App\Models\Coupon;
 use App\Models\HiringLead;
 use App\Models\Plan;
-use App\Models\Uf;
+use App\Models\State;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -50,8 +50,8 @@ class HiringLeadController extends CrudModuleController
     }
 
     /**
-     * O pré-cadastro não permite criação nem edição: apenas visualização,
-     * alteração de visibilidade, exclusão e conversão em cliente.
+     * Pre-registration does not allow creation or editing: only viewing,
+     * visibility changes, deletion, and conversion to a client.
      *
      * @return array<string, string>
      */
@@ -97,7 +97,7 @@ class HiringLeadController extends CrudModuleController
      */
     private function actionFailureResponse(Request $request, ?array $errors, ?string $message): RedirectResponse|JsonResponse
     {
-        $message ??= 'Não foi possível concluir a operação.';
+        $message ??= 'Could not complete the operation.';
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -132,7 +132,7 @@ class HiringLeadController extends CrudModuleController
                 'hiringLeadStatus' => $this->enumOptions(HiringLeadStatus::class),
                 'hiringLeadSource' => $this->enumOptions(HiringLeadSource::class),
                 'genderTypes' => $this->enumOptions(GenderType::class),
-                'ufs' => $this->modelOptions(Uf::class),
+                'states' => $this->modelOptions(State::class),
                 'plans' => Plan::query()
                     ->select(['id', 'name'])
                     ->orderBy('name')

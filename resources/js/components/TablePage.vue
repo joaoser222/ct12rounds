@@ -12,15 +12,16 @@ import {
 import { visibilityOptions, type VisibilityValue } from '@/shared/visibility';
 import type { PaginatedResponse } from '@/shared/page';
 import { formatDateTime } from '@/plugins/formatters';
+import { useConfirm } from '@/composables/useConfirm';
 
 /**
- * Tabela genérica para páginas indexadas do sistema.
+ * Generic table for indexed pages in the system.
  *
- * Responsabilidades:
- * - renderizar busca, filtros, seleção, ações e paginação;
- * - sincronizar filtros com a URL via Inertia;
- * - aplicar permissões de visualização, criação, exclusão e visibilidade;
- * - permitir colunas e ações extras via slots.
+ * Responsibilities:
+ * - render search, filters, selection, actions, and pagination;
+ * - sync filters with the URL via Inertia;
+ * - apply view, create, delete, and visibility permissions;
+ * - allow extra columns and actions via slots.
  */
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ interface Props {
     loading?: boolean;
     searchKey?: string;
     title?: string;
-    // Permissões: o padrão é derivar do módulo; `permissions` e `permissionMap` permitem sobrescrever.
+    // Permissions: defaults to deriving from module; `permissions` and `permissionMap` allow overrides.
     module?: string;
     permissions?: string[];
     permissionMap?: TablePermissionMap;
@@ -112,7 +113,7 @@ const props = withDefaults(defineProps<Props>(), {
     customSlots: () => [],
 });
 
-// Eventos para páginas que precisem reagir sem duplicar a lógica da tabela.
+// Events for pages that need to react without duplicating table logic.
 const emit = defineEmits<{
     'update:search': [value: SearchValue];
     'update:page': [value: number];
@@ -145,7 +146,7 @@ const internalVisibilityFilter = ref(
     page.props.filters?.visibility ?? 'visible',
 );
 
-// Garante que o campo de busca inicial seja válido; cai no primeiro searchable se não encontrar.
+// Ensures the initial search field is valid; falls back to the first searchable if not found.
 const resolveSearchField = (key?: string): string => {
     const headers = props.headers.filter((h) => h.searchable !== undefined);
     return headers.some((h) => h.key === key) ? key! : (headers[0]?.key ?? '');
@@ -210,7 +211,7 @@ const selectedSearchComponentProps = computed(() => {
     return { ...base, ...resolvedProps };
 });
 
-// Normaliza o v-model entre componentes de busca com tipos diferentes.
+// Normalizes the v-model between search components with different types.
 const searchInputValue = computed<SearchValue>({
     get: () =>
         selectedSearchComponentName.value === 'DateField'
@@ -235,7 +236,7 @@ const permissions = computed(() => ({
 
 const hasExtraActions = computed(() => !!slots['extra-actions']);
 
-// Colunas de seleção e ações são injetadas aqui para não poluir as definições de cada página.
+// Selection and action columns are injected here to avoid polluting each page's definitions.
 const computedHeaders = computed(() => {
     const headers = [...props.headers];
 
@@ -264,7 +265,7 @@ const computedHeaders = computed(() => {
 
 // ─── Navegação / Inertia ─────────────────────────────────────────────────────
 
-// Centraliza todas as visitas ao backend; preserva estado visual entre filtros e paginação.
+// Centralizes all backend visits; preserves visual state between filters and pagination.
 const loadItems = (options?: {
     page?: number;
     sortBy?: { key: string; order: string }[];
@@ -375,7 +376,7 @@ const changeVisibility = (visibility: string) => {
     }
 };
 
-// Limpa seleção e volta à página 1 ao trocar filtro de visibilidade para evitar estado inconsistente.
+// Clears selection and returns to page 1 when changing visibility filter to prevent inconsistent state.
 const applyVisibilityFilter = (visibility: VisibilityValue) => {
     if (internalVisibilityFilter.value === visibility) return;
     internalVisibilityFilter.value = visibility;
@@ -427,7 +428,7 @@ const formatItemDateTime = (
 
 // ─── Watchers ────────────────────────────────────────────────────────────────
 
-// Busca com debounce para evitar múltiplas visitas Inertia em sequência.
+// Search with debounce to prevent multiple Inertia visits in sequence.
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 watch(search, (value) => {
@@ -446,7 +447,7 @@ watch(search, (value) => {
     }, 500);
 });
 
-// Sincroniza estado interno com os filtros vindos do backend (ex.: navegação pelo histórico do browser).
+// Synchronizes internal state with filters from the backend (e.g., browser history navigation).
 watch(
     () => page.props.filters,
     (filters) => {
@@ -463,7 +464,7 @@ onMounted(() => {
     void ensurePermissionsLoaded();
 });
 
-// Exposição mínima para páginas que precisem disparar reload manual ou inspecionar seleção.
+// Minimal exposure for pages that need to trigger manual reload or inspect selection.
 defineExpose({ loadItems, selectedItems, internalLoading });
 </script>
 

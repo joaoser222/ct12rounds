@@ -49,6 +49,6 @@ createInertiaApp({
     },
 
     progress: {
-        color: '#6750A4', // Material You primary — ajuste para sua cor
+        color: '#6750A4', // Material You primary — adjust to your color
     },
 });

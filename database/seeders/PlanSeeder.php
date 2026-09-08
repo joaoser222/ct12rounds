@@ -28,7 +28,7 @@ class PlanSeeder extends Seeder
     }
 
     /**
-     * Obtém as categorias criadas pelo PlanCategorySeeder.
+     * Retrieves the categories created by PlanCategorySeeder.
      *
      * @return array<string, PlanCategory>
      */
@@ -41,7 +41,7 @@ class PlanSeeder extends Seeder
     }
 
     /**
-     * Obtém as modalidades criadas pelo ModalitySeeder.
+     * Retrieves the modalities created by ModalitySeeder.
      *
      * @return array<string, Modality>
      */
@@ -56,7 +56,7 @@ class PlanSeeder extends Seeder
     }
 
     /**
-     * Retorna a lista de planos com IDs de categorias e modalidades.
+     * Returns the list of plans with category and modality IDs.
      *
      * @param  array<string, PlanCategory>  $categories
      * @param  array<string, Modality>  $modalities
@@ -133,7 +133,7 @@ class PlanSeeder extends Seeder
     }
 
     /**
-     * Cria um plano com sua categoria e modalidades.
+     * Creates a plan with its category and modalities.
      *
      * @param  array{name: string, description: string, category_id: int, price: float, duration_months: int, modalities: list<int>}  $planData
      */
@@ -153,7 +153,7 @@ class PlanSeeder extends Seeder
     }
 
     /**
-     * Associa modalidades ao plano.
+     * Attaches modalities to the plan.
      *
      * @param  list<int>  $modalityIds
      */

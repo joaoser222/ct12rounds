@@ -16,7 +16,7 @@ class ConvertHiringLeadActionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_convert_cria_cliente_com_source_site(): void
+    public function test_convert_creates_client_with_site_source(): void
     {
         $lead = HiringLead::factory()->contractFlow()->create();
 
@@ -37,7 +37,7 @@ class ConvertHiringLeadActionTest extends TestCase
         $this->assertNotNull($lead->converted_at);
     }
 
-    public function test_convert_reutiliza_cliente_existente_por_documento(): void
+    public function test_convert_reuses_existing_client_by_document(): void
     {
         $existingClient = Client::factory()->create([
             'document' => '11122233344',
@@ -57,7 +57,7 @@ class ConvertHiringLeadActionTest extends TestCase
         $this->assertEquals($existingClient->id, $lead->client_id);
     }
 
-    public function test_convert_rejeita_lead_ja_convertido(): void
+    public function test_convert_rejects_already_converted_lead(): void
     {
         $client = Client::factory()->create();
         $lead = HiringLead::factory()->create([
@@ -70,7 +70,7 @@ class ConvertHiringLeadActionTest extends TestCase
         $this->assertFalse($result->success);
     }
 
-    public function test_convert_rejeita_documento_duplicado_em_lead_nao_convertido(): void
+    public function test_convert_rejects_duplicate_document_on_unconverted_lead(): void
     {
         HiringLead::factory()->create([
             'document' => '12312312300',

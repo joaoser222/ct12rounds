@@ -16,10 +16,10 @@ import {
 } from 'vue-currency-input';
 
 /**
- * Campo monetário compartilhado baseado em `vue-currency-input`.
+ * Shared currency field based on `vue-currency-input`.
  *
- * O componente exibe o valor formatado em pt-BR e mantém o `v-model`
- * sincronizado com um número limpo para persistência.
+ * The component displays the value formatted in pt-BR and keeps the `v-model`
+ * synchronized with a clean number for persistence.
  */
 const props = withDefaults(
     defineProps<{

@@ -3,12 +3,12 @@ import { onlyDigits } from '@/plugins/formatters';
 import { capitalize } from '@/directives/textCase';
 
 /**
- * Integração compartilhada com ViaCEP.
+ * Shared integration with ViaCEP.
  *
- * O plugin expõe helpers para:
- * - consultar CEP;
- * - preencher formulários com os campos de endereço do projeto;
- * - reutilizar a integração via `useViaCep()` ou injeção global.
+ * The plugin exposes helpers to:
+ * - look up postal codes;
+ * - fill forms with the project's address fields;
+ * - reuse the integration via `useViaCep()` or global injection.
  */
 
 export type ViaCepResponse = {
@@ -125,7 +125,7 @@ export function fillAddressFields(
     address: ViaCepAddress,
     options: FillAddressOptions = {},
 ): void {
-    // Permite mapear o retorno do ViaCEP para nomes de campos diferentes por tela.
+    // Allows mapping the ViaCEP response to different field names per screen.
     const fields = {
         ...defaultAddressFields,
         ...options.fields,
@@ -173,7 +173,7 @@ export function useViaCep(): ViaCepPlugin {
 
 export default {
     install(app: App): void {
-        // Disponibiliza a integração tanto por inject quanto por propriedade global.
+        // Makes the integration available both via inject and as a global property.
         app.provide(viaCepKey, viaCep);
         app.config.globalProperties.$viaCep = viaCep;
     },

@@ -22,10 +22,10 @@
 import { ref, watch } from 'vue';
 
 /**
- * Wrapper de `v-text-field` para campos de senha.
+ * Wrapper around `v-text-field` for password fields.
  *
- * Mantém API compatível com `v-model` e adiciona apenas o toggle de
- * visibilidade, evitando repetir essa lógica nas páginas.
+ * Keeps a `v-model`-compatible API and adds only the visibility toggle,
+ * avoiding repetition of this logic across pages.
  */
 interface Props {
     modelValue?: string;
@@ -41,7 +41,7 @@ const emit = defineEmits<{
 const internalValue = ref<string>(props.modelValue ?? '');
 const showPassword = ref(false);
 
-// Mantém o valor local sincronizado quando o formulário é atualizado externamente.
+// Keeps the local value in sync when the form is updated externally.
 watch(
     () => props.modelValue,
     (newValue) => {

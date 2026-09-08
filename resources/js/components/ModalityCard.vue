@@ -34,8 +34,8 @@ const cardStyle = computed<Record<string, string>>(() => ({
 </template>
 
 <style scoped>
-/* Scale via transform (origem central): reduz o card inteiro — texto, logo,
- * padding e borda — para uso compacto em documentos. A altura acompanha a escala. */
+/* Scale via transform (center origin): shrinks the entire card — text, logo,
+ * padding and border — for compact use in documents. The height follows the scale. */
 .modality-card {
     display: flex;
     align-items: center;

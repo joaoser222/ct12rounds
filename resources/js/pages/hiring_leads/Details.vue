@@ -21,7 +21,7 @@ const props = defineProps<{
     options: Record<string, any>;
 }>();
 
-const { genderTypes, hiringLeadSource, hiringLeadStatus, plans, coupons, ufs } =
+const { genderTypes, hiringLeadSource, hiringLeadStatus, plans, coupons, states } =
     useSharedOptions(props.options ?? {});
 
 const fields: ReadOnlyField[] = [
@@ -133,7 +133,7 @@ const convert = () => {
             {{ findLabel(coupons, value as string | number | null) ?? '-' }}
         </template>
         <template #field-address_state="{ value }">
-            {{ findLabel(ufs, value as string | null) ?? value ?? '-' }}
+            {{ findLabel(states, value as string | null) ?? value ?? '-' }}
         </template>
         <template #field-created_at="{ value }">
             {{ formatDateTime(value as string | null) }}

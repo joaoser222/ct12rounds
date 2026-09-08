@@ -38,7 +38,7 @@ class InstallmentSplitterTest extends TestCase
         $this->assertEquals(150.0, $result[0]);
     }
 
-    public function test_distributes_centavos_remainder(): void
+    public function test_distributes_cents_remainder(): void
     {
         $result = $this->splitter->split(100.01, 3);
 

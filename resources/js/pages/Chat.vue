@@ -164,7 +164,7 @@ async function selectConversation(
         messages.value = data.messages ?? [];
         await scrollToBottom();
     } catch {
-        // Mantém a conversa atual em caso de falha ao carregar o histórico.
+        // Keeps the current conversation if loading history fails.
     }
 }
 

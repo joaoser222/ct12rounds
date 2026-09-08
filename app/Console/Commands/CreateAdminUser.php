@@ -12,46 +12,46 @@ use Illuminate\Support\Facades\Validator;
 class CreateAdminUser extends Command
 {
     /**
-     * O nome e assinatura do comando no terminal.
+     * The command name and signature.
      *
      * @var string
      */
     protected $signature = 'user:create-admin
-                            {--email= : E-mail do administrador}
-                            {--name= : Nome do administrador}
-                            {--password= : Senha do administrador}
-                            {--force : Forçar criação mesmo se usuário existir}';
+                            {--email= : Administrator email}
+                            {--name= : Administrator name}
+                            {--password= : Administrator password}
+                            {--force : Force creation even if user already exists}';
 
     /**
      * @var string
      */
-    protected $description = 'Cria um usuário administrador no sistema';
+    protected $description = 'Create an administrator user in the system';
 
     /**
-     * Execute o comando.
+     * Execute the command.
      */
     public function handle(): int
     {
-        $this->info('Criando usuário administrador...');
+        $this->info('Creating administrator user...');
         $this->newLine();
 
         $this->callSilently('access-control:sync', [
             '--without-users' => true,
         ]);
 
-        // Coleta os dados
-        $name = $this->option('name') ?? $this->ask('Nome do administrador');
-        $email = $this->option('email') ?? $this->ask('E-mail do administrador');
-        $password = $this->option('password') ?? $this->secret('Senha do administrador');
+        // Collect data
+        $name = $this->option('name') ?? $this->ask('Administrator name');
+        $email = $this->option('email') ?? $this->ask('Administrator email');
+        $password = $this->option('password') ?? $this->secret('Administrator password');
         $role = Role::query()->where('name', AccessRole::ADMINISTRATOR->value)->first();
 
         if ($role === null) {
-            $this->error('Perfil de administrador nao encontrado apos sincronizacao.');
+            $this->error('Administrator profile not found after synchronization.');
 
             return Command::FAILURE;
         }
 
-        // Validação
+        // Validation
         $validator = Validator::make([
             'name' => $name,
             'email' => $email,
@@ -70,21 +70,21 @@ class CreateAdminUser extends Command
             return Command::FAILURE;
         }
 
-        // Verifica se usuário já existe
+        // Check if user already exists
         $existingUser = User::where('email', $email)->first();
 
         if ($existingUser) {
             if (! $this->option('force')) {
-                $this->warn("Usuário com e-mail {$email} já existe!");
+                $this->warn("User with email {$email} already exists!");
 
-                if (! $this->confirm('Deseja atualizar este usuário para administrador?')) {
-                    $this->error('Operação cancelada.');
+                if (! $this->confirm('Do you want to update this user to administrator?')) {
+                    $this->error('Operation cancelled.');
 
                     return Command::FAILURE;
                 }
             }
 
-            // Atualiza usuário existente
+            // Update existing user
             $existingUser->update([
                 'name' => $name,
                 'password' => Hash::make($password),
@@ -92,16 +92,16 @@ class CreateAdminUser extends Command
             ]);
             $existingUser->permissions()->sync($role->permissions()->pluck('permissions.id')->all());
 
-            $this->info('Usuário atualizado para administrador com sucesso!');
+            $this->info('User updated to administrator successfully!');
             $this->table(
-                ['ID', 'Nome', 'E-mail', 'Admin'],
-                [[$existingUser->id, $existingUser->name, $existingUser->email, 'Sim']]
+                ['ID', 'Name', 'E-mail', 'Admin'],
+                [[$existingUser->id, $existingUser->name, $existingUser->email, 'Yes']]
             );
 
             return Command::SUCCESS;
         }
 
-        // Cria novo usuário
+        // Create new user
         $user = User::create([
             'name' => $name,
             'email' => $email,
@@ -110,12 +110,12 @@ class CreateAdminUser extends Command
         ]);
         $user->permissions()->sync($role->permissions()->pluck('permissions.id')->all());
 
-        $this->info('Usuário administrador criado com sucesso!');
+        $this->info('Administrator user created successfully!');
         $this->newLine();
 
         $this->table(
-            ['ID', 'Nome', 'E-mail', 'Admin'],
-            [[$user->id, $user->name, $user->email, 'Sim']]
+            ['ID', 'Name', 'E-mail', 'Admin'],
+            [[$user->id, $user->name, $user->email, 'Yes']]
         );
 
         return Command::SUCCESS;

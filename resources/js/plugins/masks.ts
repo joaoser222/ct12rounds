@@ -1,10 +1,10 @@
 import { onlyAlphanumeric, onlyDigits } from './formatters.ts';
 
 /**
- * Engine simples de máscaras da aplicação.
+ * Simple mask engine for the application.
  *
- * Suporta tokens fixos (`#`, `A`, `X`, `Z`) e quantificadores de repetição,
- * permitindo montar máscaras reutilizáveis sem depender do input nativo.
+ * Supports fixed tokens (`#`, `A`, `X`, `Z`) and repetition quantifiers,
+ * allowing reusable masks to be built without depending on native input.
  */
 
 export type MaskToken = {
@@ -86,7 +86,7 @@ export function applyMask(
         return String(value ?? '');
     }
 
-    // Primeiro normaliza o valor bruto; depois reconstrói a saída conforme a máscara.
+    // First normalizes the raw value; then reconstructs the output according to the mask.
     const rawValue = unmaskValue(value, mask, mode);
     const parsedMask = parseMask(mask);
     let rawIndex = 0;
@@ -145,7 +145,7 @@ function unmaskByMask(value: string, mask: string): string {
         return value;
     }
 
-    // Filtra apenas caracteres compatíveis com os tokens declarados na máscara.
+    // Filters only characters compatible with the tokens declared in the mask.
     const availableTokens = new Set(
         parseMask(mask)
             .filter((part): part is Extract<ParsedMaskPart, { type: 'token' }> => part.type === 'token')
@@ -193,7 +193,7 @@ function limitValue(
 }
 
 function parseMask(mask: string): ParsedMaskPart[] {
-    // Converte a máscara textual em partes tokenizadas para facilitar aplicação e unmask.
+    // Converts the textual mask into tokenized parts to facilitate application and unmasking.
     const parts: ParsedMaskPart[] = [];
 
     for (let index = 0; index < mask.length; index++) {
@@ -228,7 +228,7 @@ function parseQuantifier(
     mask: string,
     index: number,
 ): { min: number; max: number; endIndex: number } | null {
-    // Quantificadores suportados: *, +, ? e {min,max}.
+    // Supported quantifiers: *, +, ? and {min,max}.
     const char = mask[index];
 
     if (char === '*') {

@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Uf;
+use App\Models\State;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class UfSeeder extends Seeder
+class StateSeeder extends Seeder
 {
     use WithoutModelEvents;
 
@@ -15,7 +15,7 @@ class UfSeeder extends Seeder
      */
     public function run(): void
     {
-        Uf::upsert([
+        State::upsert([
             ['name' => 'Acre', 'code' => 'AC'],
             ['name' => 'Alagoas', 'code' => 'AL'],
             ['name' => 'Amapá', 'code' => 'AP'],

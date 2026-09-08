@@ -2,10 +2,10 @@ import { h } from 'vue'
 import type { IconSet, IconProps } from 'vuetify'
 
 /**
- * Adaptador do iconset Tabler para o formato esperado pelo Vuetify.
+ * Tabler iconset adapter for the format expected by Vuetify.
  *
- * Permite usar nomes curtos de ícone na aplicação mantendo renderização via
- * classes CSS do pacote webfont.
+ * Allows using short icon names in the application while maintaining rendering
+ * via CSS classes from the webfont package.
  */
 
 const tabler: IconSet = {

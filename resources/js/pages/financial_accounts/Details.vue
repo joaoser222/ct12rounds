@@ -56,6 +56,7 @@ const isBankAccount = (form: Record<string, unknown>): boolean => form.account_t
                 <v-col cols="12" md="6">
                     <v-text-field
                         v-model="form.name"
+                        v-text-case="'capitalize'"
                         label="Nome"
                         :rules="[required]"
                         :error-messages="errors.name"
@@ -74,6 +75,7 @@ const isBankAccount = (form: Record<string, unknown>): boolean => form.account_t
                     <v-col cols="12" md="4">
                         <v-text-field
                             v-model="form.holder_name"
+                            v-text-case="'capitalize'"
                             label="Nome do Titular"
                             :rules="[required]"
                             :error-messages="errors.holder_name"

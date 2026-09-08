@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 class ModalitySeeder extends Seeder
 {
     /**
-     * Modalidades pré-definidas.
+     * Predefined modalities.
      *
      * @var array<string, string>
      */

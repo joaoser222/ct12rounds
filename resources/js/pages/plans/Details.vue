@@ -20,7 +20,7 @@ type Plan = {
 const props = defineProps<{
     plan?: Plan | null;
     routes: DetailsRoutes;
-    publicCadastroUrl?: string | null;
+    publicRegistrationUrl?: string | null;
 }>();
 
 const { modalities } = useSharedOptions(usePage().props.options ?? {});
@@ -35,8 +35,8 @@ const defaults = {
 };
 
 async function copyPublicLink(): Promise<void> {
-    if (!props.publicCadastroUrl) return;
-    await navigator.clipboard.writeText(props.publicCadastroUrl);
+    if (!props.publicRegistrationUrl) return;
+    await navigator.clipboard.writeText(props.publicRegistrationUrl);
 }
 </script>
 
@@ -94,11 +94,11 @@ async function copyPublicLink(): Promise<void> {
                     />
                 </v-col>
                 <v-col
-                    v-if="publicCadastroUrl"
+                    v-if="publicRegistrationUrl"
                     cols="12"
                 >
                     <v-text-field
-                        :model-value="publicCadastroUrl"
+                        :model-value="publicRegistrationUrl"
                         label="Link de cadastro"
                         readonly
                         persistent-hint

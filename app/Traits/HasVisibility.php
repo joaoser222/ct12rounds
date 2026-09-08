@@ -7,28 +7,28 @@ use App\Enums\Visibility;
 trait HasVisibility
 {
     /**
-     * Inicializa a trait
+     * Initialize the trait.
      */
     public function initializeHasVisibility(): void
     {
-        // Adiciona o cast para Visibility Enum
+        // Add the Visibility Enum cast
         if (! isset($this->casts['visibility'])) {
             $this->casts['visibility'] = Visibility::class;
         }
 
-        // Adiciona visibility ao fillable se não existir
+        // Add visibility to fillable if not present
         if (! in_array('visibility', $this->fillable)) {
             $this->fillable[] = 'visibility';
         }
 
-        // Define o valor padrão
+        // Set the default value
         if (! isset($this->attributes['visibility'])) {
             $this->attributes['visibility'] = Visibility::VISIBLE;
         }
     }
 
     /**
-     * Valida se o valor de visibility é válido
+     * Validate that the visibility value is valid.
      */
     public function isValidVisibility(): bool
     {
@@ -36,7 +36,7 @@ trait HasVisibility
     }
 
     /**
-     * Retorna o objeto Enum
+     * Return the Enum object.
      */
     public function getVisibilityEnum(): ?Visibility
     {
@@ -44,7 +44,7 @@ trait HasVisibility
     }
 
     /**
-     * Acessor para label
+     * Label accessor.
      */
     public function getVisibilityLabelAttribute(): string
     {
@@ -52,7 +52,7 @@ trait HasVisibility
     }
 
     /**
-     * Mutator com validação
+     * Mutator with validation.
      */
     public function setVisibilityAttribute(string|Visibility $value): void
     {
@@ -62,7 +62,7 @@ trait HasVisibility
 
         if (! Visibility::isValid($value)) {
             throw new \InvalidArgumentException(
-                "Valor inválido para visibility: '{$value}'. Valores permitidos: "
+                "Invalid value for visibility: '{$value}'. Allowed values: "
                 .implode(', ', Visibility::values())
             );
         }
@@ -70,7 +70,7 @@ trait HasVisibility
         $this->attributes['visibility'] = $value;
     }
 
-    // Métodos de verificação
+    // Verification methods
 
     public function isVisible(): bool
     {
@@ -108,7 +108,7 @@ trait HasVisibility
         return $query->where('visibility', '!=', Visibility::ARCHIVED->value);
     }
 
-    // Métodos estáticos para usar nas validações
+    // Static methods for use in validations
 
     public static function getVisibilityOptions(): array
     {

@@ -31,7 +31,7 @@ defineProps<{
 }>();
 
 const sharedProps = usePage().props;
-const { ufs } = useSharedOptions(sharedProps.options ?? {});
+const { states } = useSharedOptions(sharedProps.options ?? {});
 
 const defaults = {
     name: '',
@@ -165,7 +165,7 @@ async function fillAddress(form: AddressForm): Promise<void> {
                 <v-select
                     v-model="form.address_state"
                     label="Estado"
-                    :items="ufs"
+                    :items="states"
                     :error-messages="errors.address_state"
                 />
                 </v-col>

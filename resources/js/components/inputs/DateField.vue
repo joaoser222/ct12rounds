@@ -35,10 +35,10 @@ import { ref, watch, computed, useAttrs } from 'vue';
 import moment from '@/plugins/moment';
 
 /**
- * Campo de data com entrada manual e `v-date-picker`.
+ * Date field with manual input and `v-date-picker`.
  *
- * O componente converte entre um formato amigável para exibição
- * (`formatDisplay`) e o formato esperado para persistência (`formatOutput`).
+ * The component converts between a user-friendly display format
+ * (`formatDisplay`) and the expected persistence format (`formatOutput`).
  */
 const props = defineProps<{
     modelValue?: string;
@@ -46,7 +46,7 @@ const props = defineProps<{
     formatOutput?: string;
 }>();
 
-// Os formatos seguem defaults seguros, mas podem ser adaptados por tela.
+// The formats follow safe defaults but can be adapted per screen.
 const formatDisplay = props.formatDisplay ?? 'DD/MM/YYYY';
 const formatOutput = props.formatOutput ?? 'YYYY-MM-DD';
 
@@ -81,7 +81,7 @@ const pickerValue = computed<string | undefined>(() => {
     return momentObj.format('YYYY-MM-DD');
 });
 
-// As helpers isolam conversão e limpeza quando a entrada não representa uma data válida.
+// The helpers isolate conversion and cleanup when the input does not represent a valid date.
 function formatToDisplay(date: string | undefined): string {
     if (!date) return '';
 
@@ -104,7 +104,7 @@ function formatToOutput(date: string): string {
     return '';
 }
 
-// O picker trabalha com um valor normalizado e emite no formato esperado pelo backend.
+// The picker works with a normalized value and emits in the format expected by the backend.
 function datePickerInput(date: unknown): void {
     const momentObj =
         typeof date === 'string'
@@ -124,7 +124,7 @@ function datePickerInput(date: unknown): void {
     datePickerMenu.value = false;
 }
 
-// Mantém o texto sincronizado quando o valor externo muda por navegação ou preenchimento automático.
+// Keeps the text in sync when the external value changes via navigation or autofill.
 watch(
     () => props.modelValue,
     (newVal: string | undefined) => {
@@ -133,7 +133,7 @@ watch(
     { immediate: true },
 );
 
-// A conversão acontece no blur para evitar conflitos com a digitação do usuário.
+// Conversion happens on blur to avoid conflicts with user typing.
 function handleInput(): void {
     const formatted = formatToOutput(inputValue.value);
     emit('update:modelValue', formatted);

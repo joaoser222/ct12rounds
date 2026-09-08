@@ -10,13 +10,13 @@ import { findLabel, findOption, useSharedOptions } from '@/shared/options';
 
 defineOptions({ layout: AuthenticatedLayout });
 
-// Props da página
+// Page props
 const props = defineProps<{
     clients: PaginatedResponse<any>;
     routes: IndexRoutes;
 }>();
 
-// Configuração da tabela
+// Table configuration
 const headers: TableHeader[] = [
     { title: 'ID', key: 'id', sortable: true, width: '80px' },
     { title: 'Nome', key: 'name', sortable: true, searchable: true },
@@ -65,7 +65,7 @@ const { clientStatus } = useSharedOptions(
         title="Clientes"
         :custom-slots="['status', 'created_at', 'phone', 'document']"
     >
-        <!-- Status personalizado -->
+        <!-- Custom status -->
         <template #column-status="{ item }">
             <v-chip :color="findOption(clientStatus, item.status)?.color">
                 {{ findLabel(clientStatus, item.status) }}

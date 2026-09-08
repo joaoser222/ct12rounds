@@ -19,7 +19,7 @@ trait HasMorphObjects
     }
 
     /**
-     * Registra todos os morph maps definidos nas propriedades
+     * Register all morph maps defined in properties.
      */
     protected static function registerAllMorphMaps(): void
     {
@@ -31,7 +31,7 @@ trait HasMorphObjects
             return;
         }
 
-        // Registra maps da propriedade $morphMaps
+        // Register maps from the $morphMaps property
         if (property_exists($class, 'morphMaps')) {
             $morphMaps = get_class_vars($class)['morphMaps'] ?? [];
 
@@ -46,7 +46,7 @@ trait HasMorphObjects
     }
 
     /**
-     * Valida todos os campos morph type
+     * Validate all morph type fields.
      */
     protected function validateAllMorphTypes(): void
     {
@@ -65,24 +65,24 @@ trait HasMorphObjects
     }
 
     /**
-     * Retorna todas as configurações dos morphs
+     * Return all morph configurations.
      */
     public function getAllMorphConfigs(): array
     {
         $configs = [];
         $class = static::class;
 
-        // Pega os maps definidos
+        // Get the defined maps
         $morphMaps = property_exists($class, 'morphMaps')
             ? (get_class_vars($class)['morphMaps'] ?? [])
             : [];
 
-        // Pega as permissões definidas
+        // Get the defined permissions
         $allowedTypes = property_exists($class, 'allowedMorphTypes')
             ? static::$allowedMorphTypes
             : [];
 
-        // Para cada campo definido no morphMaps
+        // For each field defined in morphMaps
         foreach ($morphMaps as $field => $map) {
             $configs[$field] = [
                 'field' => $field,
@@ -96,13 +96,13 @@ trait HasMorphObjects
     }
 
     /**
-     * Verifica se um tipo é permitido
+     * Check if a type is allowed.
      */
     protected function isMorphTypeAllowed(string $type, array $config): bool
     {
         $allowed = $config['allowed'] ?? [];
 
-        // Se não definiu allowed explicitamente, permite todos do map
+        // If allowed is not explicitly defined, allow all from the map
         if (empty($allowed)) {
             $allowed = array_keys($config['map'] ?? []);
         }
@@ -111,18 +111,18 @@ trait HasMorphObjects
     }
 
     /**
-     * Retorna mensagem de erro
+     * Return the error message.
      */
     protected function getMorphErrorMessage(string $invalidType, array $config): string
     {
         $field = $config['field'];
         $allowed = implode(', ', $config['allowed'] ?? []);
 
-        return "Tipo '{$invalidType}' não é permitido para o campo '{$field}'. Tipos permitidos: {$allowed}";
+        return "Type '{$invalidType}' is not allowed for field '{$field}'. Allowed types: {$allowed}";
     }
 
     /**
-     * Método auxiliar para adicionar um tipo permitido dinamicamente
+     * Helper method to dynamically add an allowed type.
      */
     public function addAllowedMorphType(string $field, string $type): void
     {
@@ -140,7 +140,7 @@ trait HasMorphObjects
     }
 
     /**
-     * Retorna os tipos permitidos para um campo
+     * Return the allowed types for a field.
      */
     public function getAllowedForField(string $field): array
     {
@@ -156,7 +156,7 @@ trait HasMorphObjects
     }
 
     /**
-     * Retorna os tipos padrão para um campo (todos do map)
+     * Return the default types for a field (all from the map).
      */
     protected function getDefaultAllowedForField(string $field): array
     {

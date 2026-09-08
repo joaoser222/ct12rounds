@@ -9,7 +9,7 @@ use App\Actions\Supplier\UpdateSupplierAction;
 use App\DTOs\Supplier\CreateSupplierDTO;
 use App\DTOs\Supplier\UpdateSupplierDTO;
 use App\Models\Supplier;
-use App\Models\Uf;
+use App\Models\State;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -119,7 +119,7 @@ class SupplierController extends CrudModuleController
     {
         return [
             'options' => [
-                'ufs' => $this->modelOptions(Uf::class),
+                'states' => $this->modelOptions(State::class),
             ],
         ];
     }

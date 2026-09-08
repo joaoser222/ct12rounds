@@ -29,7 +29,7 @@ class SelectBoxController extends Controller
         $method = 'select'.str_replace('-', '', ucwords($objectName, '-'));
 
         if (! method_exists($this, $method)) {
-            abort(404, "Select para '{$objectName}' não encontrado.");
+            abort(404, "Select for '{$objectName}' not found.");
         }
 
         $this->authorizeAccess($this->accessModuleFor($objectName));
@@ -127,7 +127,7 @@ class SelectBoxController extends Controller
     }
 
     /**
-     * Busca genérica para selectboxes.
+     * Generic search for selectboxes.
      *
      * @param  class-string<Model>  $modelClass
      */

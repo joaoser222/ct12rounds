@@ -1,10 +1,10 @@
 import { onlyDigits } from './formatters.ts';
 
 /**
- * Validadores reutilizáveis para formulários Vuetify.
+ * Reusable validators for Vuetify forms.
  *
- * Mantém regras simples e síncronas, retornando `true` ou a mensagem de erro
- * esperada pelos componentes de input.
+ * Keeps rules simple and synchronous, returning `true` or the error message
+ * expected by input components.
  */
 
 export const required = (value: unknown) => !!value || 'É obrigatório';
@@ -19,7 +19,7 @@ export const cpf = (value: string) => {
     }
 
     const n = d.split('').map(Number);
-    // Reaproveita a regra oficial dos dígitos verificadores.
+    // Reuses the official check digit rule.
     const calc = (len: number) => {
         const sum = n
             .slice(0, len)
@@ -41,7 +41,7 @@ export const cnpj = (value: string) => {
     }
 
     const n = d.split('').map(Number);
-    // Reaproveita a regra oficial dos dígitos verificadores.
+    // Reuses the official check digit rule.
     const calc = (len: number) => {
         let weight = len - 7;
         const sum = n.slice(0, len).reduce((acc, v) => {

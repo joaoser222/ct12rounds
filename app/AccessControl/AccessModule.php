@@ -8,37 +8,37 @@ enum AccessModule: string
 {
     use HasMetadata;
 
-    // Visualização
+    // Viewing
     case DASHBOARD = 'dashboard';
     case REPORT = 'reports';
 
-    // Pessoas
+    // People
     case CLIENT = 'clients';
     case TRAINER = 'trainers';
     case SUPPLIER = 'suppliers';
     case HIRING_LEAD = 'hiring_leads';
 
-    // Catálogo
+    // Catalog
     case PRODUCT = 'products';
     case MODALITY = 'modalities';
     case PLAN = 'plans';
     case PLAN_CATEGORY = 'plan_categories';
 
-    // Faturamento
+    // Billing
     case CONTRACT = 'contracts';
     case COUPON = 'coupons';
     case SALE = 'sales';
     case PURCHASE = 'purchases';
     case DIRECT_LESSON = 'direct_lessons';
 
-    // Financeiro
+    // Financial
     case COST_CENTER = 'cost_centers';
     case FINANCIAL_CATEGORY = 'financial_categories';
     case PAYABLE = 'payables';
     case RECEIVABLE = 'receivables';
     case MOVEMENT = 'movements';
 
-    // Gateway de Pagamentos
+    // Payment Gateway
     case GATEWAY_PAYMENT = 'gateway_payments';
     case GATEWAY_TRANSFER = 'gateway_transfers';
     case GATEWAY_TRANSFER_RECIPIENT = 'gateway_transfer_recipients';
@@ -47,7 +47,7 @@ enum AccessModule: string
     case GATEWAY_CREDIT_CARD = 'gateway_credit_cards';
     case GATEWAY_INVOICE = 'gateway_invoices';
 
-    // Avançado
+    // Advanced
     case FINANCIAL_ACCOUNT = 'financial_accounts';
     case GATEWAY_ACCOUNT = 'gateway_accounts';
     case USER = 'users';
@@ -59,7 +59,7 @@ enum AccessModule: string
         return match ($this) {
             self::DASHBOARD => 'Dashboard',
             self::REPORT => 'Relatórios',
-            self::CLIENT => 'Clientes',
+            self::CLIENT => 'Pessoas',
             self::TRAINER => 'Treinadores',
             self::SUPPLIER => 'Fornecedores',
             self::HIRING_LEAD => 'Pré-cadastro de Clientes',
@@ -71,21 +71,21 @@ enum AccessModule: string
             self::COUPON => 'Cupons',
             self::SALE => 'Vendas',
             self::PURCHASE => 'Compras',
-            self::DIRECT_LESSON => 'Aula Direta',
+            self::DIRECT_LESSON => 'Aulas Diretas',
             self::COST_CENTER => 'Centros de Custo',
             self::FINANCIAL_CATEGORY => 'Categorias Financeiras',
-            self::PAYABLE => 'Pagamentos',
-            self::RECEIVABLE => 'Recebimentos',
-            self::MOVEMENT => 'Caixa',
-            self::GATEWAY_PAYMENT => 'Pagamentos do Gateway',
-            self::GATEWAY_TRANSFER => 'Transferências do Gateway',
-            self::GATEWAY_TRANSFER_RECIPIENT => 'Destinatários de Transferências',
-            self::GATEWAY_POSTBACK => 'Postbacks do Gateway',
-            self::GATEWAY_CUSTOMER => 'Clientes do Gateway',
-            self::GATEWAY_CREDIT_CARD => 'Cartões do Gateway',
+            self::PAYABLE => 'Contas a Pagar',
+            self::RECEIVABLE => 'Contas a Receber',
+            self::MOVEMENT => 'Fluxo de Caixa',
+            self::GATEWAY_PAYMENT => 'Gateway de Pagamentos',
+            self::GATEWAY_TRANSFER => 'Transferências Gateway',
+            self::GATEWAY_TRANSFER_RECIPIENT => 'Destinatários de Transferência',
+            self::GATEWAY_POSTBACK => 'Postbacks Gateway',
+            self::GATEWAY_CUSTOMER => 'Clientes Gateway',
+            self::GATEWAY_CREDIT_CARD => 'Cartões Gateway',
             self::GATEWAY_INVOICE => 'Notas Fiscais',
-            self::FINANCIAL_ACCOUNT => 'Contas',
-            self::GATEWAY_ACCOUNT => 'Contas do Gateway',
+            self::FINANCIAL_ACCOUNT => 'Contas Financeiras',
+            self::GATEWAY_ACCOUNT => 'Contas Gateway',
             self::USER => 'Usuários',
             self::SETTING => 'Configurações',
             self::CHAT => 'Chat'

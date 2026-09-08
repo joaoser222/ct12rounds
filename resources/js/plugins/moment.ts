@@ -2,10 +2,10 @@ import moment, { type Moment, type MomentInput } from 'moment';
 import 'moment/dist/locale/pt-br';
 
 /**
- * Instância compartilhada do Moment já configurada para pt-BR.
+ * Shared Moment instance already configured for pt-BR.
  *
- * Mantém um único ponto de configuração para componentes que ainda dependem
- * de parsing/formatos baseados em Moment.
+ * Maintains a single configuration point for components that still depend
+ * on Moment-based parsing/formats.
  */
 
 const instance: typeof moment = moment;

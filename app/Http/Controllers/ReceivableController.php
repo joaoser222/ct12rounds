@@ -82,7 +82,7 @@ class ReceivableController extends CrudModuleController
     }
 
     /**
-     * Retorna as rotas disponíveis para o frontend.
+     * Return the available routes for the frontend.
      */
     protected function getModuleRoutes(): array
     {
@@ -129,7 +129,7 @@ class ReceivableController extends CrudModuleController
         abort_if(
             $receivable->status === InvoiceStatus::PAID,
             422,
-            'Este recebimento já foi baixado.',
+            'This receivable has already been settled.',
         );
 
         $result = $this->markReceivablePaid->execute(MarkReceivablePaidDTO::from([
@@ -143,13 +143,13 @@ class ReceivableController extends CrudModuleController
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Recebimento baixado com sucesso.',
+                'message' => 'Receivable settled successfully.',
             ]);
         }
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Recebimento baixado com sucesso.',
+            'message' => 'Receivable settled successfully.',
         ]);
 
         return redirect()->route('receivables.index');
@@ -205,7 +205,7 @@ class ReceivableController extends CrudModuleController
 
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => 'Nota fiscal solicitada com sucesso.',
+            'message' => 'Fiscal invoice requested successfully.',
         ]);
 
         return back();
@@ -216,7 +216,7 @@ class ReceivableController extends CrudModuleController
      */
     private function actionFailureResponse(Request $request, ?array $errors, ?string $message): RedirectResponse|JsonResponse
     {
-        $message ??= 'Não foi possível concluir a operação.';
+        $message ??= 'Could not complete the operation.';
 
         if ($request->expectsJson()) {
             return response()->json([

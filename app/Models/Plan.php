@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PlanAudience;
 use App\Traits\HasVisibility;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,11 @@ class Plan extends Model
         'price',
         'duration_months',
         'plan_category_id',
+        'audience',
+    ];
+
+    protected $casts = [
+        'audience' => PlanAudience::class,
     ];
 
     protected static function booted(): void
@@ -50,6 +56,11 @@ class Plan extends Model
     protected function modalityQuantity(): Attribute
     {
         return Attribute::get(fn (): int => $this->modalities()->count());
+    }
+
+    public function requiresLegalRepresentative(): bool
+    {
+        return $this->audience === PlanAudience::CHILD;
     }
 
     public function planCategory()

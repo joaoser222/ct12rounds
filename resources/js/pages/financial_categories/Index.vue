@@ -8,13 +8,13 @@ import type { PaginatedResponse, IndexRoutes } from '@/shared/page';
 
 defineOptions({ layout: AuthenticatedLayout });
 
-// Props da página
+// Page props
 const props = defineProps<{
     financialCategories: PaginatedResponse<any>;
     routes: IndexRoutes;
 }>();
 
-// Configuração da tabela
+// Table configuration
 const headers: TableHeader[] = [
     { title: 'ID', key: 'id', sortable: true, width: '80px' },
     { title: 'Nome', key: 'name', sortable: true, searchable: true },

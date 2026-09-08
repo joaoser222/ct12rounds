@@ -34,7 +34,7 @@ defineProps<{
 }>();
 
 const sharedProps = usePage().props;
-const { genderTypes, ufs } = useSharedOptions(
+const { genderTypes, states } = useSharedOptions(
     sharedProps.options ?? {},
 );
 
@@ -72,7 +72,7 @@ const defaults = {
                 :form="form"
                 :errors="errors"
                 :gender-types="genderTypes"
-                :ufs="ufs"
+                :states="states"
             />
         </template>
     </DetailsPage>

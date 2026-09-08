@@ -25,14 +25,14 @@ abstract class AbstractModuleController extends Controller
     abstract protected function modelClass(): string;
 
     /**
-     * Retorna as rotas disponíveis para o frontend.
+     * Return the available routes for the frontend.
      *
      * @return array<string, string>
      */
     abstract protected function getModuleRoutes(): array;
 
     /**
-     * Compartilha as rotas com o Inertia.
+     * Share routes with Inertia.
      */
     protected function shareModuleRoutes(): void
     {
@@ -99,8 +99,8 @@ abstract class AbstractModuleController extends Controller
     }
 
     /**
-     * Campos que serão retornados para o frontend.
-     * Se vazio, retorna todos os campos.
+     * Fields that will be returned to the frontend.
+     * If empty, returns all fields.
      *
      * @return array<int, string>
      */
@@ -160,7 +160,7 @@ abstract class AbstractModuleController extends Controller
         foreach ($this->joins() as $relation) {
             $relationObject = $model->$relation();
 
-            $query->join(
+            $query->leftJoin(
                 $relationObject->getRelated()->getTable(),
                 $relationObject->getQualifiedForeignKeyName(),
                 '=',

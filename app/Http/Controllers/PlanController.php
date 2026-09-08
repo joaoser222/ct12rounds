@@ -77,17 +77,17 @@ class PlanController extends CrudModuleController
                     ])
                     ->all(),
             ],
-            'publicCadastroUrl' => $model ? $this->publicCadastroUrl($model) : null,
+            'publicRegistrationUrl' => $model ? $this->publicRegistrationUrl($model) : null,
         ];
     }
 
-    private function publicCadastroUrl(Model $model): ?string
+    private function publicRegistrationUrl(Model $model): ?string
     {
         if (empty($model->getAttribute('public_slug')) || $model->getAttribute('visibility') === 'hidden') {
             return null;
         }
 
-        return route('public.cadastro', ['plan' => $model->getAttribute('public_slug')]);
+        return route('public.register', ['plan' => $model->getAttribute('public_slug')]);
     }
 
     public function show(Request $request): Response|JsonResponse

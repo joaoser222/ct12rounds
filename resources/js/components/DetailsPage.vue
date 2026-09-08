@@ -8,16 +8,16 @@ import {
 import type { DetailsRoutes } from '@/shared/page';
 
 /**
- * Wrapper genérico para telas de criação/edição.
+ * Generic wrapper for creation/editing screens.
  *
- * Responsabilidades:
- * - montar o `useForm` a partir de `defaults` + `item`;
- * - alternar automaticamente entre store e update;
- * - controlar permissão, validação e estado dos botões;
- * - expor o formulário via slot para a página dona dos campos.
+ * Responsibilities:
+ * - build the `useForm` from `defaults` + `item`;
+ * - automatically switch between store and update;
+ * - control permission, validation, and button state;
+ * - expose the form via slot for the page that owns the fields.
  */
 
-// O formulário genérico diferencia automaticamente permissões de criação e atualização.
+// The generic form automatically distinguishes between creation and update permissions.
 type DetailsPermissionAction = 'create' | 'update';
 type DetailsPermissionMap = ModulePermissionMap<DetailsPermissionAction>;
 
@@ -27,7 +27,7 @@ type VForm = {
     resetValidation: () => void;
 };
 
-// A página dona do formulário fornece dados, rotas e defaults; este componente cuida do ciclo de edição.
+// The page that owns the form provides data, routes, and defaults; this component handles the editing cycle.
 const props = withDefaults(
     defineProps<{
         title: string;
@@ -68,7 +68,7 @@ const initialData = computed<FormData>(() => ({
     ...(props.item ?? {}),
 }));
 
-// `useForm` mantém integração com validação/erros do Inertia sem acoplar o schema ao componente genérico.
+// `useForm` maintains integration with Inertia's validation/errors without coupling the schema to the generic component.
 const form = useForm<FormData>({ ...initialData.value });
 
 const formErrors = computed(() => form.errors);
@@ -78,7 +78,7 @@ const emit = defineEmits<{
     cancel: [];
 }>();
 
-// Sem identificador, o componente assume fluxo de criação.
+// Without an identifier, the component assumes the creation flow.
 const recordId = computed(() => props.item?.[props.itemKey]);
 const isCreating = computed(
     () => recordId.value === undefined || recordId.value === null,
@@ -119,7 +119,7 @@ const validate = async (): Promise<boolean> => {
     return result.valid;
 };
 
-// O submit escolhe automaticamente entre criação e atualização a partir da presença do identificador.
+// The submit automatically chooses between creation and update based on the presence of the identifier.
 const submit = async (overrides: FormData = {}): Promise<void> => {
     if (!canSubmit.value) {
         return;
@@ -166,7 +166,7 @@ const cancel = (): void => {
 watch(
     initialData,
     (data) => {
-        // Sempre que o item muda, o formulário volta ao estado base daquela edição.
+        // Whenever the item changes, the form returns to the base state of that edit.
         form.defaults({ ...data });
         form.reset();
         formDetails.value?.resetValidation();
@@ -180,14 +180,14 @@ watch(
 watch(
     () => form.data(),
     (current, previous) => {
-        // Limpa erro do campo que o usuário acabou de editar.
+        // Clears the error of the field the user just edited.
         for (const key of Object.keys(current)) {
             if (key in previous && current[key] !== previous[key] && form.errors[key]) {
                 form.clearErrors(key);
             }
         }
 
-        // Revalida de forma assíncrona para manter o estado do botão consistente com o formulário atual.
+        // Revalidates asynchronously to keep the button state consistent with the current form.
         void nextTick(validate);
     },
     { deep: true },
@@ -216,7 +216,7 @@ void nextTick(validate);
                     validate-on="input"
                     @submit.prevent="submit"
                 >
-                    <!-- A página consome o form pronto e renderiza apenas os campos específicos do módulo. -->
+                    <!-- The page consumes the ready form and renders only the module-specific fields. -->
                     <slot
                         :form="form"
                         :errors="formErrors"

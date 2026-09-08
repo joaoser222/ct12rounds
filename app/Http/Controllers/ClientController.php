@@ -12,7 +12,7 @@ use App\Enums\ClientStatus;
 use App\Enums\GenderType;
 use App\Http\Requests\ClientRequest;
 use App\Models\Client;
-use App\Models\Uf;
+use App\Models\State;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -141,7 +141,7 @@ class ClientController extends CrudModuleController
         return [
             'options' => [
                 'genderTypes' => $this->enumOptions(GenderType::class),
-                'ufs' => $this->modelOptions(Uf::class),
+                'states' => $this->modelOptions(State::class),
             ],
 
         ];

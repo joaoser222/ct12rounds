@@ -88,10 +88,10 @@
 import { ref, watch, computed } from 'vue';
 
 /**
- * Campo de cor com preview inline e seletor em diálogo.
+ * Color field with inline preview and dialog-based picker.
  *
- * O valor externo só é atualizado em `confirmColor`, permitindo testar a cor
- * no diálogo sem persistir alterações parciais.
+ * The external value is only updated on `confirmColor`, allowing testing the color
+ * in the dialog without persisting partial changes.
  */
 const props = withDefaults(
     defineProps<{
@@ -106,7 +106,7 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void;
 }>();
 
-// `internalValue` permite editar/cancelar dentro do diálogo sem alterar o valor externo imediatamente.
+// `internalValue` allows editing/canceling within the dialog without immediately changing the external value.
 const dialog = ref<boolean>(false);
 const internalValue = ref<string>(props.modelValue);
 const originalValue = ref<string>(props.modelValue);
@@ -124,7 +124,7 @@ watch(
     { immediate: true },
 );
 
-// Ao abrir, o componente guarda um snapshot para permitir restauração em cancelamento.
+// On open, the component stores a snapshot to allow restoration on cancel.
 function openDialog(): void {
     originalValue.value = props.modelValue || '#ffffff';
     internalValue.value = props.modelValue || '#ffffff';
@@ -132,7 +132,7 @@ function openDialog(): void {
 }
 
 function closeDialog(): void {
-    // Restaura o valor original se cancelar.
+    // Restores the original value if canceled.
     internalValue.value = originalValue.value;
     dialog.value = false;
 }
@@ -146,7 +146,7 @@ function updateColor(color: string): void {
     internalValue.value = color;
 }
 
-// Exposto para integrações que precisem abrir o picker programaticamente.
+// Exposed for integrations that need to open the picker programmatically.
 defineExpose({
     openDialog,
     closeDialog,

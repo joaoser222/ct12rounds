@@ -36,6 +36,7 @@ const defaults = {
                 <v-col cols="12" md="6">
                     <v-text-field
                         v-model="form.name"
+                        v-text-case="'capitalize'"
                         label="Nome"
                         :rules="[required]"
                         :error-messages="errors.name"

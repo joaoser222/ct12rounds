@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 class PlanCategorySeeder extends Seeder
 {
     /**
-     * Categorias de planos pré-definidas.
+     * Predefined plan categories.
      *
      * @var list<string>
      */

@@ -89,7 +89,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerRepositoryBindings();
         $this->registerServiceBindings();
 
-        // Gera rotas de forma customizada para modulos
+        // Generate routes in a custom way for modules
         Route::macro('module', function (string $prefixOrController, ?string $controller = null) {
             $controller ??= $prefixOrController;
             $prefix = $controller === $prefixOrController

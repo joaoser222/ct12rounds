@@ -32,7 +32,7 @@ const props = withDefaults(
         form: ClientFormData;
         errors: ClientFormErrors;
         genderTypes: Option[];
-        ufs: Option[];
+        states: Option[];
         requireAddressState?: boolean;
         disabled?: boolean;
     }>(),
@@ -238,7 +238,7 @@ async function fillAddress(): Promise<void> {
             <v-select
                 v-model="form.address_state"
                 label="Estado"
-                :items="ufs"
+                :items="states"
                 :rules="requireAddressState ? [required] : []"
                 :disabled="disabled"
                 :error-messages="errors.address_state"

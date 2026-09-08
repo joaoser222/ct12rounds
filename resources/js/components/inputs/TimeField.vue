@@ -34,10 +34,10 @@ import { ref, watch, computed, useAttrs } from 'vue';
 import moment from '@/plugins/moment';
 
 /**
- * Campo de horário com entrada manual e `v-time-picker`.
+ * Time field with manual input and `v-time-picker`.
  *
- * O usuário vê `formatDisplay`, enquanto o `v-model` sempre emite em
- * `formatOutput`, mantendo o valor consistente para persistência.
+ * The user sees `formatDisplay`, while the `v-model` always emits in
+ * `formatOutput`, keeping the value consistent for persistence.
  */
 interface Props {
     modelValue?: string;
@@ -80,7 +80,7 @@ const pickerValue = computed<string | undefined>(() => {
     return momentObj.format('HH:mm');
 });
 
-// O picker sempre emite no formato de saída, enquanto o input continua amigável ao usuário.
+// The picker always emits in the output format, while the input remains user-friendly.
 function timePickerInput(time: string | null): void {
     if (!time) {
         return;
@@ -123,7 +123,7 @@ watch(
     { immediate: true },
 );
 
-// A normalização no blur evita emitir valores parciais durante a digitação.
+// Normalization on blur prevents emitting partial values during typing.
 function handleInput(): void {
     emit('update:modelValue', formatToOutput(inputValue.value));
 }

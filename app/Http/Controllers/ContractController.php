@@ -273,7 +273,7 @@ class ContractController extends CrudModuleController
             $couponInfo = $model->coupon?->code;
 
             if ($model->registration_token !== null && $model->client_id === null) {
-                $registrationUrl = route('public.cadastro', ['contract' => $model->registration_token]);
+                $registrationUrl = route('public.register', ['contract' => $model->registration_token]);
 
                 $registration = [
                     'url' => $registrationUrl,

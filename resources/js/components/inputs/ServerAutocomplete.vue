@@ -16,17 +16,17 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 /**
- * Autocomplete com busca remota no endpoint `/select-box/{objectName}`.
+ * Autocomplete with remote search on the `/select-box/{objectName}` endpoint.
  *
- * Fluxo:
- * - carrega opções iniciais com busca vazia ao montar;
- * - aplica debounce de 300ms na digitação;
- * - aborta requisições anteriores para evitar race conditions.
+ * Flow:
+ * - loads initial options with an empty search on mount;
+ * - applies a 300ms debounce on typing;
+ * - aborts previous requests to avoid race conditions.
  *
- * Props principais:
- * - `objectName`: recurso consultado no backend;
- * - `limit`: máximo de opções por requisição;
- * - `modelValue`: valor selecionado no `v-model`.
+ * Main props:
+ * - `objectName`: resource queried on the backend;
+ * - `limit`: maximum options per request;
+ * - `modelValue`: selected value from `v-model`.
  */
 type SelectOption = {
     value: string;
@@ -121,7 +121,7 @@ function emitSelection(value: string | number | null): void {
     emit('selected-item', selected ?? null);
 }
 
-// Executa a busca imediatamente e garante que apenas a resposta mais recente atualize o estado.
+// Runs the search immediately and ensures only the most recent response updates the state.
 function runFetch(query: string): void {
     activeRequestController?.abort();
 
@@ -172,7 +172,7 @@ function runFetch(query: string): void {
             });
 }
 
-// Usa debounce nas buscas digitadas e permite carga imediata na montagem inicial.
+// Uses debounce on typed searches and allows immediate loading on initial mount.
 function fetchOptions(query: string, immediate = false): void {
     if (searchTimeout) {
         clearTimeout(searchTimeout);

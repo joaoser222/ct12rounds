@@ -10,7 +10,7 @@ use App\DTOs\Trainer\CreateTrainerDTO;
 use App\DTOs\Trainer\UpdateTrainerDTO;
 use App\Enums\GenderType;
 use App\Models\Trainer;
-use App\Models\Uf;
+use App\Models\State;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -127,7 +127,7 @@ class TrainerController extends CrudModuleController
         return [
             'options' => [
                 'genderTypes' => $this->enumOptions(GenderType::class),
-                'ufs' => $this->modelOptions(Uf::class),
+                'states' => $this->modelOptions(State::class),
             ],
         ];
     }

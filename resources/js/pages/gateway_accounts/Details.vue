@@ -525,6 +525,7 @@ onMounted(() => {
                             <v-col cols="12" md="6">
                                 <v-text-field
                                     v-model="municipalForm.municipal_service_name"
+                                    v-text-case="'capitalize'"
                                     label="Nome do serviço municipal"
                                     :error-messages="municipalErrors.municipal_service_name"
                                 />

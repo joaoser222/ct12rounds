@@ -478,7 +478,7 @@ class ChatControllerTest extends TestCase
         $this->assertSame('Conversa antiga', $titles[0], 'A conversa com atividade recente deve vir primeiro.');
     }
 
-    public function test_chat_usa_groq_com_formato_tool_calls(): void
+    public function test_chat_uses_groq_with_tool_calls_format(): void
     {
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
@@ -546,7 +546,7 @@ class ChatControllerTest extends TestCase
         $this->assertSame('auto', $body['tool_choice']);
     }
 
-    public function test_chat_envia_chat_template_kwargs_do_config(): void
+    public function test_chat_sends_chat_template_kwargs_from_config(): void
     {
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
@@ -580,7 +580,7 @@ class ChatControllerTest extends TestCase
         $this->assertSame(['enable_thinking' => false], $recorded[0]->data()['chat_template_kwargs']);
     }
 
-    public function test_chat_stream_emite_tokens_e_persiste_mensagem(): void
+    public function test_chat_stream_emits_tokens_and_persists_message(): void
     {
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');

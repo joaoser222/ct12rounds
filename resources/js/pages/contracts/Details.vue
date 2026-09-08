@@ -95,7 +95,7 @@ const props = defineProps<{
         plans: PlanOption[];
         coupons: CouponOption[];
         genderTypes?: LabeledOption<string>[];
-        ufs?: LabeledOption<string>[];
+        states?: LabeledOption<string>[];
         billableStatus?: Option[];
         paymentMethods?: Option[];
     };
@@ -292,11 +292,37 @@ function copyRegistrationLink(): void {
         return;
     }
 
-    navigator.clipboard?.writeText(props.registration.url).then(() => {
-        copied.value = true;
+    const url = props.registration.url;
 
+    if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            copied.value = true;
+            setTimeout(() => (copied.value = false), 2000);
+        }).catch(() => fallbackCopy(url));
+
+        return;
+    }
+
+    fallbackCopy(url);
+}
+
+function fallbackCopy(text: string): void {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+        document.execCommand('copy');
+        copied.value = true;
         setTimeout(() => (copied.value = false), 2000);
-    }).catch(() => {});
+    } catch {
+        // ignore
+    }
+
+    document.body.removeChild(textarea);
 }
 
 function splitAmount(amount: number, installments: number): number[] {

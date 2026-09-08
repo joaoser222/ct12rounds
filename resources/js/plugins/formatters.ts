@@ -1,8 +1,8 @@
 /**
- * Helpers de formatação e sanitização leves usados pela UI.
+ * Lightweight formatting and sanitization helpers used by the UI.
  *
- * A ideia aqui é centralizar formatos comuns sem acoplar a aplicação a
- * componentes específicos.
+ * The idea here is to centralize common formats without coupling the application
+ * to specific components.
  */
 
 export function onlyDigits(value?: string | number | null): string {
@@ -55,7 +55,7 @@ export function formatCurrency(
 }
 
 function normalizeDate(value?: string | number | Date | null): Date | null {
-    // Normaliza entradas heterogêneas antes da formatação de data.
+    // Normalizes heterogeneous inputs before date formatting.
     if (value === null || value === undefined || value === '') {
         return null;
     }

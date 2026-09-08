@@ -10,15 +10,15 @@ import themes from '../themes/index';
 import { tabler } from './tabler';
 
 /**
- * Configuração central do Vuetify da aplicação.
+ * Central Vuetify configuration for the application.
  *
- * Este arquivo concentra:
- * - tema, locale e iconset;
- * - aliases de componentes usados no projeto;
- * - defaults visuais para manter consistência entre páginas.
+ * This file consolidates:
+ * - theme, locale, and iconset;
+ * - component aliases used in the project;
+ * - visual defaults to maintain consistency across pages.
  */
 
-// Garante tipagem compatível com o shape esperado pelo Vuetify.
+// Ensures type compatibility with the shape expected by Vuetify.
 const typedThemes = themes as Record<string, ThemeDefinition>;
 
 export default createVuetify({
@@ -50,7 +50,7 @@ export default createVuetify({
         VBtnIcon: VBtn
     },
     defaults: {
-        // Defaults globais e por componente evitam repetir props visuais nas páginas.
+        // Global and per-component defaults avoid repeating visual props on pages.
         global: {
             elevation: 0,
         },

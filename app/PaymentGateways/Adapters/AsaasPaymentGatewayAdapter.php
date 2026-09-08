@@ -410,8 +410,8 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
             : \App\Enums\Gateway\InvoiceStatus::UNKNOWN;
         $newStatus = $this->mapInvoiceStatus($body['status'] ?? 'PENDING');
 
-        // Idempotência: sem --force, não regrava o registro quando o status
-        // informado pelo provedor não mudou em relação ao que já temos.
+        // Idempotency: without --force, do not overwrite the record when the
+        // status reported by the provider has not changed from what we already have.
         if (! $force && $currentStatus === $newStatus) {
             return $invoice->fresh();
         }

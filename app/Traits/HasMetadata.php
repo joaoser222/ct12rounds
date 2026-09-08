@@ -12,8 +12,8 @@ trait HasMetadata
     }
 
     /**
-     * Lista de campos que serão retornados em options().
-     * Pode ser sobrescrita no enum que usa o trait.
+     * List of fields that will be returned by options().
+     * Can be overridden in the enum that uses this trait.
      */
     protected static function fields(): array
     {
@@ -21,7 +21,7 @@ trait HasMetadata
     }
 
     /**
-     * Retorna todos os valores como array
+     * Return all values as an array.
      */
     public static function values(): array
     {
@@ -29,7 +29,7 @@ trait HasMetadata
     }
 
     /**
-     * Retorna array para selects (value => [campos definidos em fields()])
+     * Return array for selects (value => [fields defined in fields()]).
      */
     public static function options(): array
     {
@@ -51,7 +51,7 @@ trait HasMetadata
     }
 
     /**
-     * Verifica se um valor é válido
+     * Check if a value is valid.
      */
     public static function isValid(string $value): bool
     {

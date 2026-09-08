@@ -15,10 +15,10 @@ import { computed } from 'vue';
 import { applyMask, unmaskValue, type UnmaskMode } from '@/plugins/masks';
 
 /**
- * Wrapper leve sobre `v-text-field` para valores mascarados.
+ * Lightweight wrapper around `v-text-field` for masked values.
  *
- * `displayValue` controla apenas a exibição; o valor emitido depende de
- * `unmask`, permitindo persistir texto mascarado ou limpo no `v-model`.
+ * `displayValue` controls only the display; the emitted value depends on
+ * `unmask`, allowing masked or clean text to be persisted in `v-model`.
  */
 defineOptions({
     inheritAttrs: false,
@@ -43,7 +43,7 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void;
 }>();
 
-// `displayValue` controla apenas o que o usuário vê; o valor emitido pode ser mascarado ou limpo.
+// `displayValue` controls only what the user sees; the emitted value may be masked or clean.
 const displayValue = computed(() =>
     applyMask(props.modelValue, props.mask, props.unmask),
 );

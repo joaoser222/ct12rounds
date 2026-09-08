@@ -36,10 +36,10 @@ class GatewayAccount extends Model
             $definition = app(PaymentGatewayManager::class)->find((string) $account->name);
             $account->invoicing_supported = $definition?->supportsInvoicing() === true;
 
-            // A configuração fiscal é considerada válida quando o emissor possui os
-            // dados municipais mínimos (descrição do serviço e código de serviço).
-            // O marcador settings.invoicing.fiscal_configuration_at indica que a
-            // configuração foi efetivada no provedor (PUT /invoices/municipalConfiguration).
+            // Fiscal configuration is considered valid when the emitter has the
+            // minimum municipal data (service description and service code).
+            // The settings.invoicing.fiscal_configuration_at flag indicates that
+            // the configuration was applied at the provider (PUT /invoices/municipalConfiguration).
             $account->invoicing_configured = $account->invoicing_supported
                 && filled(data_get($account->settings, 'invoicing.service_description'))
                 && filled(data_get($account->settings, 'invoicing.municipal_service_code'));

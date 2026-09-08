@@ -76,7 +76,7 @@ class DiscountCalculator
     }
 
     /**
-     * Split amount into equal parts handling centavos correctly.
+     * Split amount into equal parts handling cents correctly.
      *
      * @return array<int, float>
      */

@@ -5,7 +5,7 @@ namespace App\Services\Billing;
 class InstallmentSplitter
 {
     /**
-     * Split amount into equal installments handling centavos correctly.
+     * Split amount into equal installments handling cents correctly.
      *
      * @return array<int, float>
      */
