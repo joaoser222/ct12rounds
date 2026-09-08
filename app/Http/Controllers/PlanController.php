@@ -28,7 +28,7 @@ class PlanController extends CrudModuleController
     /**
      * @var array<int, string>
      */
-    protected array $fields = ['id', 'name', 'description', 'created_at'];
+    protected array $fields = ['id', 'name', 'price', 'duration_months', 'description', 'created_at'];
 
     /**
      * @var array<int, string>
@@ -38,7 +38,7 @@ class PlanController extends CrudModuleController
     /**
      * @var array<int, string>
      */
-    protected array $sortableFields = ['id', 'name', 'created_at'];
+    protected array $sortableFields = ['id', 'name', 'price', 'duration_months', 'created_at'];
 
     protected function accessModule(): AccessModule
     {
