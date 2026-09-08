@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import type { TableHeader, TableRoutes } from '@/components/TablePage.vue';
-import { formatDate } from '@/plugins/formatters';
+import { formatCurrency, formatDate } from '@/plugins/formatters';
 import type { PaginatedResponse, IndexRoutes } from '@/shared/page';
 
 defineOptions({ layout: AuthenticatedLayout });
@@ -39,8 +39,14 @@ const routes: TableRoutes = {
         :routes="routes"
         module="plans"
         title="Planos"
-        :custom-slots="['created_at']"
+        :custom-slots="['price', 'duration_months', 'created_at']"
     >
+        <template #column-price="{ item }">
+            {{ formatCurrency(item.price) }}
+        </template>
+        <template #column-duration_months="{ item }">
+            {{ item.duration_months }} {{ item.duration_months === 1 ? 'mês' : 'meses' }}
+        </template>
         <template #column-created_at="{ item }">
             {{ formatDate(item.created_at) }}
         </template>
