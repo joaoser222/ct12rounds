@@ -22,7 +22,6 @@ declare module 'vue' {
     MaskedTextField: typeof import('./../../resources/js/components/inputs/MaskedTextField.vue')['default']
     ModalityCard: typeof import('./../../resources/js/components/ModalityCard.vue')['default']
     PasswordField: typeof import('./../../resources/js/components/inputs/PasswordField.vue')['default']
-    QuillEditor: typeof import('./../../resources/js/components/inputs/QuillEditor.vue')['default']
     ReadOnlyDetailsPage: typeof import('./../../resources/js/components/ReadOnlyDetailsPage.vue')['default']
     ServerAutocomplete: typeof import('./../../resources/js/components/inputs/ServerAutocomplete.vue')['default']
     StatusChip: typeof import('./../../resources/js/components/StatusChip.vue')['default']
