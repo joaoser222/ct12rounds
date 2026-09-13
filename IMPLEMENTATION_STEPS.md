@@ -85,6 +85,17 @@ modalidade usando a cor definida.
 
 # IMPLEMENTATION STEPS — Painel dedicado de edição da Landing (GrapesJS)
 
+> ⚠️ **Arquivo histórico / SUPERSEDED em 2026-09-13.** A landing foi migrada para
+> uma **página Inertia/Vue estática**. Todo o pipeline que este documento descreve
+> (editor GrapesJS, guard/auth `landing_admin`, storage/assets, comandos, migrações,
+> rotas `/landing-admin`, `/storage/landing` e `/landing-assets`, dependências
+> `grapesjs*`) foi **removido**. A landing é agora o componente
+> `resources/js/pages/public/Landing.vue`, com assets locais em
+> `public/landing-assets/img/` e SEO via SSR (`INERTIA_SSR_ENABLED=true`).
+> A captura de leads (`POST public.landing.store`) e as edições via settings
+> (`LandingSettingsService`) foram mantidas. As seções abaixo ficam como registro
+> histórico do que existiu.
+
 ## Objetivo
 Criar um painel de edição **separado** da área autenticada do sistema para editar a
 landing pública, usando o **GrapesJS** (page builder visual), com **autenticação
