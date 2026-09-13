@@ -7,9 +7,7 @@ namespace Tests\Feature\HiringLeads;
 use App\Enums\HiringLeadSource;
 use App\Models\Setting;
 use App\Models\User;
-use App\Services\LandingStorageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -35,11 +33,9 @@ class PublicHiringLandingTest extends TestCase
             );
     }
 
-    public function test_landing_renders_configurable_content_when_enabled(): void
+    public function test_landing_renders_static_page_with_configurable_settings_when_enabled(): void
     {
         $this->enableLanding();
-
-        Storage::fake('local');
 
         $this->get(route('home'))
             ->assertOk()
@@ -50,39 +46,7 @@ class PublicHiringLandingTest extends TestCase
                 ->where('whatsappUrl', 'https://wa.me/5563981019160')
                 ->where('title', 'CT 12 Rounds — Centro de Treinamento')
                 ->where('storeUrl', route('public.landing.store'))
-                ->where('contentHtml', null));
-    }
-
-    public function test_landing_renders_published_content_when_available(): void
-    {
-        $this->enableLanding();
-
-        Storage::fake('local');
-
-        Storage::disk('local')->put('landing/published.html', '<section class="hero">Conteúdo do editor</section>');
-        Storage::disk('local')->put('landing/meta.json', json_encode(['status' => LandingStorageService::STATUS_PUBLISHED]));
-
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('public/Landing')
-                ->where('contentHtml', '<section class="hero">Conteúdo do editor</section>'));
-    }
-
-    public function test_landing_ignores_empty_published_content(): void
-    {
-        $this->enableLanding();
-
-        Storage::fake('local');
-
-        Storage::disk('local')->put('landing/published.html', '');
-        Storage::disk('local')->put('landing/meta.json', json_encode(['status' => LandingStorageService::STATUS_PUBLISHED]));
-
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('public/Landing')
-                ->where('contentHtml', null));
+                ->missing('contentHtml'));
     }
 
     public function test_landing_store_creates_lead_with_site_source(): void
@@ -135,8 +99,6 @@ class PublicHiringLandingTest extends TestCase
     public function test_landing_renders_contract_cta_with_register_url(): void
     {
         $this->enableLanding();
-
-        Storage::fake('local');
 
         $this->get(route('home', ['contract' => 'token-abc']))
             ->assertOk()
