@@ -21,10 +21,12 @@ import { tabler } from './tabler';
 // Ensures type compatibility with the shape expected by Vuetify.
 const typedThemes = themes as Record<string, ThemeDefinition>;
 
-export default createVuetify({
-    components: {
-        VFileUpload,
-    },
+export const createAppVuetify = (options?: { ssr?: boolean }) =>
+    createVuetify({
+        ssr: options?.ssr ?? false,
+        components: {
+            VFileUpload,
+        },
     icons: {
         defaultSet: 'tabler',
         aliases,
@@ -267,3 +269,5 @@ export default createVuetify({
         themes: typedThemes,
     },
 });
+
+export default createAppVuetify();

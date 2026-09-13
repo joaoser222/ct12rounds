@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\HiringLeads\CreateSiteLeadAction;
 use App\Enums\HiringLeadSource;
 use App\Enums\HiringLeadStatus;
 use App\Http\Requests\PublicHiringLeadRequest;
@@ -29,6 +30,7 @@ class PublicHiringLeadController extends Controller
     public function __construct(
         private readonly ClientRepositoryInterface $clientRepository,
         private readonly GatewayAdapterResolver $gatewayResolver,
+        private readonly CreateSiteLeadAction $createLead,
     ) {}
 
     public function create(Request $request): Response
@@ -112,16 +114,7 @@ class PublicHiringLeadController extends Controller
 
     private function storePreRegistration(array $data, PublicHiringLeadRequest $request): RedirectResponse
     {
-        HiringLead::query()->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'],
-            'document' => preg_replace('/\D/', '', (string) $data['document']),
-            'status' => HiringLeadStatus::NEW->value,
-            'source' => HiringLeadSource::SITE->value,
-            'visibility' => 'visible',
-            'accepted_at' => CarbonImmutable::now(),
-        ]);
+        $this->createLead->execute($data);
 
         $request->session()->put('hiring_lead_success', true);
 

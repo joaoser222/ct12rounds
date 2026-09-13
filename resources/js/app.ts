@@ -6,7 +6,7 @@ import { vTextCase } from '@/directives/textCase';
 import RootApp from '@/App.vue';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import viaCep from '@/plugins/viacep';
-import vuetify from '@/plugins/vuetify';
+import { createAppVuetify } from '@/plugins/vuetify';
 
 type InertiaPageComponent = DefineComponent & {
     layout?: unknown;
@@ -40,7 +40,7 @@ createInertiaApp({
         });
 
         app.use(plugin);
-        app.use(vuetify);
+        app.use(createAppVuetify());
         app.use(viaCep);
         app.directive('maska', vMaska);
         app.directive('text-case', vTextCase);
