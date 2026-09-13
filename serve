@@ -31,7 +31,7 @@ if [[ "${1:-}" == "build" ]]; then
     echo "▶ Instalando dependências..."
     npm ci
     echo "▶ Compilando frontend..."
-    npm run build
+    npm run build:ssr
     echo "▶ Reconstruindo e reiniciando containers..."
     exec "$project_dir/serve" "$environment" up -d --build app "$@"
 fi
@@ -45,28 +45,28 @@ for arg in "$@"; do
     fi
 done
 
+base_environment_file=".env"
 case "$environment" in
     develop)
-        environment_file=".env"
+        environment_file="develop.env"
         compose_override="compose.develop.yaml"
         compose_local="compose.local.yaml"
-        profile=""
         ;;
     production)
         environment_file="production.env"
         compose_override="compose.production.yaml"
         compose_local=""
-        profile="worker"
         ;;
 esac
 
-# Adiciona profile de monitoramento (padrão)
+# Profiles adicionais: worker em produção, monitoring por padrão. Cada profile é
+# passado com um --profile próprio (o Compose não divide lista separada por vírgula).
+profiles=()
+if [[ "$environment" == "production" ]]; then
+    profiles+=(worker)
+fi
 if [[ "$monitoring" == true ]]; then
-    if [[ -n "$profile" ]]; then
-        profile="$profile,monitoring"
-    else
-        profile="monitoring"
-    fi
+    profiles+=(monitoring)
 fi
 
 # O frontend é compilado pelo ambiente de desenvolvimento (npm run build no
@@ -78,14 +78,32 @@ if [[ -n "$compose_local" ]]; then
     compose_files+=("$project_dir/$compose_local")
 fi
 
-docker_compose=(docker compose --project-directory "$project_dir" --env-file "$project_dir/$environment_file")
+# .env é a base canônica do projeto; o arquivo do ambiente carrega apenas os
+# deltas em relação a ela. develop.env é opcional (fluxo local), production.env
+# é obrigatório para produção.
+env_files=("$project_dir/$base_environment_file")
+if [[ -f "$project_dir/$environment_file" ]]; then
+    env_files+=("$project_dir/$environment_file")
+elif [[ "$environment" == "develop" ]]; then
+    echo "Aviso: $environment_file não encontrado; usando apenas $base_environment_file." >&2
+else
+    echo "Erro: $environment_file é obrigatório para o ambiente $environment." >&2
+    exit 1
+fi
+
+env_file_args=(--project-directory "$project_dir")
+for env_file in "${env_files[@]}"; do
+    env_file_args+=(--env-file "$env_file")
+done
+
+docker_compose=(docker compose "${env_file_args[@]}")
 
 for file in "${compose_files[@]}"; do
     docker_compose+=(-f "$file")
 done
 
-if [[ -n "$profile" ]]; then
+for profile in "${profiles[@]}"; do
     docker_compose+=(--profile "$profile")
-fi
+done
 
 exec "${docker_compose[@]}" "$@"

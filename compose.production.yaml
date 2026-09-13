@@ -1,14 +1,19 @@
 services:
   app:
     env_file:
-      - production.env
+      - path: .env
+        required: true
+      - path: production.env
+        required: true
     command: >-
       sh -c 'set -e;
+      node /var/www/html/bootstrap/ssr/ssr.js > /tmp/ssr.log 2>&1 &
       mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache;
       chown -R www-data:www-data storage bootstrap/cache;
       exec php-fpm'
     volumes:
       - laravel_storage:/var/www/html/storage
+      - ./resources/views/landing:/var/www/html/resources/views/landing
   caddy:
     container_name: ct12rounds_caddy
     ports:
@@ -17,10 +22,16 @@ services:
       - ./public:/var/www/html/public:ro
   db:
     env_file:
-      - production.env
+      - path: .env
+        required: true
+      - path: production.env
+        required: true
   queue:
     env_file:
-      - production.env
+      - path: .env
+        required: true
+      - path: production.env
+        required: true
 
 volumes:
   laravel_storage:

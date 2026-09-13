@@ -1,6 +1,8 @@
 services:
   app:
     env_file:
+      - path: .env
+        required: false
       - path: develop.env
         required: false
     command: >-
@@ -22,10 +24,14 @@ services:
       - laravel_storage:/var/www/html/storage:ro
   db:
     env_file:
+      - path: .env
+        required: false
       - path: develop.env
         required: false
   queue:
     env_file:
+      - path: .env
+        required: false
       - path: develop.env
         required: false
   test:
@@ -39,6 +45,8 @@ services:
       db:
         condition: service_healthy
     env_file:
+      - path: .env
+        required: false
       - path: develop.env
         required: false
     environment:

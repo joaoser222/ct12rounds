@@ -2,24 +2,23 @@
 #
 # Uso: docker compose -f compose.yaml -f compose.develop.yaml -f compose.local.yaml up -d
 #
-# Lê as variáveis do .env do projeto (dispensando criar develop.env na mão),
-# expõe o Caddy em http://localhost:80 e mantém o APP_ENV em development.
+# Herda a camada de .env (base) + develop.env (delta, opcional) dos env_file do
+# compose.develop.yaml, expõe o Caddy em http://localhost:80 e mantém o APP_ENV
+# em development (com debug habilitado mesmo quando develop.env está ausente).
 
 services:
   app:
-    env_file:
-      - path: .env
-        required: false
     environment:
       APP_ENV: development
+      APP_DEBUG: "true"
+      LOG_LEVEL: debug
       DB_HOST: db
       DB_PORT: 5432
   queue:
-    env_file:
-      - path: .env
-        required: false
     environment:
       APP_ENV: development
+      APP_DEBUG: "true"
+      LOG_LEVEL: debug
       DB_HOST: db
       DB_PORT: 5432
   caddy:
@@ -31,9 +30,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_DATABASE}
   test:
-    env_file:
-      - path: .env
-        required: false
     environment:
       APP_ENV: testing
       DB_HOST: db
