@@ -11,9 +11,10 @@ services:
       mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache;
       chown -R www-data:www-data storage bootstrap/cache;
       exec php-fpm'
+    environment:
+      INERTIA_SSR_ENABLED: "true"
     volumes:
       - laravel_storage:/var/www/html/storage
-      - ./resources/views/landing:/var/www/html/resources/views/landing
   caddy:
     container_name: ct12rounds_caddy
     ports:

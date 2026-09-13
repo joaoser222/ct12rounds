@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Actions\HiringLeads\CreateSiteLeadAction;
 use App\Http\Requests\PublicHiringLeadRequest;
 use App\Services\LandingSettingsService;
-use App\Services\LandingStorageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response as InertiaResponse;
@@ -15,7 +14,6 @@ class HomeController extends Controller
     public function __construct(
         private readonly CreateSiteLeadAction $createSiteLead,
         private readonly LandingSettingsService $landingSettings,
-        private readonly LandingStorageService $landingStorage,
     ) {}
 
     public function index(Request $request): InertiaResponse|RedirectResponse
@@ -34,11 +32,8 @@ class HomeController extends Controller
 
         $contract = is_string($contractToken) && $contractToken !== '' ? $contractToken : null;
 
-        $publishedHtml = $this->landingStorage->publishedHtml();
-
         return inertia('public/Landing', [
             'settings' => $this->landingSettings->raw(),
-            'contentHtml' => $publishedHtml === null || $publishedHtml === '' ? null : $publishedHtml,
             'success' => (bool) $request->session()->pull('landing_success'),
             'contract' => $contract,
             'registerUrl' => $contract !== null ? route('public.register', [

@@ -30,13 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
             '/',
         ]);
 
-        $middleware->redirectGuestsTo(fn (Request $request): string => $request->is('landing-admin') || $request->is('landing-admin/*')
-            ? route('landing-admin.login')
-            : route('login'));
+        $middleware->redirectGuestsTo(fn () => route('login'));
 
-        $middleware->redirectUsersTo(fn (Request $request): string => $request->is('landing-admin/*')
-            ? '/landing-admin'
-            : route('dashboard', absolute: false));
+        $middleware->redirectUsersTo(fn () => route('dashboard', absolute: false));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
