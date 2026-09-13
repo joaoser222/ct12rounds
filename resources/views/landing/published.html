@@ -1,0 +1,1012 @@
+<style>*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --black:#080808;
+  --dark:#0d0d0d;
+  --card:#121212;
+  --card2:#161616;
+  --blue:#0057FF;
+  --blue-dim:rgba(0,87,255,.12);
+  --blue-border:rgba(0,87,255,.25);
+  --gold:#E8B84B;
+  --gold-dim:rgba(232,184,75,.1);
+  --white:#EFEFEF;
+  --muted:#666;
+  --muted2:#888;
+  --border:rgba(255,255,255,.07);
+  --border2:rgba(255,255,255,.12);
+}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--white);font-family:'Barlow',sans-serif;overflow-x:hidden}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--black)}
+::-webkit-scrollbar-thumb{background:var(--blue)}
+
+/* ── ICONS ── */
+.icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 64px;height:72px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,8,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0}
+.nav-logo-img{height:38px;width:auto;display:block;object-fit:contain}
+.nav-links{display:flex;gap:40px;list-style:none}
+.nav-links a{color:var(--muted2);text-decoration:none;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;transition:.25s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--blue);transition:.25s}
+.nav-links a:hover{color:var(--white)}
+.nav-links a:hover::after{width:100%}
+.nav-cta{background:var(--blue);color:#fff;padding:10px 22px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:.2s;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+.nav-cta:hover{background:#1a6bff;transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{position:relative;height:100vh;min-height:680px;display:flex;align-items:center;overflow:hidden}
+.hero-photo{position:absolute;top:0;right:0;width:58%;height:100%;z-index:1}
+.hero-photo img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;filter:grayscale(20%)}
+.hero-photo-tint{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,40,160,.18) 0%,rgba(0,87,255,.08) 60%,transparent 100%);mix-blend-mode:multiply;pointer-events:none}
+.hero-photo-fade-left{position:absolute;inset:0;background:linear-gradient(90deg,var(--black) 0%,rgba(8,8,8,.85) 30%,rgba(8,8,8,.3) 65%,transparent 100%);pointer-events:none}
+.hero-photo-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(0deg,var(--black) 0%,transparent 100%);pointer-events:none}
+.hero-grid-overlay{position:absolute;inset:0;z-index:2;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:72px 72px;pointer-events:none}
+.hero-vignette{position:absolute;top:0;left:0;bottom:0;width:55%;z-index:2;background:linear-gradient(90deg,var(--black) 0%,rgba(8,8,8,.6) 70%,transparent 100%);pointer-events:none}
+.hero-content{position:relative;z-index:4;padding:0 64px;max-width:860px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:28px;opacity:0;animation:fadeUp .6s .1s ease forwards}
+.hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:blink 2.4s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hero-eyebrow span{font-size:10px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;color:var(--blue)}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(72px,9.5vw,148px);line-height:.9;letter-spacing:1px;margin-bottom:28px;opacity:0;animation:fadeUp .7s .2s ease forwards}
+.hero h1 .l1{display:block;color:var(--white)}
+.hero h1 .l2{display:block;color:var(--blue)}
+.hero h1 .l3{display:block;-webkit-text-stroke:1px rgba(240,240,240,.3);color:transparent}
+.hero-p{font-size:16px;color:var(--muted2);max-width:440px;line-height:1.75;font-weight:300;margin-bottom:44px;opacity:0;animation:fadeUp .7s .35s ease forwards}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;opacity:0;animation:fadeUp .7s .5s ease forwards}
+.btn-primary{background:var(--blue);color:#fff;padding:15px 34px;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;display:inline-block;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);transition:.25s}
+.btn-primary:hover{background:#1a6bff;transform:translateY(-2px)}
+.btn-outline{color:var(--white);padding:15px 34px;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.18);transition:.25s}
+.btn-outline:hover{border-color:rgba(255,255,255,.45);transform:translateY(-2px)}
+.hero-stats-bar{position:absolute;bottom:0;left:0;right:0;z-index:4;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:0 64px;display:flex;opacity:0;animation:fadeUp .7s .7s ease forwards}
+.hero-stat{padding:24px 48px 24px 0;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.hero-stat:first-child{padding-left:0}
+.hero-stat:last-child{border:none;padding-right:0}
+.hero-stat-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--white);line-height:1}
+.hero-stat-num em{color:var(--blue);font-style:normal}
+.hero-stat-label{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+@keyframes fadeUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUpPhoto{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SECTION DEFAULTS ── */
+section{padding:108px 64px}
+.s-tag{display:inline-flex;align-items:center;gap:10px;margin-bottom:14px}
+.s-tag::before{content:'';display:block;width:20px;height:2px;background:var(--blue)}
+.s-tag span{font-size:10px;font-weight:700;letter-spacing:3.5px;text-transform:uppercase;color:var(--blue)}
+.s-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,5.5vw,88px);line-height:.92;letter-spacing:.5px;margin-bottom:18px}
+.s-sub{font-size:15px;color:var(--muted2);max-width:520px;line-height:1.75;font-weight:300}
+
+/* ── REVEAL ── */
+.rv{opacity:0;transform:translateY(36px);transition:opacity .75s ease, transform .75s ease}
+.rv.on{opacity:1;transform:none}
+.rv-l{opacity:0;transform:translateX(-36px);transition:opacity .7s ease, transform .7s ease}
+.rv-l.on{opacity:1;transform:none}
+.rv-r{opacity:0;transform:translateX(36px);transition:opacity .7s ease, transform .7s ease}
+.rv-r.on{opacity:1;transform:none}
+.rv-s{opacity:0;transform:scale(.97);transition:opacity .65s ease, transform .65s ease}
+.rv-s.on{opacity:1;transform:none}
+.d1{transition-delay:.05s}.d2{transition-delay:.12s}.d3{transition-delay:.2s}.d4{transition-delay:.28s}.d5{transition-delay:.36s}.d6{transition-delay:.44s}
+
+/* ── DIVIDER ── */
+.diag{height:72px;overflow:hidden;position:relative}
+.diag-dark{background:var(--black);clip-path:polygon(0 0,100% 40px,100% 100%,0 100%)}
+.diag-dark-r{background:var(--dark);clip-path:polygon(0 40px,100% 0,100% 100%,0 100%)}
+
+/* ── MODALIDADES ── */
+.modalidades{background:var(--dark);padding-bottom:0}
+.mod-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--border);margin-top:64px}
+.mod-card{background:var(--card);padding:40px 26px 36px;position:relative;overflow:hidden;border-right:1px solid var(--border);cursor:default;transition:.35s}
+.mod-card:last-child{border-right:none}
+.mod-card::before{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,87,255,.07) 0%,transparent 55%);opacity:0;transition:.35s}
+.mod-card:hover::before{opacity:1}
+.mod-card:hover{transform:translateY(-5px);z-index:2;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+.mod-n{font-family:'Bebas Neue',sans-serif;font-size:72px;color:rgba(255,255,255,.04);line-height:1;position:absolute;top:16px;right:16px;transition:.35s}
+.mod-card:hover .mod-n{color:rgba(0,87,255,.1)}
+.mod-ico{width:52px;height:52px;background:var(--blue-dim);border:1px solid var(--blue-border);display:flex;align-items:center;justify-content:center;margin-bottom:22px;padding:10px}
+.mod-ico img{width:100%;height:100%;object-fit:contain;display:block;filter:brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(200deg)}
+.mod-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.mod-desc{font-size:12.5px;color:var(--muted);line-height:1.65;font-weight:300}
+.mod-stripe{height:2px;width:0;background:var(--blue);position:absolute;bottom:0;left:0;transition:.35s}
+.mod-card:hover .mod-stripe{width:100%}
+.mod-kids .mod-ico{background:var(--gold-dim);border-color:rgba(232,184,75,.2)}
+.mod-kids .mod-ico img{filter:brightness(0) saturate(100%) invert(78%) sepia(46%) saturate(700%) hue-rotate(5deg) brightness(95%)}
+.mod-kids .mod-stripe{background:var(--gold)}
+.mod-kids:hover .mod-n{color:rgba(232,184,75,.1)}
+.mod-kids::before{background:linear-gradient(160deg,rgba(232,184,75,.05) 0%,transparent 55%)}
+
+/* ── CARROSSEL FOTOS ── */
+.carousel-section{background:var(--dark);padding:64px 0}
+.carousel-label{padding:0 64px;margin-bottom:28px;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:12px}
+.carousel-label::before{content:'';width:20px;height:1px;background:var(--muted)}
+.carousel-track-wrap{overflow:hidden;position:relative}
+.carousel-track-wrap::before,.carousel-track-wrap::after{content:'';position:absolute;top:0;bottom:0;width:120px;z-index:2;pointer-events:none}
+.carousel-track-wrap::before{left:0;background:linear-gradient(90deg,var(--dark) 0%,transparent 100%)}
+.carousel-track-wrap::after{right:0;background:linear-gradient(270deg,var(--dark) 0%,transparent 100%)}
+.carousel-track{display:flex;gap:12px;width:max-content;animation:scrollLeft 38s linear infinite}
+.carousel-track2{animation-direction:reverse;animation-duration:44s;margin-top:12px}
+@keyframes scrollLeft{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.c-photo{width:280px;height:280px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card2);border:1px solid var(--border)}
+.c-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(15%);transition:.3s}
+.c-photo:hover img{filter:grayscale(0%);transform:scale(1.04)}
+.c-ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:.18}
+.c-ph svg{width:32px;height:32px;fill:var(--white)}
+.c-ph span{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white)}
+
+/* ── TICKER ── */
+.ticker-wrap{overflow:hidden;background:var(--black);padding:0;position:relative;z-index:5}
+.ticker-row{display:flex;width:max-content;padding:14px 0}
+.ticker-row-1{animation:tickerLeft 22s linear infinite;transform:rotate(-2.5deg) translateX(0)}
+.ticker-row-2{animation:tickerLeft 28s linear infinite reverse;transform:rotate(2.5deg) translateX(0);margin-top:2px}
+@keyframes tickerLeft{from{transform:rotate(-2.5deg) translateX(0)}to{transform:rotate(-2.5deg) translateX(-50%)}}
+@keyframes tickerLeft2{from{transform:rotate(2.5deg) translateX(0)}to{transform:rotate(2.5deg) translateX(-50%)}}
+.ticker-row-2{animation-name:tickerLeft2}
+.ticker-band{overflow:hidden;padding:14px 0;position:relative}
+.ticker-band-1{background:var(--blue);transform:rotate(-2deg);margin:0 -40px}
+.ticker-band-2{background:#1a1a1a;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);transform:rotate(1.5deg);margin:6px -40px 0}
+.ticker-item{display:inline-flex;align-items:center;gap:20px;padding:0 24px;white-space:nowrap}
+.ticker-item span{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#fff}
+.ticker-item svg{width:8px;height:8px;fill:rgba(255,255,255,.5);flex-shrink:0}
+.ticker-band-2 .ticker-item span{color:rgba(255,255,255,.35);font-size:18px;letter-spacing:4px}
+.ticker-band-2 .ticker-item svg{fill:var(--blue);opacity:.6}
+
+/* ── MÉTODO ── */
+.metodo{background:var(--black)}
+.metodo-layout{display:grid;grid-template-columns:1fr 1fr;gap:88px;align-items:start;margin-top:64px}
+.rounds-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:40px}
+.round-item{background:var(--card);padding:18px 16px;display:flex;gap:14px;align-items:flex-start;transition:.2s}
+.round-item:hover{background:var(--card2)}
+.rn{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--blue);line-height:1;min-width:32px}
+.rt-title{font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}
+.rt-desc{font-size:11.5px;color:var(--muted);line-height:1.5;font-weight:300}
+.metodo-visual{position:sticky;top:96px}
+.mv-frame{aspect-ratio:4/3;max-height:420px;background:var(--card);border:1px solid var(--border);position:relative;overflow:hidden}
+.mv-img-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;opacity:.1}
+.mv-img-ph svg{width:56px;height:56px;fill:var(--white)}
+.mv-img-ph span{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--white)}
+.mv-num{position:absolute;bottom:-30px;right:-20px;font-family:'Bebas Neue',sans-serif;font-size:260px;line-height:1;color:rgba(0,87,255,.06);pointer-events:none}
+.mv-badge{position:absolute;top:24px;left:24px;background:rgba(0,87,255,.9);padding:8px 14px}
+.mv-badge span{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff}
+.mv-info{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.9) 0%,transparent 100%);padding:32px 24px 24px}
+.mv-info h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.mv-info p{font-size:12px;color:var(--muted2);line-height:1.6}
+
+/* ── STATS BAND ── */
+.stats-band{background:var(--blue);padding:0 64px;clip-path:polygon(0 0,100% 24px,100% 100%,0 calc(100% - 24px));margin:0}
+.stats-band-inner{display:grid;grid-template-columns:repeat(4,1fr);padding:72px 0}
+.sb-item{text-align:center;padding:0 20px;border-right:1px solid rgba(255,255,255,.18)}
+.sb-item:last-child{border:none}
+.sb-num{font-family:'Bebas Neue',sans-serif;font-size:80px;line-height:1;color:#fff}
+.sb-num em{color:rgba(255,255,255,.5);font-style:normal;font-size:.65em}
+.sb-label{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.65);margin-top:6px}
+
+/* ── MARQUEE RIBBONS ── */
+.ribbons-wrap{background:var(--black);padding:0;overflow:hidden;display:flex;flex-direction:column;gap:0}
+.ribbon{overflow:hidden;padding:14px 0;position:relative}
+.ribbon-1{background:var(--blue);transform:rotate(-1.8deg) scaleX(1.05);margin:8px -20px}
+.ribbon-2{background:#0a0a0a;border-top:1px solid rgba(0,87,255,.3);border-bottom:1px solid rgba(0,87,255,.3);transform:rotate(1.4deg) scaleX(1.05);margin:8px -20px}
+.ribbon-track{display:flex;gap:0;width:max-content;animation:ribbonScroll 22s linear infinite}
+.ribbon-2 .ribbon-track{animation-direction:reverse;animation-duration:28s}
+@keyframes ribbonScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ribbon-word{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;text-transform:uppercase;white-space:nowrap;padding:0 28px;display:flex;align-items:center;gap:28px}
+.ribbon-1 .ribbon-word{color:#fff}
+.ribbon-2 .ribbon-word{color:var(--blue)}
+.ribbon-sep{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5;flex-shrink:0}
+
+/* ── COMPETITIVO ── */
+.competitivo{background:var(--dark)}
+.comp-layout{margin-top:64px}
+.comp-header{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:end;margin-bottom:56px}
+/* gallery carousel for competitive */
+.comp-gallery{margin-bottom:48px}
+.comp-gallery-track-wrap{overflow:hidden;position:relative}
+.comp-gallery-track-wrap::before,.comp-gallery-track-wrap::after{content:'';position:absolute;top:0;bottom:0;width:100px;z-index:2;pointer-events:none}
+.comp-gallery-track-wrap::before{left:0;background:linear-gradient(90deg,var(--dark) 0%,transparent 100%)}
+.comp-gallery-track-wrap::after{right:0;background:linear-gradient(270deg,var(--dark) 0%,transparent 100%)}
+.comp-gallery-track{display:flex;gap:10px;width:max-content;animation:scrollLeft 32s linear infinite}
+.comp-gallery-track2{animation-direction:reverse;animation-duration:40s;margin-top:10px}
+.cg-photo{flex-shrink:0;overflow:hidden;position:relative;background:var(--card2);border:1px solid var(--border)}
+.cg-photo.wide{width:340px;height:220px}
+.cg-photo.tall{width:220px;height:300px}
+.cg-photo.sq{width:260px;height:260px}
+.cg-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(15%);transition:.3s}
+.cg-photo:hover img{filter:grayscale(0%);transform:scale(1.04)}
+.cg-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(20%);transition:.3s}
+.cg-photo:hover img{filter:grayscale(0%);transform:scale(1.04)}
+.cg-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:.18}
+.cg-ph svg{width:32px;height:32px;fill:var(--white)}
+.cg-ph span{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white)}
+.comp-cta{margin-top:0;padding:40px 48px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:32px}
+.comp-cta-text h3{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.comp-cta-text p{font-size:13px;color:var(--muted2);font-weight:300}
+
+/* ── INSTRUTORES ── */
+.instrutores{background:var(--black)}
+.inst-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:64px}
+.inst-card{background:var(--card);overflow:hidden;position:relative}
+.inst-photo-area{aspect-ratio:1/1;position:relative;overflow:hidden;background:var(--card2)}
+.inst-photo-area img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(30%);transition:.4s}
+.inst-card:hover .inst-photo-area img{filter:grayscale(0%);transform:scale(1.04)}
+.inst-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:.12}
+.inst-ph svg{width:52px;height:52px;fill:var(--white)}
+.inst-ph span{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white)}
+.inst-body{padding:32px 28px}
+.inst-role{font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+.inst-name{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.inst-bio{font-size:13px;color:var(--muted2);line-height:1.7;font-weight:300;margin-bottom:20px}
+.inst-tags{display:flex;gap:6px;flex-wrap:wrap}
+.inst-tag{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 9px;border:1px solid var(--border2);color:var(--muted2)}
+.inst-line{height:2px;width:0;background:var(--blue);transition:.4s;position:absolute;bottom:0;left:0}
+.inst-card:hover .inst-line{width:100%}
+
+/* ── DEPOIMENTOS ── */
+.depoimentos{background:var(--dark)}
+.dep-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:64px}
+.dep-card{background:var(--card);padding:36px 28px}
+.dep-stars{display:flex;gap:3px;margin-bottom:20px}
+.dep-stars svg{width:13px;height:13px;fill:var(--gold)}
+.dep-text{font-size:14.5px;line-height:1.8;color:rgba(239,239,239,.75);font-weight:300;font-style:italic;margin-bottom:28px}
+.dep-bottom{display:flex;align-items:center;gap:14px;border-top:1px solid var(--border);padding-top:22px}
+.dep-photo{width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--card2);position:relative;border:1px solid var(--border2)}
+.dep-photo img{width:100%;height:100%;object-fit:cover;filter:grayscale(20%)}
+.dep-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.2}
+.dep-ph svg{width:22px;height:22px;fill:var(--white)}
+.dep-name{font-size:13px;font-weight:600;letter-spacing:.3px}
+.dep-mod{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+
+/* ── HORÁRIOS ── */
+.horarios{background:var(--black)}
+.schedule-wrap{margin-top:64px;overflow-x:auto}
+.schedule-table{width:100%;border-collapse:collapse;border:1px solid var(--border);min-width:700px}
+.schedule-table th{background:rgba(0,87,255,.9);color:#fff;padding:14px 18px;font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;text-align:left;white-space:nowrap}
+.schedule-table td{padding:14px 18px;border:1px solid var(--border);font-size:12.5px}
+.schedule-table tr:nth-child(even) td{background:rgba(255,255,255,.018)}
+.schedule-table tr:hover td{background:rgba(255,255,255,.03)}
+.slot{display:inline-block;padding:3px 9px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.s-bx{background:rgba(0,87,255,.15);color:#6699ff}
+.s-kk{background:rgba(232,184,75,.12);color:var(--gold)}
+.s-ji{background:rgba(220,60,60,.1);color:#e07070}
+.s-ki{background:rgba(80,210,120,.1);color:#70cc90}
+.t-col{color:var(--muted);font-weight:500;white-space:nowrap;font-size:12px}
+.sch-note{margin-top:16px;font-size:11.5px;color:var(--muted);font-style:italic}
+
+/* ── CTA FINAL ── */
+.cta-final{background:var(--dark);padding:120px 64px;text-align:center;position:relative;overflow:hidden}
+.cta-bg-glow{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(0,87,255,.07) 0%,transparent 70%)}
+.cta-final .s-title{font-size:clamp(60px,8vw,120px);margin-bottom:0}
+.cta-final .s-title em{color:var(--blue);font-style:normal}
+.cta-final .s-sub{margin:16px auto 48px;text-align:center}
+.cta-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn-wa{background:#25D366;color:#fff;padding:16px 36px;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:11px;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);transition:.25s}
+.btn-wa:hover{background:#22c55e;transform:translateY(-2px)}
+.btn-wa svg{width:18px;height:18px;fill:#fff}
+.cta-address{margin-top:40px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:var(--muted)}
+.cta-address svg{width:14px;height:14px;fill:var(--blue);flex-shrink:0}
+
+/* ── FOOTER ── */
+footer{background:#040404;border-top:1px solid var(--border);padding:64px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:56px}
+.f-logo{display:block;margin-bottom:16px;text-decoration:none}
+.f-logo-img{height:40px;width:auto;display:block;object-fit:contain}
+.f-desc{font-size:12.5px;color:var(--muted);line-height:1.75;max-width:260px}
+.f-col h4{font-size:9.5px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(239,239,239,.5);margin-bottom:18px}
+.f-col ul{list-style:none}
+.f-col ul li{margin-bottom:10px}
+.f-col ul li a{color:var(--muted2);text-decoration:none;font-size:13px;transition:.2s}
+.f-col ul li a:hover{color:var(--white)}
+.f-bottom{background:#020202;border-top:1px solid rgba(255,255,255,.04);padding:18px 64px;display:flex;justify-content:space-between;align-items:center}
+.f-bottom p{font-size:11px;color:rgba(102,102,102,.5)}
+
+/* ── HAMBURGER & MOBILE MENU ── */
+.nav-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none;margin-left:12px}
+.nav-ham span{display:block;width:22px;height:1.5px;background:var(--white);transition:.3s;transform-origin:center}
+.nav-ham.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.nav-ham.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.nav-ham.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+.mobile-menu{display:none;position:fixed;inset:0;z-index:210;background:rgba(6,6,6,.97);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:80px 40px 40px}
+.mobile-menu.open{display:flex}
+.mm-link{color:var(--muted2);text-decoration:none;font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,10vw,52px);letter-spacing:3px;transition:.2s;padding:8px 0;width:100%;text-align:center;border-bottom:1px solid rgba(255,255,255,.05)}
+.mm-link:hover{color:var(--white)}
+.mm-cta{background:var(--blue);color:#fff;padding:16px 48px;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;text-decoration:none;margin-top:24px;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+.mobile-close{position:absolute;top:20px;right:20px;background:none;border:none;cursor:pointer;padding:10px}
+.mobile-close svg{width:22px;height:22px;stroke:var(--muted2)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1200px){
+  .mod-grid{grid-template-columns:repeat(3,1fr)}
+  .atletas-grid{grid-template-columns:repeat(2,1fr)}
+  footer{grid-template-columns:1fr 1fr;gap:40px}
+}
+
+@media(max-width:900px){
+  /* NAV */
+  nav{padding:0 20px}
+  .nav-logo-img{height:30px}
+  .nav-links{display:none}
+  .nav-cta-desk{display:none}
+  .nav-ham{display:flex}
+
+  /* GENERAL SECTIONS */
+  section{padding:64px 20px}
+
+  /* ── HERO MOBILE: column flow ── */
+  .hero{
+    position:relative;
+    height:auto;
+    min-height:auto;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    overflow:visible;
+    padding-top:72px;
+    background:var(--black);
+  }
+  /* photo: remove absolute, become full-width inline block */
+  .hero-photo{
+    position:relative;
+    width:100%;
+    height:auto;
+    top:auto;
+    right:auto;
+    order:2;
+    overflow:hidden;
+  }
+  .hero-photo img{
+    width:100%;
+    height:auto;
+    display:block;
+    object-fit:cover;
+    object-position:top center;
+    filter:grayscale(15%);
+    aspect-ratio:3/4;
+    animation:slideUpPhoto .9s .2s ease both;
+  }
+  .hero-photo-fade-left{display:none}
+  .hero-photo-tint{display:none}
+  .hero-photo-fade-bottom{height:25%;background:linear-gradient(0deg,var(--black) 0%,transparent 100%)}
+  /* decorative overlays: hide since photo is inline */
+  .hero-grid-overlay{display:none}
+  .hero-vignette{display:none}
+  /* content: centered, above photo */
+  .hero-content{
+    position:relative;
+    z-index:4;
+    padding:36px 24px 32px;
+    max-width:100%;
+    text-align:center;
+    order:1;
+    background:var(--black);
+  }
+  .hero h1{
+    font-size:clamp(52px,16vw,88px);
+    margin-bottom:18px;
+    text-align:center;
+  }
+  .hero h1 .l3{-webkit-text-stroke:1px rgba(240,240,240,.25)}
+  .hero-p{
+    font-size:15px;
+    line-height:1.65;
+    max-width:100%;
+    margin:0 auto 32px;
+    text-align:center;
+  }
+  .hero-btns{
+    flex-direction:column;
+    gap:10px;
+    align-items:center;
+  }
+  .hero-btns .btn-primary,.hero-btns .btn-outline{
+    width:100%;
+    max-width:320px;
+    text-align:center;
+    justify-content:center;
+    padding:16px 24px;
+  }
+  /* stats: below photo, stacked vertically */
+  .hero-stats-bar{
+    position:relative;
+    bottom:auto;
+    left:auto;
+    right:auto;
+    order:3;
+    display:flex;
+    flex-direction:column;
+    padding:0 !important;
+    backdrop-filter:none;
+    background:var(--card);
+    border-top:1px solid var(--border);
+    opacity:1;
+    animation:none;
+  }
+  .hero-stat{
+    padding:18px 24px !important;
+    border-right:none !important;
+    border-bottom:1px solid var(--border);
+    flex-direction:row;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    min-width:100%;
+    text-align:center;
+  }
+  .hero-stat:last-child{border-bottom:none}
+  .hero-stat-num{font-size:30px;min-width:auto}
+  .hero-stat-label{font-size:10px;letter-spacing:1.5px;text-align:left}
+
+  /* MODALIDADES */
+  .modalidades{padding-bottom:0}
+  .mod-grid{grid-template-columns:1fr 1fr;border:1px solid var(--border)}
+  .mod-card{padding:28px 18px 24px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .mod-card:nth-child(even){border-right:none}
+  .mod-n{font-size:52px}
+  .mod-name{font-size:17px}
+  .mod-desc{font-size:12px}
+
+  /* CARROSSEL */
+  .carousel-section{padding:48px 0}
+  .carousel-label{padding:0 20px}
+  .c-photo{width:200px;height:200px}
+  .carousel-track-wrap::before,.carousel-track-wrap::after{width:60px}
+
+  /* MÉTODO */
+  .metodo-layout{grid-template-columns:1fr;gap:40px}
+  .metodo-visual{position:static;top:auto}
+  .mv-frame{max-height:360px;aspect-ratio:unset;height:360px}
+  .mv-num{font-size:180px}
+  .rounds-grid{grid-template-columns:1fr;margin-top:32px}
+
+  /* STATS BAND */
+  .stats-band{padding:0;clip-path:none;overflow:hidden}
+  .stats-band-inner{grid-template-columns:1fr 1fr;gap:0;padding:48px 20px}
+  .sb-item{padding:24px 16px;border:none;border-right:1px solid rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.12)}
+  .sb-item:nth-child(even){border-right:none}
+  .sb-item:nth-child(3),.sb-item:nth-child(4){border-bottom:none}
+  .sb-num{font-size:56px}
+  .sb-label{font-size:9px;letter-spacing:2px}
+
+  /* RIBBONS */
+  .ribbon-1{transform:rotate(-1.8deg) scaleX(1.1);margin:8px -20px}
+  .ribbon-2{transform:rotate(1.4deg) scaleX(1.1);margin:8px -20px}
+
+  /* COMPETITIVO */
+  .comp-header{grid-template-columns:1fr;gap:28px;margin-bottom:36px}
+  .atletas-grid{grid-template-columns:1fr 1fr}
+  .atleta-img{aspect-ratio:2/3}
+  .comp-cta{flex-direction:column;padding:24px 20px;gap:16px}
+  .comp-cta .btn-primary{width:100%;text-align:center}
+
+  /* INSTRUTORES */
+  .inst-grid{grid-template-columns:1fr}
+  .inst-photo-area{aspect-ratio:4/3}
+  .inst-body{padding:24px 20px}
+  .inst-name{font-size:24px}
+
+  /* DEPOIMENTOS */
+  .dep-grid{grid-template-columns:1fr}
+  .dep-card{padding:28px 20px}
+
+  /* HORÁRIOS */
+  .horarios{padding:64px 0}
+  .horarios>.s-tag,.horarios>.s-title,.horarios>.s-sub,.horarios>.sch-note{padding-left:20px;padding-right:20px}
+  .schedule-wrap{margin-top:36px}
+
+  /* CTA */
+  .cta-final{padding:72px 20px}
+  .cta-btns{flex-direction:column;align-items:stretch;max-width:400px;margin:0 auto}
+  .btn-wa,.cta-final .btn-outline{width:100%;justify-content:center;text-align:center}
+
+  /* FOOTER */
+  footer{grid-template-columns:1fr;padding:48px 20px;gap:36px}
+  .f-desc{max-width:100%}
+  .f-bottom{padding:16px 20px;flex-direction:column;gap:6px;text-align:center}
+}
+
+@media(max-width:520px){
+  /* HERO */
+  .hero h1{font-size:clamp(46px,14vw,68px)}
+
+  /* MODALIDADES → single column */
+  .mod-grid{grid-template-columns:1fr}
+  .mod-card{border-right:none !important}
+
+  /* ATLETAS → single column */
+  .atletas-grid{grid-template-columns:1fr}
+  .atleta-img{aspect-ratio:3/2}
+
+  /* INSTRUTORES photo ratio */
+  .inst-photo-area{aspect-ratio:3/2}
+
+  /* CARROSSEL */
+  .c-photo{width:160px;height:160px}
+
+  /* ROUNDS — keep 1 col */
+  .rounds-grid{grid-template-columns:1fr}
+}</style>
+<!-- ──────── NAV ──────── -->
+<nav>
+  <a href="#" class="nav-logo"><img src="/landing-assets/img/AnyConv.com__logoct12.webp" alt="CT 12 Rounds" class="nav-logo-img"></a>
+  <ul class="nav-links">
+    <li><a href="#modalidades">Modalidades</a></li>
+    <li><a href="#metodo">Método</a></li>
+    <li><a href="#competitivo">Competitivo</a></li>
+    <li><a href="#instrutores">Instrutores</a></li>
+    <li><a href="#horarios">Horários</a></li>
+  </ul>
+  <a href="https://wa.me/5563981019160" class="nav-cta nav-cta-desk">Matricule-se</a>
+  <button class="nav-ham" id="hamBtn" aria-label="Abrir menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="mobileClose" aria-label="Fechar menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  </button>
+  <a href="#modalidades" class="mm-link">Modalidades</a>
+  <a href="#metodo" class="mm-link">Método</a>
+  <a href="#competitivo" class="mm-link">Competitivo</a>
+  <a href="#instrutores" class="mm-link">Instrutores</a>
+  <a href="#horarios" class="mm-link">Horários</a>
+  <a href="https://wa.me/5563981019160" class="mm-cta">Matricule-se</a>
+</div>
+
+<!-- ──────── HERO ──────── -->
+<section class="hero" id="inicio">
+  <div class="hero-photo">
+    <img src="/landing-assets/img/AnyConv.com__ronald.webp" alt="Ronald Castilho — Head Coach CT 12 Rounds">
+    <div class="hero-photo-tint"></div>
+    <div class="hero-photo-fade-left"></div>
+    <div class="hero-photo-fade-bottom"></div>
+  </div>
+  <div class="hero-grid-overlay"></div>
+  <div class="hero-vignette"></div>
+  <div class="hero-content">
+    <h1>
+      <span class="l1">FORJE</span>
+      <span class="l2">SEU CORPO.</span>
+      <span class="l3">DOMINE O RING.</span>
+    </h1>
+    <p class="hero-p">Boxe, Kickboxing e Jiu-Jitsu com a Metodologia 12 Rounds. Treinamentos que transformam — do iniciante ao atleta competitivo.</p>
+    <div class="hero-btns">
+      <a href="https://wa.me/5563981019160" class="btn-primary">Começar agora</a>
+      <a href="#metodo" class="btn-outline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Conhecer o método
+      </a>
+    </div>
+  </div>
+  <div class="hero-stats-bar">
+    <div class="hero-stat">
+      <div class="hero-stat-num">500<em>+</em></div>
+      <div class="hero-stat-label">Alunos Formados</div>
+    </div>
+    <div class="hero-stat" style="padding-left:48px">
+      <div class="hero-stat-num">5</div>
+      <div class="hero-stat-label">Modalidades</div>
+    </div>
+    <div class="hero-stat" style="padding-left:48px">
+      <div class="hero-stat-num">12</div>
+      <div class="hero-stat-label">Semanas p/ Resultado</div>
+    </div>
+    <div class="hero-stat" style="padding-left:48px">
+      <div class="hero-stat-num">604<em> SUL</em></div>
+      <div class="hero-stat-label">Alameda 08 — Palmas</div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── RIBBONS ──────── -->
+<div class="ribbons-wrap">
+  <div class="ribbon ribbon-1">
+    <div class="ribbon-track">
+      <span class="ribbon-word">Disciplina<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Foco<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Superação<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Força<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Resiliência<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Garra<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Determinação<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Velocidade<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Potência<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Evolução<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Disciplina<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Foco<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Superação<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Força<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Resiliência<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Garra<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Determinação<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Velocidade<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Potência<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Evolução<span class="ribbon-sep"></span></span>
+    </div>
+  </div>
+  <div class="ribbon ribbon-2">
+    <div class="ribbon-track">
+      <span class="ribbon-word">CT 12 Rounds<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Boxe<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Kickboxing<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Jiu-Jitsu<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Palmas — TO<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Metodologia 12 Rounds<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Treino de Elite<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Alta Performance<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">CT 12 Rounds<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Boxe<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Kickboxing<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Jiu-Jitsu<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Palmas — TO<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Metodologia 12 Rounds<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Treino de Elite<span class="ribbon-sep"></span></span>
+      <span class="ribbon-word">Alta Performance<span class="ribbon-sep"></span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── MODALIDADES ──────── -->
+<section class="modalidades" id="modalidades">
+  <div class="s-tag rv"><span>O que ensinamos</span></div>
+  <h2 class="s-title rv d1">5 MODALIDADES.<br>1 OBJETIVO.</h2>
+  <p class="s-sub rv d2">Encontre sua luta. Desenvolvemos atletas e pessoas em todas as frentes do combate.</p>
+  <div class="mod-grid rv d3">
+    <!-- BOXE -->
+    <div class="mod-card">
+      <div class="mod-n">01</div>
+      <div class="mod-ico"><img src="/landing-assets/img/luvas-de-boxe.svg" alt="Boxe"></div>
+      <div class="mod-name">Boxe</div>
+      <p class="mod-desc">Técnica, velocidade e condicionamento. O esporte mais completo para defesa pessoal e performance.</p>
+      <div class="mod-stripe"></div>
+    </div>
+    <!-- KICKBOXING -->
+    <div class="mod-card">
+      <div class="mod-n">02</div>
+      <div class="mod-ico"><img src="/landing-assets/img/kick.svg" alt="Kickboxing"></div>
+      <div class="mod-name">Kickboxing</div>
+      <p class="mod-desc">Golpes de punho e chute combinados. Potência, coordenação e máximo condicionamento físico.</p>
+      <div class="mod-stripe"></div>
+    </div>
+    <!-- JIU-JITSU -->
+    <div class="mod-card">
+      <div class="mod-n">03</div>
+      <div class="mod-ico"><img src="/landing-assets/img/judo.svg" alt="Jiu-Jitsu"></div>
+      <div class="mod-name">Jiu-Jitsu</div>
+      <p class="mod-desc">Arte suave e eficaz. Quedas, imobilizações e finalizações para defesa real e competição.</p>
+      <div class="mod-stripe"></div>
+    </div>
+    <!-- BOXE KIDS -->
+    <div class="mod-card mod-kids">
+      <div class="mod-n">04</div>
+      <div class="mod-ico"><img src="/landing-assets/img/boxekids.svg" alt="Boxe Kids"></div>
+      <p class="mod-desc">Disciplina, respeito e autoconfiança. Metodologia lúdica para crianças e adolescentes de 5 a 15 anos.</p>
+      <div class="mod-stripe" style="background:var(--gold)"></div>
+    </div>
+    <!-- JIU KIDS -->
+    <div class="mod-card mod-kids">
+      <div class="mod-n">05</div>
+      <div class="mod-ico"><img src="/landing-assets/img/Gemini_Generated_Image_a5jm0ua5jm0ua5jm-Photoroom.svg" alt="Jiu-Jitsu Kids"></div>
+      <p class="mod-desc">Coordenação motora, lógica e caráter. O esporte que ensina a pensar e a persistir.</p>
+      <div class="mod-stripe" style="background:var(--gold)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── CARROSSEL ──────── -->
+<div class="carousel-section">
+  <div class="carousel-label rv">Galeria de treinos & eventos</div>
+  <div class="carousel-track-wrap">
+    <div class="carousel-track" id="track1">
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(2).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(3).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(4).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(5).webp" alt="Treino" loading="lazy"></div>
+      <!-- duplicates for seamless loop -->
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(2).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(3).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(4).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(5).webp" alt="Treino" loading="lazy"></div>
+    </div>
+  </div>
+  <div class="carousel-track-wrap" style="margin-top:12px">
+    <div class="carousel-track carousel-track2">
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(6).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(7).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(8).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(9).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
+      <!-- duplicates for seamless loop -->
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(6).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(7).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(8).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(9).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── MÉTODO ──────── -->
+<section class="metodo" id="metodo">
+  <div class="s-tag rv"><span>Nossa filosofia</span></div>
+  <h2 class="s-title rv d1">METODOLOGIA<br><span style="color:var(--blue)">12 ROUNDS</span></h2>
+  <div class="metodo-layout">
+    <div class="rv-l">
+      <p class="s-sub">12 semanas de imersão total. Cada round é uma etapa do seu desenvolvimento. Não existe atalho — existe processo.</p>
+      <div class="rounds-grid" style="margin-top:40px">
+        <div class="round-item"><div class="rn">01</div><div><div class="rt-title">Avaliação</div><div class="rt-desc">Diagnóstico físico e técnico</div></div></div>
+        <div class="round-item"><div class="rn">02</div><div><div class="rt-title">Base</div><div class="rt-desc">Postura, guarda e movimentação</div></div></div>
+        <div class="round-item"><div class="rn">03</div><div><div class="rt-title">Fundamentos</div><div class="rt-desc">Golpes e técnicas essenciais</div></div></div>
+        <div class="round-item"><div class="rn">04</div><div><div class="rt-title">Condicionamento</div><div class="rt-desc">Resistência aeróbica e anaeróbica</div></div></div>
+        <div class="round-item"><div class="rn">05</div><div><div class="rt-title">Combinações</div><div class="rt-desc">Sequências de golpes e defesas</div></div></div>
+        <div class="round-item"><div class="rn">06</div><div><div class="rt-title">Sparring Leve</div><div class="rt-desc">Primeiro contato controlado</div></div></div>
+        <div class="round-item"><div class="rn">07</div><div><div class="rt-title">Tática</div><div class="rt-desc">Leitura de luta e estratégia</div></div></div>
+        <div class="round-item"><div class="rn">08</div><div><div class="rt-title">Força</div><div class="rt-desc">Musculação funcional para combate</div></div></div>
+        <div class="round-item"><div class="rn">09</div><div><div class="rt-title">Velocidade</div><div class="rt-desc">Reação e explosão muscular</div></div></div>
+        <div class="round-item"><div class="rn">10</div><div><div class="rt-title">Mentalidade</div><div class="rt-desc">Foco, pressão e resiliência</div></div></div>
+        <div class="round-item"><div class="rn">11</div><div><div class="rt-title">Sparring Total</div><div class="rt-desc">Simulação completa de combate</div></div></div>
+        <div class="round-item"><div class="rn">12</div><div><div class="rt-title">Performance</div><div class="rt-desc">Resultado e próximo ciclo</div></div></div>
+      </div>
+    </div>
+    <div class="metodo-visual rv-r">
+      <div class="mv-frame">
+        <img src="/landing-assets/img/AnyConv.com__encarada.webp" alt="Metodologia 12 Rounds" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;filter:grayscale(15%)">
+        <div class="mv-num">12</div>
+        <div class="mv-badge"><span>Metodologia exclusiva</span></div>
+        <div class="mv-info">
+          <h3>12 Semanas para a Melhor Versão</h3>
+          <p>Cada aluno segue um ciclo estruturado. Sem achismo — resultado baseado em método comprovado.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── STATS BAND ──────── -->
+<div class="stats-band rv-s">
+  <div class="stats-band-inner">
+    <div class="sb-item"><div class="sb-num">500<em>+</em></div><div class="sb-label">Alunos transformados</div></div>
+    <div class="sb-item"><div class="sb-num">5</div><div class="sb-label">Modalidades ativas</div></div>
+    <div class="sb-item"><div class="sb-num">12</div><div class="sb-label">Anos de experiência</div></div>
+    <div class="sb-item"><div class="sb-num">98<em>%</em></div><div class="sb-label">Satisfação dos alunos</div></div>
+  </div>
+</div>
+
+<!-- ──────── COMPETITIVO ──────── -->
+<section class="competitivo" id="competitivo">
+  <div class="s-tag rv"><span>Equipe de alto rendimento</span></div>
+  <h2 class="s-title rv d1">TIME<br><span style="color:var(--gold)">COMPETITIVO</span></h2>
+  <div class="comp-layout">
+    <div class="comp-header">
+      <div class="rv-l">
+        <p class="s-sub" style="max-width:400px;margin:0">Formamos atletas para competições regionais, estaduais e nacionais. Se você tem fogo para competir, temos a estrutura para levar você ao próximo nível.</p>
+      </div>
+      <div class="rv-r">
+        <p style="font-size:14px;color:var(--muted2);line-height:1.75;font-weight:300">O time competitivo do CT 12 Rounds reúne atletas selecionados em todas as modalidades. Treinamento específico, preparação física periodizada e acompanhamento técnico individualizado.</p>
+      </div>
+    </div>
+    <!-- GALERIA COMPETITIVO -->
+    <div class="comp-gallery rv d2">
+      <div class="comp-gallery-track-wrap">
+        <div class="comp-gallery-track">
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(1).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(2).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(3).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(4).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(5).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(6).webp" alt="Competição" loading="lazy"></div>
+          <!-- duplicates for seamless loop -->
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(1).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(2).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(3).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(4).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(5).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(6).webp" alt="Competição" loading="lazy"></div>
+        </div>
+      </div>
+      <div class="comp-gallery-track-wrap" style="margin-top:10px">
+        <div class="comp-gallery-track comp-gallery-track2">
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(7).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(8).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(9).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(10).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(11).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(1).webp" alt="Competição" loading="lazy"></div>
+          <!-- duplicates for seamless loop -->
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(7).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(8).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(9).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(10).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(11).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(1).webp" alt="Competição" loading="lazy"></div>
+        </div>
+      </div>
+    </div>
+    <div class="comp-cta rv d3">
+      <div class="comp-cta-text">
+        <h3>Quer competir pelo CT 12 Rounds?</h3>
+        <p>Fale com o Ronald e descubra como entrar no time competitivo.</p>
+      </div>
+      <a href="https://wa.me/5563981019160" class="btn-primary" style="flex-shrink:0">Quero competir</a>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── INSTRUTORES ──────── -->
+<section class="instrutores" id="instrutores">
+  <div class="s-tag rv"><span>Quem ensina</span></div>
+  <h2 class="s-title rv d1">NOSSOS<br>INSTRUTORES</h2>
+  <p class="s-sub rv d2">Profissionais certificados, atletas ativos e apaixonados por transformar vidas através das lutas.</p>
+  <div class="inst-grid rv d3">
+    <div class="inst-card">
+      <div class="inst-photo-area">
+        <div class="inst-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg><span>Foto do professor</span></div>
+      </div>
+      <div class="inst-body">
+        <div class="inst-role">Head Coach & CEO</div>
+        <div class="inst-name">Ronald Castilho</div>
+        <p class="inst-bio">Criador da Metodologia 12 Rounds. Atleta e instrutor com mais de uma década formando campeões dentro e fora do ring.</p>
+        <div class="inst-tags"><span class="inst-tag">Boxe</span><span class="inst-tag">Kickboxing</span><span class="inst-tag">Personal</span></div>
+      </div>
+      <div class="inst-line"></div>
+    </div>
+    <div class="inst-card">
+      <div class="inst-photo-area">
+        <div class="inst-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg><span>Foto do professor</span></div>
+      </div>
+      <div class="inst-body">
+        <div class="inst-role">Jiu-Jitsu — Faixa Preta</div>
+        <div class="inst-name">Prof. Instrutor</div>
+        <p class="inst-bio">Especialista em Jiu-Jitsu competitivo e defesa pessoal. Formou atletas para campeonatos estaduais e nacionais.</p>
+        <div class="inst-tags"><span class="inst-tag">Jiu-Jitsu</span><span class="inst-tag">Defesa Pessoal</span><span class="inst-tag">Competição</span></div>
+      </div>
+      <div class="inst-line"></div>
+    </div>
+    <div class="inst-card">
+      <div class="inst-photo-area">
+        <div class="inst-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg><span>Foto do professor</span></div>
+      </div>
+      <div class="inst-body">
+        <div class="inst-role">Pedagogia & Lutas Infantis</div>
+        <div class="inst-name">Coord. Kids</div>
+        <p class="inst-bio">Especialista em desenvolvimento infantil através do esporte. Metodologia lúdica que garante aprendizado e diversão.</p>
+        <div class="inst-tags"><span class="inst-tag">Boxe Kids</span><span class="inst-tag">Jiu Kids</span><span class="inst-tag">Pedagogia</span></div>
+      </div>
+      <div class="inst-line"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── DEPOIMENTOS ──────── -->
+<section class="depoimentos" id="depoimentos">
+  <div class="s-tag rv"><span>Resultados reais</span></div>
+  <h2 class="s-title rv d1">O QUE NOSSOS<br>ALUNOS DIZEM</h2>
+  <div class="dep-grid rv d2">
+    <div class="dep-card">
+      <div class="dep-stars">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="dep-text">"Em 12 semanas perdi 8kg e aprendi a me defender. O método realmente funciona. O Ronald é exigente e humano ao mesmo tempo."</p>
+      <div class="dep-bottom">
+        <div class="dep-photo"><div class="dep-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div></div>
+        <div><div class="dep-name">Marcos Lima</div><div class="dep-mod">Boxe & Condicionamento</div></div>
+      </div>
+    </div>
+    <div class="dep-card">
+      <div class="dep-stars">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="dep-text">"Meu filho tem 8 anos e mudou completamente. Mais disciplinado, mais confiante, e adora as aulas. O ambiente é seguro e os professores são excepcionais."</p>
+      <div class="dep-bottom">
+        <div class="dep-photo"><div class="dep-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div></div>
+        <div><div class="dep-name">Carla Sousa</div><div class="dep-mod">Jiu-Jitsu Kids</div></div>
+      </div>
+    </div>
+    <div class="dep-card">
+      <div class="dep-stars">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
+      <p class="dep-text">"Treinei em vários CTs. O 12 Rounds é diferente — o método é sério, o treino é intenso, e o resultado é real. Hoje compito e evoluo todo mês."</p>
+      <div class="dep-bottom">
+        <div class="dep-photo"><div class="dep-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div></div>
+        <div><div class="dep-name">Thiago Alves</div><div class="dep-mod">Kickboxing — Atleta Competitivo</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── HORÁRIOS ──────── -->
+<section class="horarios" id="horarios">
+  <div class="s-tag rv"><span>Agenda semanal</span></div>
+  <h2 class="s-title rv d1">HORÁRIOS<br>DAS AULAS</h2>
+  <p class="s-sub rv d2">Grade fixa para você planejar sua semana. Turmas reduzidas para máxima qualidade de ensino.</p>
+  <div class="schedule-wrap rv d3">
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th>Horário</th><th>Segunda</th><th>Terça</th><th>Quarta</th><th>Quinta</th><th>Sexta</th><th>Sábado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="t-col">07:00 – 08:00</td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-kk">Kickboxing</span></td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-kk">Kickboxing</span></td><td><span class="slot s-bx">Boxe</span></td><td>—</td></tr>
+        <tr><td class="t-col">09:00 – 10:00</td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td>—</td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td>—</td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td><span class="slot s-ji">Jiu-Jitsu</span></td></tr>
+        <tr><td class="t-col">16:00 – 17:00</td><td><span class="slot s-ki">Boxe Kids</span></td><td><span class="slot s-ki">Jiu Kids</span></td><td><span class="slot s-ki">Boxe Kids</span></td><td><span class="slot s-ki">Jiu Kids</span></td><td><span class="slot s-ki">Boxe Kids</span></td><td><span class="slot s-ki">Kids Geral</span></td></tr>
+        <tr><td class="t-col">18:00 – 19:00</td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td><span class="slot s-kk">Kickboxing</span></td><td>—</td></tr>
+        <tr><td class="t-col">19:00 – 20:00</td><td><span class="slot s-kk">Kickboxing</span></td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-kk">Kickboxing</span></td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sch-note rv">* Grade sujeita a alterações. Confirme horários pelo WhatsApp antes de vir.</p>
+</section>
+
+<!-- ──────── CTA FINAL ──────── -->
+<section class="cta-final" id="contato">
+  <div class="cta-bg-glow"></div>
+  <div class="s-tag rv" style="justify-content:center"><span>Dar o primeiro passo</span></div>
+  <h2 class="s-title rv d1" style="text-align:center">PRONTO PARA<br><em>ENTRAR NO RING?</em></h2>
+  <p class="s-sub rv d2" style="text-align:center;margin:16px auto 48px">A primeira aula é gratuita. Venha conhecer o CT e sentir o método na pele.</p>
+  <div class="cta-btns rv d3">
+    <a href="https://wa.me/5563981019160" class="btn-wa">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      Falar no WhatsApp
+    </a>
+    <a href="https://wa.me/5563981019160" class="btn-outline">Agendar aula gratuita</a>
+  </div>
+  <div class="cta-address rv d4">
+    <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+    604 SUL, Alameda 08 — Palmas, Tocantins
+  </div>
+</section>
+
+<!-- ──────── FOOTER ──────── -->
+<footer>
+  <div>
+    <a href="#" class="f-logo"><img src="/landing-assets/img/AnyConv.com__logoct12.webp" alt="CT 12 Rounds" class="f-logo-img"></a>
+    <p class="f-desc">Ajudamos pessoas a alcançarem a sua melhor versão e performance através DAS LUTAS. Metodologia 12 Rounds — Palmas, TO.</p>
+  </div>
+  <div class="f-col">
+    <h4>Modalidades</h4>
+    <ul>
+      <li><a href="#">Boxe</a></li>
+      <li><a href="#">Kickboxing</a></li>
+      <li><a href="#">Jiu-Jitsu</a></li>
+      <li><a href="#">Boxe Kids</a></li>
+      <li><a href="#">Jiu-Jitsu Kids</a></li>
+    </ul>
+  </div>
+  <div class="f-col">
+    <h4>CT</h4>
+    <ul>
+      <li><a href="#">Sobre nós</a></li>
+      <li><a href="#">Método 12 Rounds</a></li>
+      <li><a href="#">Time Competitivo</a></li>
+      <li><a href="#">Instrutores</a></li>
+      <li><a href="#">Horários</a></li>
+    </ul>
+  </div>
+  <div class="f-col">
+    <h4>Contato</h4>
+    <ul>
+      <li><a href="https://wa.me/5563981019160">WhatsApp</a></li>
+      <li><a href="https://instagram.com/ct12rounds">Instagram</a></li>
+      <li><a href="#">604 SUL, Alameda 08</a></li>
+      <li><a href="#">Palmas — TO</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="f-bottom">
+  <p>© 2025 CT 12 Rounds. Todos os direitos reservados.</p>
+  <p>Metodologia 12 Rounds — Palmas, Tocantins</p>
+</div>
