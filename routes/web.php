@@ -21,7 +21,12 @@ use App\Http\Controllers\GatewayPaymentController;
 use App\Http\Controllers\GatewayPostbackController;
 use App\Http\Controllers\GatewayTransferController;
 use App\Http\Controllers\GatewayTransferRecipientController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HiringLeadController;
+use App\Http\Controllers\LandingAdmin\EditorController as LandingAdminEditorController;
+use App\Http\Controllers\LandingAdmin\Auth\LoginController as LandingAdminLoginController;
+use App\Http\Controllers\LandingAssetController;
+use App\Http\Controllers\LandingStorageController;
 use App\Http\Controllers\ModalityController;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\PayableController;
@@ -41,11 +46,30 @@ use App\Http\Controllers\TrainerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return auth()->check()
-        ? inertia('Home')
-        : redirect()->route('login');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('storage/landing/{path}', [LandingStorageController::class, 'show'])
+    ->name('landing.storage')
+    ->where('path', '[A-Za-z0-9._-]+');
+
+Route::get('landing-assets/{path}', [LandingAssetController::class, 'show'])
+    ->name('landing.assets')
+    ->where('path', 'img/[A-Za-z0-9._()% +-]+');
+
+Route::prefix('landing-admin')->name('landing-admin.')->group(function () {
+    Route::middleware('guest:landing_admin')->group(function () {
+        Route::get('login', [LandingAdminLoginController::class, 'create'])->name('login');
+        Route::post('login', [LandingAdminLoginController::class, 'store'])->name('login.store');
+    });
+
+    Route::middleware('auth:landing_admin')->group(function () {
+        Route::get('/', [LandingAdminEditorController::class, 'index'])->name('editor');
+        Route::put('api/content', [LandingAdminEditorController::class, 'saveDraft'])->name('api.content');
+        Route::post('api/publish', [LandingAdminEditorController::class, 'publish'])->name('api.publish');
+        Route::post('api/images', [LandingAdminEditorController::class, 'uploadImage'])->name('api.images');
+        Route::post('logout', [LandingAdminLoginController::class, 'destroy'])->name('logout');
+    });
+});
 
 Route::post('gateway-postbacks/{gateway_account}/receive', [GatewayPostbackController::class, 'receive'])
     ->name('gateway-postbacks.receive');
@@ -62,6 +86,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('throttle:30,1')->group(function () {
+    Route::post('/', [HomeController::class, 'store'])->name('public.landing.store');
     Route::get('register', [PublicHiringLeadController::class, 'create'])->name('public.register');
     Route::post('register', [PublicHiringLeadController::class, 'store'])->name('public.register.store');
     Route::post('register/retry-payment', [PublicHiringLeadController::class, 'retryPayment'])->name('public.register.retry');
