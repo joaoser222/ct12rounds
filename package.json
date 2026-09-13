@@ -30,6 +30,7 @@
         "vue-tsc": "^2.2.0"
     },
     "dependencies": {
+        "@inertiajs/server": "^0.1.0",
         "@inertiajs/vue3": "^3.0.0",
         "@mdi/font": "^7.4.47",
         "@tabler/icons-webfont": "3.34.0",
@@ -37,6 +38,8 @@
         "concurrently": "^9.0.1",
         "dayjs": "^1.11.13",
         "globals": "^15.14.0",
+        "grapesjs": "^0.23.6",
+        "grapesjs-preset-webpage": "^1.0.3",
         "laravel-vite-plugin": "^3.1",
         "maska": "^3.2.0",
         "moment": "^2.30.1",
