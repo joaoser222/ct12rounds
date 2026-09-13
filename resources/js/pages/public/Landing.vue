@@ -14,11 +14,17 @@ const props = defineProps<{
     success?: boolean | null;
     contract?: string | null;
     registerUrl?: string | null;
-    contentHtml?: string | null;
 }>();
 
 const primaryHref = computed(() => (props.contract ? props.registerUrl : '#capture'));
 const ctaNavLabel = computed(() => (props.contract ? 'Continuar cadastro' : 'Matricule-se'));
+
+const canonicalUrl = computed(() =>
+    typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '',
+);
+const ogImageUrl = computed(() =>
+    typeof window !== 'undefined' ? `${window.location.origin}/landing-assets/img/AnyConv.com__encarada.webp` : '',
+);
 
 const form = useForm({
     name: '',
@@ -91,13 +97,14 @@ onBeforeUnmount(() => {
             rel="stylesheet"
         />
         <meta name="description" :content="description" />
+        <link rel="canonical" :href="canonicalUrl" />
         <meta property="og:type" content="website" />
         <meta property="og:title" :content="title" />
         <meta property="og:description" :content="description" />
+        <meta property="og:image" :content="ogImageUrl" />
     </Head>
 
     <div class="landing">
-    <template v-if="typeof contentHtml === 'string' && contentHtml.length > 0">
         <div v-if="success" class="cap-published-banner">
             <div class="cap-success">
                 Recebemos os seus dados. Nossa equipe vai entrar em contato em breve.
@@ -109,15 +116,10 @@ onBeforeUnmount(() => {
                 <a :href="registerUrl" class="cap-contract-btn clipped-object">{{ ctaNavLabel }}</a>
             </div>
         </div>
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="landing-published" v-html="contentHtml" />
-    </template>
-    <template v-else>
-
 
 <!-- ──────── NAV ──────── -->
 <nav>
-  <a href="#" class="nav-logo"><img src="https://pub-cccb3835776443fb895523fca798b2d5.r2.dev/AnyConv.com__logoct12.webp" alt="CT 12 Rounds" class="nav-logo-img"></a>
+  <a href="#" class="nav-logo"><img src="/landing-assets/img/AnyConv.com__logoct12.webp" alt="CT 12 Rounds" class="nav-logo-img"></a>
   <ul class="nav-links">
     <li><a href="#modalidades">Modalidades</a></li>
     <li><a href="#metodo">Método</a></li>
@@ -147,7 +149,7 @@ onBeforeUnmount(() => {
 <!-- ──────── HERO ──────── -->
 <section class="hero" id="inicio">
   <div class="hero-photo">
-    <img src="https://pub-cccb3835776443fb895523fca798b2d5.r2.dev/AnyConv.com__ronald.webp" alt="Ronald Castilho — Head Coach CT 12 Rounds">
+    <img src="/landing-assets/img/AnyConv.com__ronald.webp" alt="Ronald Castilho — Head Coach CT 12 Rounds">
     <div class="hero-photo-tint"></div>
     <div class="hero-photo-fade-left"></div>
     <div class="hero-photo-fade-bottom"></div>
@@ -287,7 +289,7 @@ onBeforeUnmount(() => {
     <!-- BOXE -->
     <div class="mod-card">
       <div class="mod-n">01</div>
-      <div class="mod-ico"><img src="https://pub-cccb3835776443fb895523fca798b2d5.r2.dev/luvas-de-boxe.svg" alt="Boxe"></div>
+      <div class="mod-ico"><img src="/landing-assets/img/luvas-de-boxe.svg" alt="Boxe"></div>
       <div class="mod-name">Boxe</div>
       <p class="mod-desc">Técnica, velocidade e condicionamento. O esporte mais completo para defesa pessoal e performance.</p>
       <div class="mod-stripe"></div>
@@ -295,7 +297,7 @@ onBeforeUnmount(() => {
     <!-- KICKBOXING -->
     <div class="mod-card">
       <div class="mod-n">02</div>
-      <div class="mod-ico"><img src="https://pub-cccb3835776443fb895523fca798b2d5.r2.dev/kick.svg" alt="Kickboxing"></div>
+      <div class="mod-ico"><img src="/landing-assets/img/kick.svg" alt="Kickboxing"></div>
       <div class="mod-name">Kickboxing</div>
       <p class="mod-desc">Golpes de punho e chute combinados. Potência, coordenação e máximo condicionamento físico.</p>
       <div class="mod-stripe"></div>
@@ -303,7 +305,7 @@ onBeforeUnmount(() => {
     <!-- JIU-JITSU -->
     <div class="mod-card">
       <div class="mod-n">03</div>
-      <div class="mod-ico"><img src="https://pub-cccb3835776443fb895523fca798b2d5.r2.dev/judo.svg" alt="Jiu-Jitsu"></div>
+      <div class="mod-ico"><img src="/landing-assets/img/judo.svg" alt="Jiu-Jitsu"></div>
       <div class="mod-name">Jiu-Jitsu</div>
       <p class="mod-desc">Arte suave e eficaz. Quedas, imobilizações e finalizações para defesa real e competição.</p>
       <div class="mod-stripe"></div>
@@ -311,14 +313,14 @@ onBeforeUnmount(() => {
     <!-- BOXE KIDS -->
     <div class="mod-card mod-kids">
       <div class="mod-n">04</div>
-      <div class="mod-ico"><img src="https://pub-cccb3835776443fb895523fca798b2d5.r2.dev/boxekids.svg" alt="Boxe Kids"></div>
+      <div class="mod-ico"><img src="/landing-assets/img/boxekids.svg" alt="Boxe Kids"></div>
       <p class="mod-desc">Disciplina, respeito e autoconfiança. Metodologia lúdica para crianças e adolescentes de 5 a 15 anos.</p>
       <div class="mod-stripe" style="background:var(--gold)"></div>
     </div>
     <!-- JIU KIDS -->
     <div class="mod-card mod-kids">
       <div class="mod-n">05</div>
-      <div class="mod-ico"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/Gemini_Generated_Image_a5jm0ua5jm0ua5jm-Photoroom.svg" alt="Jiu-Jitsu Kids"></div>
+      <div class="mod-ico"><img src="/landing-assets/img/Gemini_Generated_Image_a5jm0ua5jm0ua5jm-Photoroom.svg" alt="Jiu-Jitsu Kids"></div>
       <p class="mod-desc">Coordenação motora, lógica e caráter. O esporte que ensina a pensar e a persistir.</p>
       <div class="mod-stripe" style="background:var(--gold)"></div>
     </div>
@@ -330,32 +332,32 @@ onBeforeUnmount(() => {
   <div class="carousel-label rv">Galeria de treinos & eventos</div>
   <div class="carousel-track-wrap">
     <div class="carousel-track" id="track1">
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(2).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(3).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(4).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(5).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(2).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(3).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(4).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(5).webp" alt="Treino" loading="lazy"></div>
       <!-- duplicates for seamless loop -->
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(2).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(3).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(4).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(5).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(2).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(3).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(4).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(5).webp" alt="Treino" loading="lazy"></div>
     </div>
   </div>
   <div class="carousel-track-wrap" style="margin-top:12px">
     <div class="carousel-track carousel-track2">
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(6).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(7).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(8).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(9).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(6).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(7).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(8).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(9).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
       <!-- duplicates for seamless loop -->
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(6).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(7).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(8).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(9).webp" alt="Treino" loading="lazy"></div>
-      <div class="c-photo"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(6).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(7).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(8).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(9).webp" alt="Treino" loading="lazy"></div>
+      <div class="c-photo"><img src="/landing-assets/img/treinos%20(1).webp" alt="Treino" loading="lazy"></div>
     </div>
   </div>
 </div>
@@ -384,7 +386,7 @@ onBeforeUnmount(() => {
     </div>
     <div class="metodo-visual rv-r">
       <div class="mv-frame">
-        <img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/AnyConv.com__encarada.webp" alt="Metodologia 12 Rounds" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;filter:grayscale(15%)">
+        <img src="/landing-assets/img/AnyConv.com__encarada.webp" alt="Metodologia 12 Rounds" style="width:100%;height:100%;object-fit:cover;object-position:center center;display:block;filter:grayscale(15%)">
         <div class="mv-num">12</div>
         <div class="mv-badge"><span>Metodologia exclusiva</span></div>
         <div class="mv-info">
@@ -423,36 +425,36 @@ onBeforeUnmount(() => {
     <div class="comp-gallery rv d2">
       <div class="comp-gallery-track-wrap">
         <div class="comp-gallery-track">
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(1).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(2).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(3).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(4).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(5).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(6).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(1).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(2).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(3).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(4).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(5).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(6).webp" alt="Competição" loading="lazy"></div>
           <!-- duplicates for seamless loop -->
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(1).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(2).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(3).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(4).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(5).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(6).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(1).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(2).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(3).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(4).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(5).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(6).webp" alt="Competição" loading="lazy"></div>
         </div>
       </div>
       <div class="comp-gallery-track-wrap" style="margin-top:10px">
         <div class="comp-gallery-track comp-gallery-track2">
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(7).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(8).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(9).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(10).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(11).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(1).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(7).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(8).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(9).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(10).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(11).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(1).webp" alt="Competição" loading="lazy"></div>
           <!-- duplicates for seamless loop -->
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(7).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(8).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(9).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(10).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(11).webp" alt="Competição" loading="lazy"></div>
-          <div class="cg-photo sq"><img src="https://pub-1efb09029ced4efc829a2dcaa0cb1cdd.r2.dev/comp%20(1).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(7).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(8).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(9).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(10).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(11).webp" alt="Competição" loading="lazy"></div>
+          <div class="cg-photo sq"><img src="/landing-assets/img/comp%20(1).webp" alt="Competição" loading="lazy"></div>
         </div>
       </div>
     </div>
@@ -607,7 +609,7 @@ onBeforeUnmount(() => {
 <!-- ──────── FOOTER ──────── -->
 <footer>
   <div>
-    <a href="#" class="f-logo"><img src="https://pub-cccb3835776443fb895523fca798b2d5.r2.dev/AnyConv.com__logoct12.webp" alt="CT 12 Rounds" class="f-logo-img"></a>
+    <a href="#" class="f-logo"><img src="/landing-assets/img/AnyConv.com__logoct12.webp" alt="CT 12 Rounds" class="f-logo-img"></a>
     <p class="f-desc">Ajudamos pessoas a alcançarem a sua melhor versão e performance através DAS LUTAS. Metodologia 12 Rounds — Palmas, TO.</p>
   </div>
   <div class="f-col">
@@ -677,7 +679,6 @@ hamBtn.addEventListener('click', openMenu);
 mobileClose.addEventListener('click', closeMenu);
 document.querySelectorAll('.mm-link, .mm-cta').forEach(el => el.addEventListener('click', closeMenu));
 </script>
-    </template>
     </div>
 </template>
 
@@ -723,7 +724,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 64px;height:72px;d
 .nav-cta:hover{background:#1a6bff;transform:translateY(-1px)}
 
 /* ── HERO ── */
-.hero{position:relative;height:100vh;min-height:680px;display:flex;align-items:center;overflow:hidden}
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:stretch;overflow:hidden}
 .hero-photo{position:absolute;top:0;right:0;width:58%;height:100%;z-index:1}
 .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;filter:grayscale(20%)}
 .hero-photo-tint{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,40,160,.18) 0%,rgba(0,87,255,.08) 60%,transparent 100%);mix-blend-mode:multiply;pointer-events:none}
@@ -731,7 +732,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 64px;height:72px;d
 .hero-photo-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(0deg,var(--black) 0%,transparent 100%);pointer-events:none}
 .hero-grid-overlay{position:absolute;inset:0;z-index:2;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:72px 72px;pointer-events:none}
 .hero-vignette{position:absolute;top:0;left:0;bottom:0;width:55%;z-index:2;background:linear-gradient(90deg,var(--black) 0%,rgba(8,8,8,.6) 70%,transparent 100%);pointer-events:none}
-.hero-content{position:relative;z-index:4;padding:0 64px;max-width:860px}
+.hero-content{position:relative;z-index:4;margin:auto 0;padding:0 64px;max-width:860px}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:28px;opacity:0;animation:fadeUp .6s .1s ease forwards}
 .hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:blink 2.4s ease infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
@@ -746,7 +747,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 64px;height:72px;d
 .btn-primary:hover{background:#1a6bff;transform:translateY(-2px)}
 .btn-outline{color:var(--white);padding:15px 34px;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.18);transition:.25s}
 .btn-outline:hover{border-color:rgba(255,255,255,.45);transform:translateY(-2px)}
-.hero-stats-bar{position:absolute;bottom:0;left:0;right:0;z-index:4;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:0 64px;display:flex;opacity:0;animation:fadeUp .7s .7s ease forwards}
+.hero-stats-bar{position:relative;width:100%;z-index:4;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:0 64px;display:flex;opacity:0;animation:fadeUp .7s .7s ease forwards}
 .hero-stat{padding:24px 48px 24px 0;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
 .hero-stat:first-child{padding-left:0}
 .hero-stat:last-child{border:none;padding-right:0}
@@ -1057,6 +1058,7 @@ footer{background:#040404;border-top:1px solid var(--border);padding:64px;displa
   .hero-content{
     position:relative;
     z-index:4;
+    margin:0;
     padding:36px 24px 32px;
     max-width:100%;
     text-align:center;
