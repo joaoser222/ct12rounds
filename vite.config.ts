@@ -28,7 +28,13 @@ export default defineConfig({
                 }),
             ],
         }),
-        vue(),
+        vue({
+            template: {
+                transformAssetUrls: {
+                    includeAbsolute: false,
+                },
+            },
+        }),
         vuetify({
             autoImport: true,
             styles: {
