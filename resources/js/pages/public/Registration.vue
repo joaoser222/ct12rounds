@@ -17,11 +17,18 @@ type ContractRegistration = {
     plan?: string | null;
 };
 
+type PrefilledData = {
+    name?: string;
+    email?: string;
+    phone?: string;
+};
+
 const props = defineProps<{
     plan?: PlanSummary | null;
     requiresLegalRepresentative?: boolean;
     coupon?: string | null;
     couponWarning?: string | null;
+    initial?: PrefilledData | null;
     contract?: ContractRegistration | null;
     terms?: string | null;
     success?: boolean;
@@ -35,9 +42,9 @@ const isContractFlow = computed(() => !!props.contract);
 const isRetry = computed(() => !!props.retryClientId);
 
 const form = useForm({
-    name: '',
-    email: '',
-    phone: '',
+    name: props.initial?.name ?? '',
+    email: props.initial?.email ?? '',
+    phone: props.initial?.phone ?? '',
     document: '',
     gender: '',
     birth_date: '',
@@ -69,22 +76,32 @@ const isAddressRequired = computed(() => isContractFlow.value);
 
 const step1Valid = computed(() => {
     if (!form.name || !form.email || !form.phone) return false;
-    if (!form.document) return false;
     if (isContractFlow.value) {
+        if (!form.document) return false;
         if (!form.gender || !form.birth_date) return false;
-        if (!form.address_postal_code || !form.address || !form.address_number) return false;
-        if (!form.address_district || !form.address_city || !form.address_state) return false;
+        if (!form.address_postal_code || !form.address || !form.address_number)
+            return false;
+        if (!form.address_district || !form.address_city || !form.address_state)
+            return false;
     }
     if (props.requiresLegalRepresentative && form.legal_representative) {
-        if (!form.legal_representative_name || !form.legal_representative_document || !form.legal_representative_birth_date) return false;
+        if (
+            !form.legal_representative_name ||
+            !form.legal_representative_document ||
+            !form.legal_representative_birth_date
+        )
+            return false;
     }
     return true;
 });
 
 const step2Valid = computed(() => {
-    if (!form.card_number || form.card_number.replace(/\D/g, '').length < 13) return false;
-    if (!form.card_expiry_month || form.card_expiry_month.length < 2) return false;
-    if (!form.card_expiry_year || form.card_expiry_year.length < 4) return false;
+    if (!form.card_number || form.card_number.replace(/\D/g, '').length < 13)
+        return false;
+    if (!form.card_expiry_month || form.card_expiry_month.length < 2)
+        return false;
+    if (!form.card_expiry_year || form.card_expiry_year.length < 4)
+        return false;
     if (!form.card_cvv || form.card_cvv.length < 3) return false;
     if (!form.card_holder_name) return false;
     return true;
@@ -126,10 +143,7 @@ const submitRetryPayment = () => {
             fluid
             class="fill-height d-flex align-center justify-center pa-4"
         >
-            <v-card
-                width="640"
-                color="secondary"
-            >
+            <v-card width="640" color="secondary">
                 <v-card-text class="pa-8">
                     <h1 class="text-h6 font-weight-medium text-center mb-1">
                         {{
@@ -144,7 +158,7 @@ const submitRetryPayment = () => {
                         {{
                             isContractFlow
                                 ? `Preencha seus dados para garantir sua vaga no plano ${plan?.name ?? contract?.plan ?? ''}.`
-                                : 'Preencha seus dados básicos e garanta sua condição promocional.'
+                                : 'Deixe seus dados para nossa equipe entrar em contato o mais rápido possível.'
                         }}
                     </p>
 
@@ -154,16 +168,21 @@ const submitRetryPayment = () => {
                         variant="tonal"
                         class="mb-4"
                     >
-                        Cadastro realizado com sucesso! Nossa equipe entrará em contato em breve.
+                        Cadastro realizado com sucesso! Nossa equipe entrará em
+                        contato em breve.
                     </v-alert>
 
                     <v-alert
-                        v-if="coupon && isContractFlow"
+                        v-if="coupon"
                         type="info"
                         variant="tonal"
                         class="mb-4"
                     >
-                        Cupom promocional aplicado: <strong>{{ coupon }}</strong>
+                        Cupom promocional aplicado:
+                        <strong>{{ coupon }}</strong>
+                        <span v-if="!isContractFlow">
+                            Seu desconto será mantido na hora da contratação.
+                        </span>
                     </v-alert>
 
                     <v-alert
@@ -206,31 +225,17 @@ const submitRetryPayment = () => {
                                 />
                             </v-col>
                         </v-row>
-                        <v-text-field
-                            v-model="form.document"
-                            label="CPF"
-                            :error-messages="form.errors.document"
-                            class="mb-3"
-                        />
 
-                        <v-checkbox
-                            v-model="form.accepted"
-                            label="Li e aceito os termos do contrato."
-                            :error-messages="form.errors.accepted"
-                            color="primary"
-                            class="mb-3"
-                        />
-
-                        <v-btn
+                        <v-clipped-button
                             type="submit"
                             color="primary"
-                            size="large"
                             block
+                            class="cta-finalize"
                             :loading="form.processing"
                             :disabled="form.processing || !step1Valid"
                         >
                             Finalizar pré-cadastro
-                        </v-btn>
+                        </v-clipped-button>
                     </v-form>
 
                     <!-- Cadastro com contrato: multi-step -->
@@ -243,7 +248,13 @@ const submitRetryPayment = () => {
                             class="mb-4"
                         />
 
-                        <v-form @submit.prevent="isRetry ? submitRetryPayment() : submitContractRegistration">
+                        <v-form
+                            @submit.prevent="
+                                isRetry
+                                    ? submitRetryPayment()
+                                    : submitContractRegistration
+                            "
+                        >
                             <template v-if="!isRetry && currentStep === 1">
                                 <v-text-field
                                     v-model="form.name"
@@ -277,7 +288,9 @@ const submitRetryPayment = () => {
                                         <v-text-field
                                             v-model="form.document"
                                             label="CPF"
-                                            :error-messages="form.errors.document"
+                                            :error-messages="
+                                                form.errors.document
+                                            "
                                             class="mb-3"
                                         />
                                     </v-col>
@@ -286,8 +299,14 @@ const submitRetryPayment = () => {
                                             v-model="form.gender"
                                             label="Gênero"
                                             :items="[
-                                                { title: 'Masculino', value: 'M' },
-                                                { title: 'Feminino', value: 'F' },
+                                                {
+                                                    title: 'Masculino',
+                                                    value: 'M',
+                                                },
+                                                {
+                                                    title: 'Feminino',
+                                                    value: 'F',
+                                                },
                                             ]"
                                             :error-messages="form.errors.gender"
                                             class="mb-3"
@@ -307,7 +326,9 @@ const submitRetryPayment = () => {
                                     <v-text-field
                                         v-model="form.address_postal_code"
                                         label="CEP"
-                                        :error-messages="form.errors.address_postal_code"
+                                        :error-messages="
+                                            form.errors.address_postal_code
+                                        "
                                         class="mb-3"
                                     />
                                     <v-text-field
@@ -321,15 +342,22 @@ const submitRetryPayment = () => {
                                             <v-text-field
                                                 v-model="form.address_number"
                                                 label="Número"
-                                                :error-messages="form.errors.address_number"
+                                                :error-messages="
+                                                    form.errors.address_number
+                                                "
                                                 class="mb-3"
                                             />
                                         </v-col>
                                         <v-col cols="12" md="8">
                                             <v-text-field
-                                                v-model="form.address_complement"
+                                                v-model="
+                                                    form.address_complement
+                                                "
                                                 label="Complemento"
-                                                :error-messages="form.errors.address_complement"
+                                                :error-messages="
+                                                    form.errors
+                                                        .address_complement
+                                                "
                                                 class="mb-3"
                                             />
                                         </v-col>
@@ -337,7 +365,9 @@ const submitRetryPayment = () => {
                                     <v-text-field
                                         v-model="form.address_district"
                                         label="Bairro"
-                                        :error-messages="form.errors.address_district"
+                                        :error-messages="
+                                            form.errors.address_district
+                                        "
                                         class="mb-3"
                                     />
                                     <v-row>
@@ -345,7 +375,9 @@ const submitRetryPayment = () => {
                                             <v-text-field
                                                 v-model="form.address_city"
                                                 label="Cidade"
-                                                :error-messages="form.errors.address_city"
+                                                :error-messages="
+                                                    form.errors.address_city
+                                                "
                                                 class="mb-3"
                                             />
                                         </v-col>
@@ -354,7 +386,9 @@ const submitRetryPayment = () => {
                                                 v-model="form.address_state"
                                                 label="UF"
                                                 maxlength="2"
-                                                :error-messages="form.errors.address_state"
+                                                :error-messages="
+                                                    form.errors.address_state
+                                                "
                                                 class="mb-3"
                                             />
                                         </v-col>
@@ -375,27 +409,42 @@ const submitRetryPayment = () => {
 
                                     <template v-if="form.legal_representative">
                                         <v-text-field
-                                            v-model="form.legal_representative_name"
+                                            v-model="
+                                                form.legal_representative_name
+                                            "
                                             v-text-case="'capitalize'"
                                             label="Nome do responsável"
-                                            :error-messages="form.errors.legal_representative_name"
+                                            :error-messages="
+                                                form.errors
+                                                    .legal_representative_name
+                                            "
                                             class="mb-3"
                                         />
                                         <v-row>
                                             <v-col cols="12" md="6">
                                                 <v-text-field
-                                                    v-model="form.legal_representative_document"
+                                                    v-model="
+                                                        form.legal_representative_document
+                                                    "
                                                     label="CPF do responsável"
-                                                    :error-messages="form.errors.legal_representative_document"
+                                                    :error-messages="
+                                                        form.errors
+                                                            .legal_representative_document
+                                                    "
                                                     class="mb-3"
                                                 />
                                             </v-col>
                                             <v-col cols="12" md="6">
                                                 <v-text-field
-                                                    v-model="form.legal_representative_birth_date"
+                                                    v-model="
+                                                        form.legal_representative_birth_date
+                                                    "
                                                     label="Nascimento do responsável"
                                                     type="date"
-                                                    :error-messages="form.errors.legal_representative_birth_date"
+                                                    :error-messages="
+                                                        form.errors
+                                                            .legal_representative_birth_date
+                                                    "
                                                     class="mb-3"
                                                 />
                                             </v-col>
@@ -404,27 +453,37 @@ const submitRetryPayment = () => {
                                 </template>
 
                                 <template v-if="terms">
-                                    <v-card
-                                        variant="tonal"
-                                        class="mb-3"
-                                    >
+                                    <v-card variant="tonal" class="mb-3">
                                         <v-card-actions>
-                                            <span class="text-body-2">Termos e condições</span>
+                                            <span class="text-body-2"
+                                                >Termos e condições</span
+                                            >
                                             <v-spacer />
                                             <v-btn
                                                 variant="text"
                                                 size="small"
-                                                :prepend-icon="showTerms ? 'ti ti-chevron-up' : 'ti ti-chevron-down'"
+                                                :prepend-icon="
+                                                    showTerms
+                                                        ? 'ti ti-chevron-up'
+                                                        : 'ti ti-chevron-down'
+                                                "
                                                 @click="showTerms = !showTerms"
                                             >
-                                                {{ showTerms ? 'Ocultar' : 'Ler termos' }}
+                                                {{
+                                                    showTerms
+                                                        ? 'Ocultar'
+                                                        : 'Ler termos'
+                                                }}
                                             </v-btn>
                                         </v-card-actions>
                                         <v-expand-transition>
                                             <v-card-text
                                                 v-show="showTerms"
                                                 class="text-body-2 text-pre-wrap"
-                                                style="max-height: 240px; overflow-y: auto"
+                                                style="
+                                                    max-height: 240px;
+                                                    overflow-y: auto;
+                                                "
                                             >
                                                 {{ terms }}
                                             </v-card-text>
@@ -458,16 +517,35 @@ const submitRetryPayment = () => {
 
                                 <CreditCardField
                                     v-model:card-number="form.card_number"
-                                    v-model:card-expiry-month="form.card_expiry_month"
-                                    v-model:card-expiry-year="form.card_expiry_year"
+                                    v-model:card-expiry-month="
+                                        form.card_expiry_month
+                                    "
+                                    v-model:card-expiry-year="
+                                        form.card_expiry_year
+                                    "
                                     v-model:card-cvv="form.card_cvv"
-                                    v-model:card-holder-name="form.card_holder_name"
+                                    v-model:card-holder-name="
+                                        form.card_holder_name
+                                    "
                                     :errors="{
-                                        card_number: form.errors.card_number ? [form.errors.card_number] : [],
-                                        card_expiry_month: form.errors.card_expiry_month ? [form.errors.card_expiry_month] : [],
-                                        card_expiry_year: form.errors.card_expiry_year ? [form.errors.card_expiry_year] : [],
-                                        card_cvv: form.errors.card_cvv ? [form.errors.card_cvv] : [],
-                                        card_holder_name: form.errors.card_holder_name ? [form.errors.card_holder_name] : [],
+                                        card_number: form.errors.card_number
+                                            ? [form.errors.card_number]
+                                            : [],
+                                        card_expiry_month: form.errors
+                                            .card_expiry_month
+                                            ? [form.errors.card_expiry_month]
+                                            : [],
+                                        card_expiry_year: form.errors
+                                            .card_expiry_year
+                                            ? [form.errors.card_expiry_year]
+                                            : [],
+                                        card_cvv: form.errors.card_cvv
+                                            ? [form.errors.card_cvv]
+                                            : [],
+                                        card_holder_name: form.errors
+                                            .card_holder_name
+                                            ? [form.errors.card_holder_name]
+                                            : [],
                                     }"
                                 />
 
@@ -489,9 +567,15 @@ const submitRetryPayment = () => {
                                             size="large"
                                             block
                                             :loading="form.processing"
-                                            :disabled="form.processing || !step2Valid"
+                                            :disabled="
+                                                form.processing || !step2Valid
+                                            "
                                         >
-                                            {{ isRetry ? 'Tentar novamente' : 'Finalizar cadastro' }}
+                                            {{
+                                                isRetry
+                                                    ? 'Tentar novamente'
+                                                    : 'Finalizar cadastro'
+                                            }}
                                         </v-btn>
                                     </v-col>
                                 </v-row>
@@ -503,3 +587,36 @@ const submitRetryPayment = () => {
         </v-container>
     </v-main>
 </template>
+
+<style scoped>
+/* CTA de pré-cadastro no padrão dos botões de destaque da landing page. */
+.cta-finalize {
+    background: #0057ff;
+    color: #fff;
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    height: 52px;
+    transition:
+        background 0.25s,
+        transform 0.25s;
+}
+.cta-finalize:hover:not(.v-btn--disabled) {
+    background: #1a6bff !important;
+    transform: translateY(-2px);
+}
+/* Nunca vira link visitado/roxo: mantém sempre primary. */
+.cta-finalize:visited,
+.cta-finalize:active,
+.cta-finalize:focus {
+    color: #fff;
+}
+.v-theme--dark .cta-finalize.v-btn--disabled,
+.v-theme--dark .cta-finalize.v-btn--disabled.v-btn--variant-flat {
+    background: #0057ff !important;
+    color: #fff !important;
+    opacity: 0.6;
+}
+</style>

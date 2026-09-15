@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted } from 'vue';
 
 defineOptions({ layout: null });
@@ -10,14 +10,12 @@ const props = defineProps<{
     whatsappUrl: string;
     subtitle: string;
     ctaText: string;
-    storeUrl: string;
-    success?: boolean | null;
     contract?: string | null;
     registerUrl?: string | null;
 }>();
 
-const primaryHref = computed(() => (props.contract ? props.registerUrl : '#capture'));
-const ctaNavLabel = computed(() => (props.contract ? 'Continuar cadastro' : 'Matricule-se'));
+const heroCtaHref = computed(() => props.registerUrl ?? '/register');
+const heroCtaLabel = computed(() => (props.contract ? 'Continuar cadastro' : props.ctaText));
 
 const canonicalUrl = computed(() =>
     typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '',
@@ -25,18 +23,6 @@ const canonicalUrl = computed(() =>
 const ogImageUrl = computed(() =>
     typeof window !== 'undefined' ? `${window.location.origin}/landing-assets/img/AnyConv.com__encarada.webp` : '',
 );
-
-const form = useForm({
-    name: '',
-    email: '',
-    phone: '',
-    document: '',
-    accepted: false,
-});
-
-const submit = () => {
-    form.post(props.storeUrl, { preserveScroll: true });
-};
 
 let observer: IntersectionObserver | null = null;
 let hamBtn: HTMLElement | null = null;
@@ -79,6 +65,12 @@ onMounted(() => {
     hamBtn?.addEventListener('click', openMenu);
     mobileClose?.addEventListener('click', closeMenu);
     linkEls.forEach((el) => el.addEventListener('click', closeMenu));
+
+    const handleScroll = () => {
+        document.querySelector('nav')?.classList.toggle('scrolled', window.scrollY > 24);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 });
 
 onBeforeUnmount(() => {
@@ -86,6 +78,7 @@ onBeforeUnmount(() => {
     hamBtn?.removeEventListener('click', openMenu);
     mobileClose?.removeEventListener('click', closeMenu);
     linkEls.forEach((el) => el.removeEventListener('click', closeMenu));
+    window.removeEventListener('scroll', handleScroll);
 });
 </script>
 <template>
@@ -105,17 +98,6 @@ onBeforeUnmount(() => {
     </Head>
 
     <div class="landing">
-        <div v-if="success" class="cap-published-banner">
-            <div class="cap-success">
-                Recebemos os seus dados. Nossa equipe vai entrar em contato em breve.
-            </div>
-        </div>
-        <div v-else-if="contract" class="cap-published-banner">
-            <div class="cap-contract">
-                <span>Você foi convidado a contratar.</span>
-                <a :href="registerUrl" class="cap-contract-btn clipped-object">{{ ctaNavLabel }}</a>
-            </div>
-        </div>
 
 <!-- ──────── NAV ──────── -->
 <nav>
@@ -127,7 +109,7 @@ onBeforeUnmount(() => {
     <li><a href="#instrutores">Instrutores</a></li>
     <li><a href="#horarios">Horários</a></li>
   </ul>
-  <a :href="primaryHref" class="nav-cta nav-cta-desk clipped-object">{{ ctaNavLabel }}</a>
+  <v-clipped-button :href="heroCtaHref" class="nav-cta nav-cta-desk">Matricule-se</v-clipped-button>
   <button class="nav-ham" id="hamBtn" aria-label="Abrir menu">
     <span></span><span></span><span></span>
   </button>
@@ -143,7 +125,7 @@ onBeforeUnmount(() => {
   <a href="#competitivo" class="mm-link" @click="closeMenu">Competitivo</a>
   <a href="#instrutores" class="mm-link" @click="closeMenu">Instrutores</a>
   <a href="#horarios" class="mm-link" @click="closeMenu">Horários</a>
-  <a :href="primaryHref" class="mm-cta clipped-object" @click="closeMenu">{{ ctaNavLabel }}</a>
+  <v-clipped-button :href="heroCtaHref" class="mm-cta" @click="closeMenu">Matricule-se</v-clipped-button>
 </div>
 
 <!-- ──────── HERO ──────── -->
@@ -164,8 +146,8 @@ onBeforeUnmount(() => {
     </h1>
     <p class="hero-p">{{ subtitle }}</p>
     <div class="hero-btns">
-      <a :href="primaryHref" class="btn-primary clipped-object">{{ ctaText }}</a>
-      <a href="#metodo" class="btn-outline clipped-object">
+      <v-clipped-button :href="heroCtaHref" class="btn-primary">{{ heroCtaLabel }}</v-clipped-button>
+      <a href="#metodo" class="btn-outline">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
         Conhecer o método
       </a>
@@ -176,61 +158,20 @@ onBeforeUnmount(() => {
       <div class="hero-stat-num">500<em>+</em></div>
       <div class="hero-stat-label">Alunos Formados</div>
     </div>
-    <div class="hero-stat" style="padding-left:48px">
+    <div class="hero-stat">
       <div class="hero-stat-num">5</div>
       <div class="hero-stat-label">Modalidades</div>
     </div>
-    <div class="hero-stat" style="padding-left:48px">
+    <div class="hero-stat">
       <div class="hero-stat-num">12</div>
       <div class="hero-stat-label">Semanas p/ Resultado</div>
     </div>
-    <div class="hero-stat" style="padding-left:48px">
+    <div class="hero-stat">
       <div class="hero-stat-num">604<em> SUL</em></div>
       <div class="hero-stat-label">Alameda 08 — Palmas</div>
     </div>
   </div>
 </section>
-
-<!-- ──────── CAPTURA / MATRÍCULA ──────── -->
-<section class="capture" id="capture">
-  <div class="capture-inner">
-    <div class="capture-copy">
-      <div class="s-tag rv"><span>Matricule-se</span></div>
-      <h2 class="s-title rv d1">PRONTO PARA<br><em>ENTRAR NO RING?</em></h2>
-      <p class="s-sub rv d2">Deixe seus dados e agende sua aula gratuita. Nossa equipe entra em contato em breve.</p>
-    </div>
-    <div class="capture-card rv d3">
-      <v-alert v-if="success" type="success" variant="tonal" class="mb-4">
-        Recebemos os seus dados. Nossa equipe vai entrar em contato em breve.
-      </v-alert>
-      <v-alert v-else-if="contract" type="info" variant="tonal" class="mb-4">
-        Você foi convidado a contratar.
-        <template #append>
-          <v-btn :href="registerUrl" color="primary" class="clipped-object">{{ ctaNavLabel }}</v-btn>
-        </template>
-      </v-alert>
-      <v-form v-else @submit.prevent="submit">
-        <v-text-field v-model="form.name" label="Nome" :error-messages="form.errors.name" class="mb-3" />
-        <v-text-field v-model="form.email" label="E-mail" type="email" :error-messages="form.errors.email" class="mb-3" />
-        <v-row>
-          <v-col cols="12" md="6">
-            <v-text-field v-model="form.phone" label="WhatsApp / Telefone" type="tel" :error-messages="form.errors.phone" class="mb-3" />
-          </v-col>
-          <v-col cols="12" md="6">
-            <v-text-field v-model="form.document" label="CPF" :error-messages="form.errors.document" class="mb-3" />
-          </v-col>
-        </v-row>
-        <v-checkbox v-model="form.accepted" color="primary" class="mb-4">
-          Declaro que os dados informados são verdadeiros e autorizo o contato pela equipe.
-        </v-checkbox>
-        <v-btn type="submit" color="primary" size="large" block class="btn-primary clipped-object" :loading="form.processing" :disabled="form.processing || !form.name || !form.email || !form.phone || !form.document || !form.accepted">
-          {{ ctaText }}
-        </v-btn>
-      </v-form>
-    </div>
-  </div>
-</section>
-
 
 <!-- ──────── RIBBONS ──────── -->
 <div class="ribbons-wrap">
@@ -463,7 +404,7 @@ onBeforeUnmount(() => {
         <h3>Quer competir pelo CT 12 Rounds?</h3>
         <p>Fale com o Ronald e descubra como entrar no time competitivo.</p>
       </div>
-      <a :href="whatsappUrl" class="btn-primary clipped-object" style="flex-shrink:0">Quero competir</a>
+      <v-clipped-button :href="whatsappUrl" class="btn-primary" style="flex-shrink:0">Quero competir</v-clipped-button>
     </div>
   </div>
 </section>
@@ -594,11 +535,11 @@ onBeforeUnmount(() => {
   <h2 class="s-title rv d1" style="text-align:center">PRONTO PARA<br><em>ENTRAR NO RING?</em></h2>
   <p class="s-sub rv d2" style="text-align:center;margin:16px auto 48px">A primeira aula é gratuita. Venha conhecer o CT e sentir o método na pele.</p>
   <div class="cta-btns rv d3">
-    <a :href="whatsappUrl" class="btn-wa clipped-object">
+    <v-clipped-button :href="whatsappUrl" class="btn-wa">
       <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
       Falar no WhatsApp
-    </a>
-    <a :href="primaryHref" class="btn-outline clipped-object">Agendar aula gratuita</a>
+    </v-clipped-button>
+    <a :href="heroCtaHref" class="btn-outline">Agendar aula gratuita</a>
   </div>
   <div class="cta-address rv d4">
     <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
@@ -712,7 +653,8 @@ body{background:var(--black);color:var(--white);font-family:'Barlow',sans-serif;
 .icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 64px;height:72px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,8,8,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 64px;height:72px;display:flex;align-items:center;justify-content:space-between;background:transparent;backdrop-filter:none;border-bottom:1px solid transparent;transition:background .3s ease,backdrop-filter .3s ease,border-color .3s ease}
+nav.scrolled{background:rgba(8,8,8,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
 .nav-logo{display:flex;align-items:center;text-decoration:none;flex-shrink:0}
 .nav-logo-img{height:38px;width:auto;display:block;object-fit:contain}
 .nav-links{display:flex;gap:40px;list-style:none}
@@ -732,7 +674,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 64px;height:72px;d
 .hero-photo-fade-bottom{position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(0deg,var(--black) 0%,transparent 100%);pointer-events:none}
 .hero-grid-overlay{position:absolute;inset:0;z-index:2;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:72px 72px;pointer-events:none}
 .hero-vignette{position:absolute;top:0;left:0;bottom:0;width:55%;z-index:2;background:linear-gradient(90deg,var(--black) 0%,rgba(8,8,8,.6) 70%,transparent 100%);pointer-events:none}
-.hero-content{position:relative;z-index:4;margin:auto 0;padding:0 64px;max-width:860px}
+.hero-content{position:relative;z-index:4;margin:auto 0;padding:0 64px 72px;max-width:860px}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:10px;margin-bottom:28px;opacity:0;animation:fadeUp .6s .1s ease forwards}
 .hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:blink 2.4s ease infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
@@ -747,8 +689,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 64px;height:72px;d
 .btn-primary:hover{background:#1a6bff;transform:translateY(-2px)}
 .btn-outline{color:var(--white);padding:15px 34px;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.18);transition:.25s}
 .btn-outline:hover{border-color:rgba(255,255,255,.45);transform:translateY(-2px)}
-.hero-stats-bar{position:relative;width:100%;z-index:4;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:0 64px;display:flex;opacity:0;animation:fadeUp .7s .7s ease forwards}
-.hero-stat{padding:24px 48px 24px 0;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.hero-stats-bar{position:relative;width:100%;z-index:4;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:0;display:flex;justify-content:space-between;opacity:0;animation:fadeUp .7s .7s ease forwards}
+.hero-stat{padding:24px 32px;border-right:1px solid var(--border);display:flex;flex:1;flex-direction:column;gap:4px;justify-content:center}
 .hero-stat:first-child{padding-left:0}
 .hero-stat:last-child{border:none;padding-right:0}
 .hero-stat-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--white);line-height:1}
@@ -1025,7 +967,7 @@ footer{background:#040404;border-top:1px solid var(--border);padding:64px;displa
     flex-direction:column;
     align-items:stretch;
     overflow:visible;
-    padding-top:72px;
+    padding:72px 0 0;
     background:var(--black);
   }
   /* photo: remove absolute, become full-width inline block */
@@ -1093,6 +1035,7 @@ footer{background:#040404;border-top:1px solid var(--border);padding:64px;displa
   /* stats: below photo, stacked vertically */
   .hero-stats-bar{
     position:relative;
+    width:100%;
     bottom:auto;
     left:auto;
     right:auto;
@@ -1211,27 +1154,21 @@ footer{background:#040404;border-top:1px solid var(--border);padding:64px;displa
   .rounds-grid{grid-template-columns:1fr}
 }
 
-/* ── Captura / Matrícula ── */
-.capture{background:var(--dark);}
-.capture-inner{max-width:1180px;margin:0 auto;padding:0 64px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
-.capture-copy .s-sub{margin-bottom:0}
-.capture-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:38px}
-.cap-success{background:rgba(112,204,144,.1);border:1px solid rgba(112,204,144,.32);color:#70cc90;padding:18px 20px;border-radius:10px;font-weight:500;line-height:1.6}
-.cap-contract{background:var(--blue-dim);border:1px solid var(--blue-border);border-radius:10px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;font-size:14px;color:var(--white)}
-.cap-published-banner{position:fixed;top:88px;left:50%;transform:translateX(-50%);z-index:250;width:min(640px,calc(100% - 40px));box-shadow:0 12px 32px rgba(0,0,0,.45)}
-.cap-contract-btn{background:var(--blue);color:#fff;padding:10px 22px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;flex-shrink:0;display:inline-block;transition:.2s}
-.cap-contract-btn:hover{background:#1a6bff}
-.capture-form{display:grid;gap:16px}
-.cf-field label{display:block;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:6px}
-.cf-field input[type=text],.cf-field input[type=email],.cf-field input[type=tel]{width:100%;background:var(--card2);border:1px solid var(--border2);color:var(--white);padding:13px 14px;font-size:14px;border-radius:8px;outline:none;transition:border-color .2s,box-shadow .2s}
-.cf-field input:focus{border-color:var(--blue)}
-.cf-agree{display:flex;gap:10px;align-items:flex-start;color:var(--muted2);font-size:12.5px;line-height:1.55;margin-top:2px;cursor:pointer}
-.cf-agree input{margin-top:2px;accent-color:var(--blue)}
-.capture-card .btn-primary{width:100%;text-align:center;justify-content:center;border:none;background:var(--blue);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;padding:16px 24px;cursor:pointer}
-.capture-card .btn-primary:hover{background:#1a6bff}
-.cap-errors{background:rgba(224,112,112,.1);border:1px solid rgba(224,112,112,.32);color:#e07070;border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.6}
-.cap-errors ul{margin:0 0 0 18px;padding:0}
-@media (max-width:900px){
-  .capture-inner{grid-template-columns:1fr;gap:28px;padding:0 20px}
-  .capture-card{padding:28px 24px}
+/* ── Botões Vuetify (v-clipped-button) na landing ── */
+/* Neutraliza a geometria padrão do VBtn para o layout customizado. */
+.landing :deep(.v-btn){
+  height:auto;
+  min-width:0;
+  text-indent:0;
+}
+/* Mantém o espaçamento entre ícone e rótulo nos botões de destaque. */
+.landing :deep(.v-btn .v-btn__content){
+  gap:11px;
+}
+/* CTAs que apontam para o pré-cadastro: nunca assumem cor de link visitado. */
+.landing :deep(.v-btn:visited){
+  color:#fff;
+}
+.btn-primary:visited,.btn-outline:visited,.nav-cta:visited,.mm-cta:visited,.btn-wa:visited{
+  color:#fff;
 }</style>

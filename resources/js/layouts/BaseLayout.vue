@@ -192,9 +192,12 @@ const userInitials = computed(() => {
 });
 
 const currentPath = computed(() => {
-    const url = page.url || window.location.pathname;
+    const url = page.url || (typeof window !== 'undefined' ? window.location.pathname : '/');
 
-    return new URL(url, window.location.origin).pathname;
+    return new URL(
+        url,
+        typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+    ).pathname;
 });
 
 const isApplicationsHome = computed(() => currentPath.value === '/');
@@ -212,7 +215,10 @@ const currentPageTitle = computed(
 );
 
 function normalizePath(href: string): string {
-    return new URL(href, window.location.origin).pathname;
+    return new URL(
+        href,
+        typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+    ).pathname;
 }
 
 function isItemActive(href: string): boolean {

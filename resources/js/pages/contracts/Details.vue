@@ -6,7 +6,13 @@ import ContractSummary from '@/pages/contracts/ContractSummary.vue';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import { formatCurrency, formatDateTime } from '@/plugins/formatters';
 import { required } from '@/plugins/validators';
-import { findLabel, findOption, useSharedOptions, type LabeledOption, type Option } from '@/shared/options';
+import {
+    findLabel,
+    findOption,
+    useSharedOptions,
+    type LabeledOption,
+    type Option,
+} from '@/shared/options';
 import { useModulePermissions } from '@/composables/useModulePermissions';
 
 defineOptions({ layout: AuthenticatedLayout });
@@ -28,6 +34,16 @@ type CouponOption = {
     discount_limit?: number | string | null;
     duration?: number | string | null;
     expiration_date?: string | null;
+};
+
+type LeadOption = {
+    value: number;
+    title: string;
+    email: string;
+    phone: string;
+    coupon_id?: number | null;
+    coupon_code?: string | null;
+    status?: string;
 };
 
 type Registration = {
@@ -94,6 +110,7 @@ const props = defineProps<{
     options: {
         plans: PlanOption[];
         coupons: CouponOption[];
+        leads?: LeadOption[];
         genderTypes?: LabeledOption<string>[];
         states?: LabeledOption<string>[];
         billableStatus?: Option[];
@@ -104,7 +121,9 @@ const props = defineProps<{
 const isCreating = !props.contract?.id;
 
 const isPending = computed(() => {
-    return !isCreating && props.contract?.client_id == null && !!props.registration;
+    return (
+        !isCreating && props.contract?.client_id == null && !!props.registration
+    );
 });
 
 const { billableStatus, paymentMethods } = useSharedOptions({
@@ -112,31 +131,36 @@ const { billableStatus, paymentMethods } = useSharedOptions({
     paymentMethods: props.options.paymentMethods,
 });
 
-const { hasPermission: canApply, ensurePermissionsLoaded: ensureApplyLoaded } = useModulePermissions<'apply'>({
-    module: () => 'contracts',
-    permissions: () => undefined,
-    permissionMap: () => ({ apply: 'contracts.update' }),
-});
+const { hasPermission: canApply, ensurePermissionsLoaded: ensureApplyLoaded } =
+    useModulePermissions<'apply'>({
+        module: () => 'contracts',
+        permissions: () => undefined,
+        permissionMap: () => ({ apply: 'contracts.update' }),
+    });
 
 const formRef = ref<VForm | null>(null);
 const selectedCoupon = ref<CouponOption | null>(null);
+const selectedLead = ref<LeadOption | null>(null);
 const copied = ref(false);
 
 const form = useForm(
     isCreating
         ? {
-            plan_id: null as number | null,
-            installments: null as number | null,
-            coupon_id: null as number | null,
-            annotations: '',
-        }
+              plan_id: null as number | null,
+              installments: null as number | null,
+              coupon_id: null as number | null,
+              lead_id: null as number | null,
+              annotations: '',
+          }
         : {
-            annotations: props.contract?.annotations ?? '',
-        },
+              annotations: props.contract?.annotations ?? '',
+          },
 );
 
 const selectedPlan = computed<PlanOption | null>(() => {
-    return props.options.plans.find((plan) => plan.value === form.plan_id) ?? null;
+    return (
+        props.options.plans.find((plan) => plan.value === form.plan_id) ?? null
+    );
 });
 
 const grossValuePreview = computed(() => {
@@ -158,13 +182,18 @@ const grossInstallmentValues = computed(() => {
 });
 
 const discountValuePreview = computed(() => {
-    if (selectedCoupon.value === null || grossInstallmentValues.value.length === 0) {
+    if (
+        selectedCoupon.value === null ||
+        grossInstallmentValues.value.length === 0
+    ) {
         return 0;
     }
 
     const percent = Number(selectedCoupon.value.percent ?? 0);
     const discountLimit = Number(selectedCoupon.value.discount_limit ?? 0);
-    const couponDuration = Number(selectedCoupon.value.duration ?? grossInstallmentValues.value.length);
+    const couponDuration = Number(
+        selectedCoupon.value.duration ?? grossInstallmentValues.value.length,
+    );
     const eligibleInstallments = Math.min(
         grossInstallmentValues.value.length,
         Number.isFinite(couponDuration) && couponDuration > 0
@@ -177,7 +206,10 @@ const discountValuePreview = computed(() => {
         .map((value) => value * (percent / 100));
 
     if (Number.isFinite(discountLimit) && discountLimit > 0) {
-        return Math.min(rawDiscounts.reduce((sum, value) => sum + value, 0), discountLimit);
+        return Math.min(
+            rawDiscounts.reduce((sum, value) => sum + value, 0),
+            discountLimit,
+        );
     }
 
     return rawDiscounts.reduce((sum, value) => sum + value, 0);
@@ -216,7 +248,10 @@ const discountedInstallmentsSummary = computed(() => {
         return `${form.installments} de ${form.installments} parcelas com desconto.`;
     }
 
-    const discountedInstallments = Math.min(Number(form.installments), couponDuration);
+    const discountedInstallments = Math.min(
+        Number(form.installments),
+        couponDuration,
+    );
 
     return `${discountedInstallments} de ${form.installments} parcelas com desconto.`;
 });
@@ -224,7 +259,10 @@ const discountedInstallmentsSummary = computed(() => {
 watchSelectedCoupon();
 
 function watchSelectedCoupon(): void {
-    selectedCoupon.value = props.options.coupons.find((coupon) => coupon.value === form.coupon_id) ?? null;
+    selectedCoupon.value =
+        props.options.coupons.find(
+            (coupon) => coupon.value === form.coupon_id,
+        ) ?? null;
 }
 
 function onPlanChange(): void {
@@ -238,8 +276,31 @@ function onPlanChange(): void {
 }
 
 function onCouponChange(value: number | null): void {
-    selectedCoupon.value = props.options.coupons.find((coupon) => coupon.value === value) ?? null;
+    selectedCoupon.value =
+        props.options.coupons.find((coupon) => coupon.value === value) ?? null;
 }
+
+function onLeadChange(value: number | null): void {
+    selectedLead.value =
+        props.options.leads?.find((lead) => lead.value === value) ?? null;
+
+    if (selectedLead.value && !form.coupon_id && selectedLead.value.coupon_id) {
+        form.coupon_id = selectedLead.value.coupon_id;
+        onCouponChange(form.coupon_id);
+    }
+}
+
+const linkedLeadCouponMessage = computed(() => {
+    if (!selectedLead.value?.coupon_code) {
+        return null;
+    }
+
+    if (form.coupon_id === selectedLead.value.coupon_id) {
+        return `Cupom reservado no pré-cadastro aplicado: ${selectedLead.value.coupon_code}.`;
+    }
+
+    return null;
+});
 
 async function submit(): Promise<void> {
     if (isCreating) {
@@ -268,13 +329,21 @@ function applyContract(): void {
         return;
     }
 
-    if (!confirm('Aplicar o contrato? Será criado o cliente a partir do cadastro, aceitos os termos e geradas as faturas.')) {
+    if (
+        !confirm(
+            'Aplicar o contrato? Será criado o cliente a partir do cadastro, aceitos os termos e geradas as faturas.',
+        )
+    ) {
         return;
     }
 
-    router.patch(props.applicationRoute, {}, {
-        preserveScroll: true,
-    });
+    router.patch(
+        props.applicationRoute,
+        {},
+        {
+            preserveScroll: true,
+        },
+    );
 }
 
 function cancelContract(route: string): void {
@@ -282,9 +351,13 @@ function cancelContract(route: string): void {
         return;
     }
 
-    router.patch(route, {}, {
-        preserveScroll: true,
-    });
+    router.patch(
+        route,
+        {},
+        {
+            preserveScroll: true,
+        },
+    );
 }
 
 function copyRegistrationLink(): void {
@@ -295,10 +368,13 @@ function copyRegistrationLink(): void {
     const url = props.registration.url;
 
     if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-            copied.value = true;
-            setTimeout(() => (copied.value = false), 2000);
-        }).catch(() => fallbackCopy(url));
+        navigator.clipboard
+            .writeText(url)
+            .then(() => {
+                copied.value = true;
+                setTimeout(() => (copied.value = false), 2000);
+            })
+            .catch(() => fallbackCopy(url));
 
         return;
     }
@@ -343,10 +419,16 @@ onMounted(() => {
 
 <template>
     <div>
-        <div class="d-flex align-center justify-space-between ga-4 my-4 flex-wrap">
+        <div
+            class="d-flex align-center justify-space-between ga-4 my-4 flex-wrap"
+        >
             <div>
                 <h1 class="text-h5 font-weight-medium">
-                    {{ isCreating ? 'Novo contrato' : `Contrato #${contract?.id}` }}
+                    {{
+                        isCreating
+                            ? 'Novo contrato'
+                            : `Contrato #${contract?.id}`
+                    }}
                 </h1>
             </div>
         </div>
@@ -354,51 +436,107 @@ onMounted(() => {
         <v-row>
             <v-col cols="12" lg="8">
                 <v-card>
-                    <v-card-text
-                        v-if="!isCreating"
-                        class="pb-0"
-                    >
+                    <v-card-text v-if="!isCreating" class="pb-0">
                         <v-row class="ma-0">
                             <v-col cols="12" md="3">
-                                <v-label class="text-caption text-medium-emphasis">ID do contrato</v-label>
-                                <div class="text-body-1 mb-3">{{ contract?.id ?? '-' }}</div>
+                                <v-label
+                                    class="text-caption text-medium-emphasis"
+                                    >ID do contrato</v-label
+                                >
+                                <div class="text-body-1 mb-3">
+                                    {{ contract?.id ?? '-' }}
+                                </div>
                             </v-col>
                             <v-col cols="12" md="3">
-                                <v-label class="text-caption text-medium-emphasis">Status</v-label>
+                                <v-label
+                                    class="text-caption text-medium-emphasis"
+                                    >Status</v-label
+                                >
                                 <div class="mb-3">
                                     <v-chip
-                                        v-if="contract?.accepted_terms === 'pending' && contract?.client_id == null"
+                                        v-if="
+                                            contract?.accepted_terms ===
+                                                'pending' &&
+                                            contract?.client_id == null
+                                        "
                                         color="warning"
                                     >
                                         Pendente
                                     </v-chip>
                                     <v-chip
                                         v-else
-                                        :color="findOption(billableStatus, contract?.status)?.color ?? 'secondary'"
+                                        :color="
+                                            findOption(
+                                                billableStatus,
+                                                contract?.status,
+                                            )?.color ?? 'secondary'
+                                        "
                                     >
-                                        {{ findLabel(billableStatus, contract?.status) ?? contract?.status ?? '-' }}
+                                        {{
+                                            findLabel(
+                                                billableStatus,
+                                                contract?.status,
+                                            ) ??
+                                            contract?.status ??
+                                            '-'
+                                        }}
                                     </v-chip>
                                 </div>
                             </v-col>
                             <v-col cols="12" md="6">
-                                <v-label class="text-caption text-medium-emphasis">Cliente</v-label>
-                                <div class="text-body-1 mb-3">{{ clientInfo ?? 'Aguardando cadastro via QR Code' }}</div>
+                                <v-label
+                                    class="text-caption text-medium-emphasis"
+                                    >Cliente</v-label
+                                >
+                                <div class="text-body-1 mb-3">
+                                    {{
+                                        clientInfo ??
+                                        'Aguardando cadastro via QR Code'
+                                    }}
+                                </div>
                             </v-col>
                             <v-col cols="12" md="3">
-                                <v-label class="text-caption text-medium-emphasis">Plano</v-label>
-                                <div class="text-body-1 mb-3">{{ contract?.plan_name ?? '-' }}</div>
+                                <v-label
+                                    class="text-caption text-medium-emphasis"
+                                    >Plano</v-label
+                                >
+                                <div class="text-body-1 mb-3">
+                                    {{ contract?.plan_name ?? '-' }}
+                                </div>
                             </v-col>
                             <v-col cols="12" md="3">
-                                <v-label class="text-caption text-medium-emphasis">Forma de pagamento</v-label>
-                                <div class="text-body-1 mb-3">{{ findLabel(paymentMethods, contract?.payment_method) ?? contract?.payment_method ?? '-' }}</div>
+                                <v-label
+                                    class="text-caption text-medium-emphasis"
+                                    >Forma de pagamento</v-label
+                                >
+                                <div class="text-body-1 mb-3">
+                                    {{
+                                        findLabel(
+                                            paymentMethods,
+                                            contract?.payment_method,
+                                        ) ??
+                                        contract?.payment_method ??
+                                        '-'
+                                    }}
+                                </div>
                             </v-col>
                             <v-col cols="12" md="3">
-                                <v-label class="text-caption text-medium-emphasis">Criado em</v-label>
-                                <div class="text-body-1 mb-3">{{ formatDateTime(contract?.created_at) }}</div>
+                                <v-label
+                                    class="text-caption text-medium-emphasis"
+                                    >Criado em</v-label
+                                >
+                                <div class="text-body-1 mb-3">
+                                    {{ formatDateTime(contract?.created_at) }}
+                                </div>
                             </v-col>
                             <v-col cols="12" md="3">
-                                <v-label class="text-caption text-medium-emphasis">Atualizado em</v-label>
-                                <div class="text-body-1 mb-3">{{ formatDateTime(contract?.updated_at) }}</div>
+                                <v-label
+                                    class="text-caption text-medium-emphasis"
+                                    >Atualizado em</v-label
+                                >
+                                <div class="text-body-1 mb-3">
+                                    {{ formatDateTime(contract?.updated_at) }}
+                                </div>
                             </v-col>
                         </v-row>
                         <v-divider class="my-4" />
@@ -416,9 +554,37 @@ onMounted(() => {
                                             item-title="title"
                                             item-value="value"
                                             :rules="[required]"
-                                            :error-messages="form.errors.plan_id"
+                                            :error-messages="
+                                                form.errors.plan_id
+                                            "
                                             @update:model-value="onPlanChange"
                                         />
+                                    </v-col>
+                                    <v-col cols="12" md="6">
+                                        <v-select
+                                            v-model="form.lead_id"
+                                            label="Pré-cadastro vinculado (opcional)"
+                                            :items="props.options.leads ?? []"
+                                            item-title="title"
+                                            item-value="value"
+                                            clearable
+                                            :error-messages="
+                                                form.errors.lead_id
+                                            "
+                                            @update:model-value="onLeadChange"
+                                        >
+                                            <template
+                                                #item="{
+                                                    props: itemProps,
+                                                    item,
+                                                }"
+                                            >
+                                                <v-list-item
+                                                    v-bind="itemProps"
+                                                    :subtitle="`${item.raw.email} • ${item.raw.phone}${item.raw.coupon_code ? ` • Cupom ${item.raw.coupon_code}` : ''}`"
+                                                />
+                                            </template>
+                                        </v-select>
                                     </v-col>
                                     <v-col cols="12" md="6">
                                         <v-select
@@ -428,24 +594,62 @@ onMounted(() => {
                                             item-title="title"
                                             item-value="value"
                                             clearable
-                                            :error-messages="form.errors.coupon_id"
+                                            :error-messages="
+                                                form.errors.coupon_id
+                                            "
                                             @update:model-value="onCouponChange"
                                         />
                                     </v-col>
+                                    <v-col
+                                        v-if="linkedLeadCouponMessage"
+                                        cols="12"
+                                    >
+                                        <v-alert
+                                            color="success"
+                                            variant="tonal"
+                                            border="start"
+                                        >
+                                            {{ linkedLeadCouponMessage }}
+                                        </v-alert>
+                                    </v-col>
                                     <v-col v-if="selectedCoupon" cols="12">
-                                        <v-alert color="info" variant="tonal" border="start">
-                                            <div class="d-flex flex-column ga-1">
+                                        <v-alert
+                                            color="info"
+                                            variant="tonal"
+                                            border="start"
+                                        >
+                                            <div
+                                                class="d-flex flex-column ga-1"
+                                            >
                                                 <div>
-                                                    Desconto: {{ formatCurrency(discountValuePreview) }}
+                                                    Desconto:
+                                                    {{
+                                                        formatCurrency(
+                                                            discountValuePreview,
+                                                        )
+                                                    }}
                                                 </div>
                                                 <div>
-                                                    Valor final: {{ formatCurrency(totalValuePreview) }}
+                                                    Valor final:
+                                                    {{
+                                                        formatCurrency(
+                                                            totalValuePreview,
+                                                        )
+                                                    }}
                                                 </div>
                                                 <div>
-                                                    {{ discountedInstallmentsSummary }}
+                                                    {{
+                                                        discountedInstallmentsSummary
+                                                    }}
                                                 </div>
-                                                <div v-if="couponPartialDurationMessage">
-                                                    {{ couponPartialDurationMessage }}
+                                                <div
+                                                    v-if="
+                                                        couponPartialDurationMessage
+                                                    "
+                                                >
+                                                    {{
+                                                        couponPartialDurationMessage
+                                                    }}
                                                 </div>
                                             </div>
                                         </v-alert>
@@ -455,12 +659,21 @@ onMounted(() => {
                                             v-model="form.annotations"
                                             label="Anotações"
                                             rows="3"
-                                            :error-messages="form.errors.annotations"
+                                            :error-messages="
+                                                form.errors.annotations
+                                            "
                                         />
                                     </v-col>
                                     <v-col cols="12">
-                                        <v-alert color="primary" variant="tonal" border="start">
-                                            Após salvar, um QR Code será gerado para o cliente preencher o cadastro e o contrato ficará pendente até a aplicação.
+                                        <v-alert
+                                            color="primary"
+                                            variant="tonal"
+                                            border="start"
+                                        >
+                                            Após salvar, um QR Code será gerado
+                                            para o cliente preencher o cadastro
+                                            e o contrato ficará pendente até a
+                                            aplicação.
                                         </v-alert>
                                     </v-col>
                                 </v-row>
@@ -470,26 +683,45 @@ onMounted(() => {
                         <template v-else-if="isPending">
                             <v-row class="ma-0">
                                 <v-col cols="12" md="6">
-                                    <v-alert color="warning" variant="tonal" border="start">
-                                        Autorize o contrato exibindo o QR Code abaixo para o cliente preencher o cadastro.
+                                    <v-alert
+                                        color="warning"
+                                        variant="tonal"
+                                        border="start"
+                                    >
+                                        Autorize o contrato exibindo o QR Code
+                                        abaixo para o cliente preencher o
+                                        cadastro.
                                     </v-alert>
 
-                                    <div class="d-flex flex-column align-center my-4">
+                                    <div
+                                        class="d-flex flex-column align-center my-4"
+                                    >
                                         <v-img
                                             :src="registration?.qr"
                                             width="220"
                                             alt="QR Code de cadastro"
                                             class="border rounded"
                                         />
-                                        <div class="text-body-2 text-medium-emphasis text-center my-3">
-                                            Escaneie ou compartilhe o link de cadastro com o cliente.
+                                        <div
+                                            class="text-body-2 text-medium-emphasis text-center my-3"
+                                        >
+                                            Escaneie ou compartilhe o link de
+                                            cadastro com o cliente.
                                         </div>
                                         <v-clipped-button
                                             color="primary"
-                                            :prepend-icon="copied ? 'ti ti-check' : 'ti ti-link'"
+                                            :prepend-icon="
+                                                copied
+                                                    ? 'ti ti-check'
+                                                    : 'ti ti-link'
+                                            "
                                             @click="copyRegistrationLink"
                                         >
-                                            {{ copied ? 'Link copiado!' : 'Copiar link de cadastro' }}
+                                            {{
+                                                copied
+                                                    ? 'Link copiado!'
+                                                    : 'Copiar link de cadastro'
+                                            }}
                                         </v-clipped-button>
                                     </div>
                                 </v-col>
@@ -497,46 +729,116 @@ onMounted(() => {
                                 <v-col cols="12" md="6">
                                     <v-card variant="tonal">
                                         <v-card-item>
-                                            <v-card-title class="text-subtitle-1">
+                                            <v-card-title
+                                                class="text-subtitle-1"
+                                            >
                                                 Cadastro do cliente
                                             </v-card-title>
                                         </v-card-item>
                                         <v-card-text>
                                             <template v-if="linkedLead">
-                                                <div class="text-body-2 text-medium-emphasis">Nome</div>
-                                                <div class="text-body-1 mb-2">{{ linkedLead.name }}</div>
-                                                <div class="text-body-2 text-medium-emphasis">CPF</div>
-                                                <div class="text-body-1 mb-2">{{ linkedLead.document }}</div>
-                                                <div class="text-body-2 text-medium-emphasis">E-mail</div>
-                                                <div class="text-body-1 mb-2">{{ linkedLead.email }}</div>
-                                                <div class="text-body-2 text-medium-emphasis">Telefone</div>
-                                                <div class="text-body-1 mb-2">{{ linkedLead.phone }}</div>
+                                                <div
+                                                    class="text-body-2 text-medium-emphasis"
+                                                >
+                                                    Nome
+                                                </div>
+                                                <div class="text-body-1 mb-2">
+                                                    {{ linkedLead.name }}
+                                                </div>
+                                                <div
+                                                    class="text-body-2 text-medium-emphasis"
+                                                >
+                                                    CPF
+                                                </div>
+                                                <div class="text-body-1 mb-2">
+                                                    {{ linkedLead.document }}
+                                                </div>
+                                                <div
+                                                    class="text-body-2 text-medium-emphasis"
+                                                >
+                                                    E-mail
+                                                </div>
+                                                <div class="text-body-1 mb-2">
+                                                    {{ linkedLead.email }}
+                                                </div>
+                                                <div
+                                                    class="text-body-2 text-medium-emphasis"
+                                                >
+                                                    Telefone
+                                                </div>
+                                                <div class="text-body-1 mb-2">
+                                                    {{ linkedLead.phone }}
+                                                </div>
 
                                                 <v-divider class="my-3" />
 
-                                                <div class="text-body-2 text-medium-emphasis">Endereço</div>
+                                                <div
+                                                    class="text-body-2 text-medium-emphasis"
+                                                >
+                                                    Endereço
+                                                </div>
                                                 <div class="text-body-1 mb-2">
-                                                    {{ linkedLead.address ?? 'Não informado' }},
-                                                    {{ linkedLead.address_number ?? '-' }}
-                                                    <span v-if="linkedLead.address_complement">
-                                                        - {{ linkedLead.address_complement }}
+                                                    {{
+                                                        linkedLead.address ??
+                                                        'Não informado'
+                                                    }},
+                                                    {{
+                                                        linkedLead.address_number ??
+                                                        '-'
+                                                    }}
+                                                    <span
+                                                        v-if="
+                                                            linkedLead.address_complement
+                                                        "
+                                                    >
+                                                        -
+                                                        {{
+                                                            linkedLead.address_complement
+                                                        }}
                                                     </span>
                                                 </div>
                                                 <div class="text-body-1 mb-2">
-                                                    {{ linkedLead.address_district ?? '' }}
-                                                    {{ linkedLead.address_city ?? '' }}
-                                                    {{ linkedLead.address_state ?? '' }}
-                                                    {{ linkedLead.address_postal_code ?? '' }}
+                                                    {{
+                                                        linkedLead.address_district ??
+                                                        ''
+                                                    }}
+                                                    {{
+                                                        linkedLead.address_city ??
+                                                        ''
+                                                    }}
+                                                    {{
+                                                        linkedLead.address_state ??
+                                                        ''
+                                                    }}
+                                                    {{
+                                                        linkedLead.address_postal_code ??
+                                                        ''
+                                                    }}
                                                 </div>
 
-                                                <v-alert color="success" variant="tonal" border="start" class="mt-4">
-                                                    Cliente já preencheu o cadastro. Aplique o contrato para criar o cliente e gerar as faturas.
+                                                <v-alert
+                                                    color="success"
+                                                    variant="tonal"
+                                                    border="start"
+                                                    class="mt-4"
+                                                >
+                                                    Cliente já preencheu o
+                                                    cadastro. Aplique o contrato
+                                                    para criar o cliente e gerar
+                                                    as faturas.
                                                 </v-alert>
                                             </template>
 
                                             <template v-else>
-                                                <v-alert color="info" variant="tonal" border="start">
-                                                    Nenhum cadastro recebido até o momento. O contrato será aplicado quando o cliente preencher o formulário.
+                                                <v-alert
+                                                    color="info"
+                                                    variant="tonal"
+                                                    border="start"
+                                                >
+                                                    Nenhum cadastro recebido até
+                                                    o momento. O contrato será
+                                                    aplicado quando o cliente
+                                                    preencher o formulário.
                                                 </v-alert>
                                             </template>
                                         </v-card-text>
@@ -550,7 +852,9 @@ onMounted(() => {
                                         v-model="form.annotations"
                                         label="Anotações"
                                         rows="3"
-                                        :error-messages="form.errors.annotations"
+                                        :error-messages="
+                                            form.errors.annotations
+                                        "
                                     />
                                 </v-col>
                             </v-row>
@@ -563,7 +867,9 @@ onMounted(() => {
                                         v-model="form.annotations"
                                         label="Anotações"
                                         rows="3"
-                                        :error-messages="form.errors.annotations"
+                                        :error-messages="
+                                            form.errors.annotations
+                                        "
                                     />
                                 </v-col>
                             </v-row>
@@ -573,8 +879,20 @@ onMounted(() => {
                     <ContractActions
                         :processing="form.processing"
                         :show-save="isCreating || !isPending"
-                        :show-apply="!isCreating && isPending && Boolean(linkedLead) && canApply('apply')"
-                        :show-cancel="!isCreating && Boolean(cancelRoute && contract?.status !== 'canceled' && contract?.client_id != null)"
+                        :show-apply="
+                            !isCreating &&
+                            isPending &&
+                            Boolean(linkedLead) &&
+                            canApply('apply')
+                        "
+                        :show-cancel="
+                            !isCreating &&
+                            Boolean(
+                                cancelRoute &&
+                                contract?.status !== 'canceled' &&
+                                contract?.client_id != null,
+                            )
+                        "
                         @back="router.get(props.routes.index)"
                         @save="submit"
                         @apply="applyContract"
@@ -586,17 +904,41 @@ onMounted(() => {
             <v-col cols="12" lg="4">
                 <ContractSummary
                     :is-creating="isCreating"
-                    :plan-title="isCreating ? selectedPlan?.title : contract?.plan_name"
+                    :plan-title="
+                        isCreating ? selectedPlan?.title : contract?.plan_name
+                    "
                     :plan-category="selectedPlan?.category"
-                    :modalities="isCreating ? selectedPlan?.modalities : undefined"
-                    :installments="isCreating ? form.installments : contract?.installments"
-                    :has-selected-tier="isCreating ? form.installments !== null : true"
-                    :gross-value="isCreating ? grossValuePreview : contract?.gross_value"
-                    :discount-value="isCreating ? discountValuePreview : contract?.discount_value"
-                    :total-value="isCreating ? totalValuePreview : contract?.total"
-                    :coupon-code="isCreating ? (selectedCoupon?.code ?? null) : (couponInfo ?? null)"
-                    :discounted-installments-summary="isCreating ? discountedInstallmentsSummary : null"
-                    :coupon-partial-duration-message="isCreating ? couponPartialDurationMessage : null"
+                    :modalities="
+                        isCreating ? selectedPlan?.modalities : undefined
+                    "
+                    :installments="
+                        isCreating ? form.installments : contract?.installments
+                    "
+                    :has-selected-tier="
+                        isCreating ? form.installments !== null : true
+                    "
+                    :gross-value="
+                        isCreating ? grossValuePreview : contract?.gross_value
+                    "
+                    :discount-value="
+                        isCreating
+                            ? discountValuePreview
+                            : contract?.discount_value
+                    "
+                    :total-value="
+                        isCreating ? totalValuePreview : contract?.total
+                    "
+                    :coupon-code="
+                        isCreating
+                            ? (selectedCoupon?.code ?? null)
+                            : (couponInfo ?? null)
+                    "
+                    :discounted-installments-summary="
+                        isCreating ? discountedInstallmentsSummary : null
+                    "
+                    :coupon-partial-duration-message="
+                        isCreating ? couponPartialDurationMessage : null
+                    "
                 />
             </v-col>
         </v-row>
