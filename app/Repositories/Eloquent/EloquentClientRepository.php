@@ -41,6 +41,17 @@ class EloquentClientRepository extends BaseEloquentRepository implements ClientR
         return $this->newQuery()->where('email', $email)->first();
     }
 
+    public function findByEmailAndPhone(string $email, ?string $phone): ?Model
+    {
+        $query = $this->newQuery()->where('email', $email);
+
+        if ($phone !== null && $phone !== '') {
+            $query->where('phone', $phone);
+        }
+
+        return $query->first();
+    }
+
     public function findActive(): Collection
     {
         return $this->newQuery()->where('status', 'active')->where('visibility', 'visible')->get();

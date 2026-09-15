@@ -21,6 +21,7 @@ class PublicHiringLeadRequest extends FormRequest
     {
         $isContractFlow = $this->boolean('is_contract_flow');
         $requiresLegalRep = $this->boolean('requires_legal_representative');
+        $isLandingStore = $this->routeIs('public.landing.store');
 
         if ($isContractFlow) {
             return [
@@ -56,17 +57,23 @@ class PublicHiringLeadRequest extends FormRequest
             ];
         }
 
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'min:10', 'max:14'],
             'document' => [
-                'required',
+                'nullable',
                 'string',
                 'min:11',
                 'max:14',
             ],
-            'accepted' => ['required', 'accepted'],
+            'coupon' => ['nullable', 'string', 'max:64'],
         ];
+
+        if ($isLandingStore) {
+            $rules['accepted'] = ['required', 'accepted'];
+        }
+
+        return $rules;
     }
 }

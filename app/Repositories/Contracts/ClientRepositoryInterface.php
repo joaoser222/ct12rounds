@@ -13,5 +13,7 @@ interface ClientRepositoryInterface extends RepositoryInterface
 
     public function findByEmail(string $email): ?Model;
 
+    public function findByEmailAndPhone(string $email, ?string $phone): ?Model;
+
     public function findActive(): Collection;
 }

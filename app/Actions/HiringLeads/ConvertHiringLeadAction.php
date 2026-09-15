@@ -35,16 +35,17 @@ class ConvertHiringLeadAction extends BaseAction
         }
 
         $duplicateLead = HiringLead::query()
-            ->where('document', $lead->document)
+            ->where('email', $lead->email)
+            ->where('phone', $lead->phone)
             ->whereKeyNot($lead->getKey())
             ->where('status', '!=', HiringLeadStatus::CONVERTED->value)
             ->exists();
 
         if ($duplicateLead) {
-            return ActionResultDTO::failure('Já existe um pré-cadastro não convertido com este documento.');
+            return ActionResultDTO::failure('Já existe um pré-cadastro não convertido com este e-mail e telefone.');
         }
 
-        $client = $this->clientRepository->findByDocument($lead->document);
+        $client = $this->clientRepository->findByEmailAndPhone($lead->email, $lead->phone);
 
         if ($client === null) {
             $client = $this->clientRepository->create([

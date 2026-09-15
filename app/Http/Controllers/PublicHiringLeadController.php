@@ -39,6 +39,7 @@ class PublicHiringLeadController extends Controller
         $coupon = null;
         $couponWarning = null;
         $contract = null;
+        $initial = null;
 
         if ($contractToken = $request->query('contract')) {
             $contract = Contract::query()
@@ -49,6 +50,16 @@ class PublicHiringLeadController extends Controller
                 $contract->load(['plan', 'coupon']);
                 $plan = $contract->plan;
                 $coupon = $contract->coupon;
+
+                $linkedLead = $contract->hiringLeads()->latest('id')->first();
+
+                if ($linkedLead !== null) {
+                    $initial = [
+                        'name' => $linkedLead->name,
+                        'email' => $linkedLead->email,
+                        'phone' => $linkedLead->phone,
+                    ];
+                }
             }
         }
 
@@ -79,6 +90,7 @@ class PublicHiringLeadController extends Controller
             'requiresLegalRepresentative' => $plan?->requiresLegalRepresentative() ?? false,
             'coupon' => $coupon?->code,
             'couponWarning' => $couponWarning,
+            'initial' => $initial,
             'contract' => $isContractFlow ? [
                 'id' => $contract->id,
                 'token' => $contract->registration_token,
@@ -114,7 +126,24 @@ class PublicHiringLeadController extends Controller
 
     private function storePreRegistration(array $data, PublicHiringLeadRequest $request): RedirectResponse
     {
-        $this->createLead->execute($data);
+        $coupon = null;
+
+        if (! empty($data['coupon'])) {
+            $coupon = $this->activeCouponByCode($data['coupon']);
+        }
+
+        if ($coupon !== null && ! $coupon->isAvailable()) {
+            $coupon = null;
+        }
+
+        $this->createLead->execute([
+            ...$data,
+            'coupon_id' => $coupon?->getKey(),
+        ]);
+
+        if ($coupon !== null) {
+            $coupon->increment('used_count');
+        }
 
         $request->session()->put('hiring_lead_success', true);
 
@@ -228,7 +257,7 @@ class PublicHiringLeadController extends Controller
                 'client_id' => $client->id,
             ]);
 
-            if ($coupon !== null) {
+            if ($coupon !== null && $this->shouldCountCouponUse($contract, $coupon)) {
                 $coupon->increment('used_count');
             }
 
@@ -363,7 +392,7 @@ class PublicHiringLeadController extends Controller
                 'client_id' => $client->id,
             ]);
 
-            if ($coupon !== null) {
+            if ($coupon !== null && $this->shouldCountCouponUse($contract, $coupon)) {
                 $coupon->increment('used_count');
             }
 
@@ -376,6 +405,17 @@ class PublicHiringLeadController extends Controller
                 'card_number' => 'Erro ao processar pagamento: '.$e->getMessage().'. Os dados do cartão podem estar incorretos.',
             ])->withInput();
         }
+    }
+
+    private function shouldCountCouponUse(Contract $contract, Coupon $coupon): bool
+    {
+        $reserved = HiringLead::query()
+            ->where('contract_id', $contract->getKey())
+            ->where('coupon_id', $coupon->getKey())
+            ->where('source', HiringLeadSource::SITE->value)
+            ->exists();
+
+        return ! $reserved;
     }
 
     private function activeCouponByCode(string $code): ?Coupon

@@ -27,10 +27,11 @@ class CreateSiteLeadAction extends BaseAction
             'name' => $input['name'],
             'email' => $input['email'],
             'phone' => $input['phone'],
-            'document' => preg_replace('/\D/', '', (string) $input['document']),
+            'document' => ! empty($input['document']) ? preg_replace('/\D/', '', (string) $input['document']) : null,
             'status' => HiringLeadStatus::NEW->value,
             'source' => HiringLeadSource::SITE->value,
             'visibility' => 'visible',
+            'coupon_id' => $input['coupon_id'] ?? null,
             'accepted_at' => Carbon::now(),
         ]);
     }
