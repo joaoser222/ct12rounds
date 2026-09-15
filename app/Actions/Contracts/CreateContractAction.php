@@ -7,6 +7,7 @@ use App\DTOs\Contracts\ActionResultDTO;
 use App\DTOs\Contracts\ContractResultDTO;
 use App\DTOs\Contracts\CreateContractDTO;
 use App\Models\Contract;
+use App\Models\HiringLead;
 use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Repositories\Contracts\CouponRepositoryInterface;
 use App\Repositories\Contracts\PlanRepositoryInterface;
@@ -47,6 +48,19 @@ class CreateContractAction extends BaseAction
             );
         }
 
+        $lead = null;
+
+        if ($dto->lead_id !== null) {
+            $lead = HiringLead::query()->with(['coupon'])->find($dto->lead_id);
+
+            if ($lead === null) {
+                return ActionResultDTO::failure(
+                    'O pré-cadastro vinculado não existe.',
+                    ['lead_id' => 'O pré-cadastro vinculado não existe.']
+                );
+            }
+        }
+
         $coupon = null;
 
         if ($dto->coupon_id !== null) {
@@ -68,6 +82,8 @@ class CreateContractAction extends BaseAction
                     ['coupon_id' => 'O cupom informado está expirado.']
                 );
             }
+        } elseif ($lead?->coupon !== null && ! $lead->coupon->expiration_date?->isPast()) {
+            $coupon = $lead->coupon;
         }
 
         $grossValue = round((float) $plan->price * (int) $dto->installments, 4);
@@ -93,6 +109,10 @@ class CreateContractAction extends BaseAction
                 'modality_id' => $planModality->modality_id,
                 'week_days' => 1,
             ]);
+        }
+
+        if ($lead !== null) {
+            $lead->update(['contract_id' => $contract->getKey()]);
         }
 
         return ActionResultDTO::success(

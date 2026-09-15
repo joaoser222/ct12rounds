@@ -21,6 +21,9 @@ class CreateContractDTO extends BaseDTO
         #[Nullable, IntegerType]
         public ?int $coupon_id = null,
 
+        #[Nullable, IntegerType]
+        public ?int $lead_id = null,
+
         #[Nullable, StringType, Max(500)]
         public ?string $annotations = null,
     ) {}

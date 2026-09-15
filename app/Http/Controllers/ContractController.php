@@ -96,6 +96,7 @@ class ContractController extends CrudModuleController
             'options' => [
                 'plans' => $this->planOptions(),
                 'coupons' => $this->couponOptions(),
+                'leads' => $this->leadOptions(),
             ],
         ]);
     }
@@ -322,6 +323,7 @@ class ContractController extends CrudModuleController
                 'paymentMethods' => $this->enumOptions(PaymentMethod::class),
                 'plans' => $this->planOptions(),
                 'coupons' => $this->couponOptions(),
+                'leads' => $this->leadOptions(),
             ],
         ];
     }
@@ -371,6 +373,31 @@ class ContractController extends CrudModuleController
                     'discount_limit' => (float) ($coupon->discount_limit ?? 0),
                     'duration' => $coupon->duration,
                     'expiration_date' => $coupon->expiration_date?->format('Y-m-d'),
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function leadOptions(): array
+    {
+        return HiringLead::query()
+            ->with(['coupon'])
+            ->whereNull('contract_id')
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get()
+            ->map(function (HiringLead $lead): array {
+                return [
+                    'value' => $lead->id,
+                    'title' => $lead->name,
+                    'email' => $lead->email,
+                    'phone' => $lead->phone,
+                    'coupon_id' => $lead->coupon_id,
+                    'coupon_code' => $lead->coupon?->code,
+                    'status' => $lead->status->value,
                 ];
             })
             ->all();

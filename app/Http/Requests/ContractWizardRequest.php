@@ -32,6 +32,7 @@ class ContractWizardRequest extends FormRequest
                 'min:1',
             ],
             'coupon_id' => ['nullable', 'integer', 'exists:coupons,id'],
+            'lead_id' => ['nullable', 'integer', 'exists:hiring_leads,id'],
             'annotations' => ['nullable', 'string', 'max:500'],
         ];
     }
