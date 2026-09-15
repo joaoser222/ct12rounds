@@ -57,14 +57,13 @@ class PublicHiringLandingTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
-            'document' => '12345678901',
             'accepted' => true,
         ])->assertRedirect(route('home'));
 
         $this->assertDatabaseHas('hiring_leads', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
-            'document' => '12345678901',
+            'document' => null,
             'source' => HiringLeadSource::SITE->value,
         ]);
     }
@@ -77,7 +76,6 @@ class PublicHiringLandingTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
-            'document' => '12345678901',
         ])->assertSessionHasErrors('accepted');
 
         $this->assertDatabaseCount('hiring_leads', 0);
@@ -89,7 +87,6 @@ class PublicHiringLandingTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
-            'document' => '12345678901',
             'accepted' => true,
         ])->assertRedirect(route('home'));
 

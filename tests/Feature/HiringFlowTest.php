@@ -128,6 +128,45 @@ class HiringFlowTest extends TestCase
         $this->assertDatabaseCount('contract_modalities', 3);
     }
 
+    public function test_contract_wizard_links_lead_and_auto_carries_reserved_coupon(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'contracts.create');
+        $plan = $this->createPlan();
+        $coupon = Coupon::query()->create([
+            'code' => 'PROMO10',
+            'percent' => 10,
+            'discount_limit' => 100,
+            'duration' => 30,
+            'expiration_date' => '2026-12-31',
+            'visibility' => 'visible',
+        ]);
+
+        $lead = HiringLead::query()->create([
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '11999999999',
+            'status' => 'new',
+            'source' => 'site',
+            'visibility' => 'visible',
+            'coupon_id' => $coupon->id,
+        ]);
+
+        $payload = $this->validPayload($plan);
+        $payload['lead_id'] = $lead->id;
+
+        $response = $this->actingAs($user)->post(route('contracts.store'), $payload);
+
+        $contract = Contract::query()->firstOrFail();
+
+        $response->assertRedirect(route('contracts.show', $contract));
+
+        $this->assertSame($coupon->id, $contract->coupon_id);
+
+        $lead->refresh();
+        $this->assertSame($contract->id, $lead->contract_id);
+    }
+
     public function test_contract_wizard_validates_the_selected_plan_duration_combination(): void
     {
         $user = User::factory()->create();

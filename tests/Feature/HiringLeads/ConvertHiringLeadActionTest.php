@@ -26,7 +26,8 @@ class ConvertHiringLeadActionTest extends TestCase
 
         $this->assertDatabaseHas('clients', [
             'name' => $lead->name,
-            'document' => $lead->document,
+            'email' => $lead->email,
+            'phone' => $lead->phone,
             'client_source' => ClientSource::SITE->value,
         ]);
 
@@ -37,14 +38,34 @@ class ConvertHiringLeadActionTest extends TestCase
         $this->assertNotNull($lead->converted_at);
     }
 
-    public function test_convert_reuses_existing_client_by_document(): void
+    public function test_convert_creates_client_without_document_from_site_lead(): void
+    {
+        $lead = HiringLead::factory()->create([
+            'document' => null,
+        ]);
+
+        $result = app(ConvertHiringLeadAction::class)->execute($lead);
+
+        $this->assertTrue($result->success);
+
+        $this->assertDatabaseHas('clients', [
+            'name' => $lead->name,
+            'email' => $lead->email,
+            'document' => null,
+            'client_source' => ClientSource::SITE->value,
+        ]);
+    }
+
+    public function test_convert_reuses_existing_client_by_email_and_phone(): void
     {
         $existingClient = Client::factory()->create([
-            'document' => '11122233344',
+            'email' => 'cliente@example.com',
+            'phone' => '11999999999',
         ]);
 
         $lead = HiringLead::factory()->create([
-            'document' => $existingClient->document,
+            'email' => $existingClient->email,
+            'phone' => $existingClient->phone,
         ]);
 
         $result = app(ConvertHiringLeadAction::class)->execute($lead);
@@ -70,14 +91,16 @@ class ConvertHiringLeadActionTest extends TestCase
         $this->assertFalse($result->success);
     }
 
-    public function test_convert_rejects_duplicate_document_on_unconverted_lead(): void
+    public function test_convert_rejects_duplicate_email_and_phone_on_unconverted_lead(): void
     {
         HiringLead::factory()->create([
-            'document' => '12312312300',
+            'email' => 'duplicado@example.com',
+            'phone' => '11988887777',
         ]);
 
         $lead = HiringLead::factory()->create([
-            'document' => '12312312300',
+            'email' => 'duplicado@example.com',
+            'phone' => '11988887777',
         ]);
 
         $result = app(ConvertHiringLeadAction::class)->execute($lead);
