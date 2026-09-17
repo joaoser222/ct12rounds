@@ -19,6 +19,7 @@ class SettingSeeder extends Seeder
             ['name' => 'direct_lesson_default_category', 'label' => 'Categoria de Aula Avulsa', 'content' => '', 'object_type' => 'select:financial-category'],
             ['name' => 'default_financial_account', 'label' => 'Conta Padrão', 'content' => '', 'object_type' => 'select:financial-account'],
             ['name' => 'hiring_terms', 'label' => 'Termos de Pré-cadastro', 'content' => '', 'object_type' => 'textarea'],
+            ['name' => 'image_rights_terms', 'label' => 'Cláusula de Direitos de Imagem', 'content' => '', 'object_type' => 'textarea'],
             ['name' => 'landing_enabled', 'label' => 'Landing page ativa', 'content' => '1', 'object_type' => 'boolean'],
             ['name' => 'landing_hero_title', 'label' => 'Landing - Título principal', 'content' => 'CT 12 Rounds — Centro de Treinamento', 'object_type' => 'text'],
             ['name' => 'landing_hero_subtitle', 'label' => 'Landing - Subtítulo', 'content' => 'Boxe, Kickboxing e Jiu-Jitsu com a Metodologia 12 Rounds. Treinamentos que transformam — do iniciante ao atleta competitivo.', 'object_type' => 'textarea'],

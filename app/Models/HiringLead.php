@@ -37,6 +37,7 @@ class HiringLead extends Model
         'legal_representative_document',
         'legal_representative_birth_date',
         'accepted_at',
+        'image_rights_accepted_at',
         'converted_at',
         'plan_id',
         'coupon_id',
@@ -51,6 +52,7 @@ class HiringLead extends Model
         'legal_representative' => 'boolean',
         'legal_representative_birth_date' => 'date:Y-m-d',
         'accepted_at' => 'datetime',
+        'image_rights_accepted_at' => 'datetime',
         'converted_at' => 'datetime',
     ];
 

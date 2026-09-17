@@ -31,11 +31,13 @@ const props = defineProps<{
     initial?: PrefilledData | null;
     contract?: ContractRegistration | null;
     terms?: string | null;
+    imageRightsTerms?: string | null;
     success?: boolean;
     retryClientId?: number | null;
 }>();
 
 const showTerms = ref(false);
+const showImageRights = ref(false);
 const currentStep = ref(1);
 
 const isContractFlow = computed(() => !!props.contract);
@@ -59,6 +61,7 @@ const form = useForm({
     coupon: props.coupon ?? '',
     contract: props.contract?.token ?? '',
     accepted: false,
+    image_rights_accepted: false,
     legal_representative: false,
     legal_representative_name: '',
     legal_representative_document: '',
@@ -495,6 +498,58 @@ const submitRetryPayment = () => {
                                     v-model="form.accepted"
                                     label="Li e aceito os termos do contrato."
                                     :error-messages="form.errors.accepted"
+                                    color="primary"
+                                    class="mb-3"
+                                />
+
+                                <template v-if="imageRightsTerms">
+                                    <v-card variant="tonal" class="mb-3">
+                                        <v-card-actions>
+                                            <span class="text-body-2"
+                                                >Direitos de imagem</span
+                                            >
+                                            <v-spacer />
+                                            <v-btn
+                                                variant="text"
+                                                size="small"
+                                                :prepend-icon="
+                                                    showImageRights
+                                                        ? 'ti ti-chevron-up'
+                                                        : 'ti ti-chevron-down'
+                                                "
+                                                @click="
+                                                    showImageRights =
+                                                        !showImageRights
+                                                "
+                                            >
+                                                {{
+                                                    showImageRights
+                                                        ? 'Ocultar'
+                                                        : 'Ler cláusula'
+                                                }}
+                                            </v-btn>
+                                        </v-card-actions>
+                                        <v-expand-transition>
+                                            <v-card-text
+                                                v-show="showImageRights"
+                                                class="text-body-2 text-pre-wrap"
+                                                style="
+                                                    max-height: 240px;
+                                                    overflow-y: auto;
+                                                "
+                                            >
+                                                {{ imageRightsTerms }}
+                                            </v-card-text>
+                                        </v-expand-transition>
+                                    </v-card>
+                                </template>
+
+                                <v-checkbox
+                                    v-model="form.image_rights_accepted"
+                                    label="Li e aceito a cláusula de direitos de imagem."
+                                    :error-messages="
+                                        form.errors.image_rights_accepted
+                                    "
                                     color="primary"
                                     class="mb-3"
                                 />

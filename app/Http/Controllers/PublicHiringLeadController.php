@@ -96,16 +96,17 @@ class PublicHiringLeadController extends Controller
                 'token' => $contract->registration_token,
                 'plan' => $contract->plan?->name,
             ] : null,
-            'terms' => $this->hiringTerms(),
+            'terms' => $this->settingContent('hiring_terms'),
+            'imageRightsTerms' => $this->settingContent('image_rights_terms'),
             'success' => $request->session()->pull('hiring_lead_success'),
             'retryClientId' => $request->session()->get('registration_client_id'),
         ]);
     }
 
-    private function hiringTerms(): ?string
+    private function settingContent(string $name): ?string
     {
         $setting = Setting::query()
-            ->where('name', 'hiring_terms')
+            ->where('name', $name)
             ->first();
 
         $content = $setting?->content;
@@ -251,6 +252,7 @@ class PublicHiringLeadController extends Controller
                 'legal_representative_birth_date' => $data['legal_representative_birth_date'] ?? null,
                 'visibility' => 'visible',
                 'accepted_at' => CarbonImmutable::now(),
+                'image_rights_accepted_at' => CarbonImmutable::now(),
                 'plan_id' => $plan?->getKey(),
                 'coupon_id' => $coupon?->getKey(),
                 'contract_id' => $contract->id,
@@ -386,6 +388,7 @@ class PublicHiringLeadController extends Controller
                 'legal_representative_birth_date' => $client->legal_representative_birth_date,
                 'visibility' => 'visible',
                 'accepted_at' => CarbonImmutable::now(),
+                'image_rights_accepted_at' => CarbonImmutable::now(),
                 'plan_id' => $plan?->getKey(),
                 'coupon_id' => $coupon?->getKey(),
                 'contract_id' => $contract->id,
