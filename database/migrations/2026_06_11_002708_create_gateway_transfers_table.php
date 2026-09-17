@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('total', 13, 4)->storedAs('gross_value - fee_value');
             $table->string('status', 20);
             $table->foreignId('gateway_account_id')->constrained()->onDelete('cascade');
-            $table->foreignId('gateway_postback_id')->constrained()->onDelete('cascade');
+            $table->foreignId('gateway_postback_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

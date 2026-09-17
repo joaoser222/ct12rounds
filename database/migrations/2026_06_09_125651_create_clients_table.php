@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name', 255);
             $table->string('email', 255)->nullable();
-            $table->string('document', 11);
-            $table->date('birth_date');
+            $table->string('document', 11)->nullable();
+            $table->date('birth_date')->nullable();
             $table->string('phone', 11);
-            $table->string('gender');
+            $table->string('gender')->nullable();
             $table->string('profile_image')->nullable();
             $table->string('address', 200)->nullable();
             $table->string('address_number', 10)->nullable();
@@ -33,6 +33,7 @@ return new class extends Migration
             $table->date('legal_representative_birth_date')->nullable();
             $table->foreignId('trainer_id')->nullable()->constrained()->onDelete('set null');
             $table->string('status', 10);
+            $table->string('client_source', 20)->nullable()->index();
             $table->string('visibility', 10);
             $table->timestamps();
         });

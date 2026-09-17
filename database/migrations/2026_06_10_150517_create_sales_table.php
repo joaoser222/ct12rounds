@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('visibility', 10);
             $table->string('status', 20);
             $table->string('payment_method', 20);
+            $table->date('first_due_date')->nullable();
+            $table->unsignedInteger('installments')->default(1);
             $table->string('annotations', 500)->nullable();
             $table->boolean('disable_stock')->default(false);
             $table->foreignId('client_id')->constrained()->onDelete('cascade');

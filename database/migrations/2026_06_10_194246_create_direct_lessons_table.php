@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->date('lesson_date');
             $table->string('status', 20);
+            $table->string('payment_method', 20)->default('cash');
             $table->string('visibility', 10);
             $table->decimal('price', 13, 4);
             $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');

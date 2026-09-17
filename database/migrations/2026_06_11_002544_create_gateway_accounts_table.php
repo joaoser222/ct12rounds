@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description');
+            $table->boolean('invoicing_enabled')->default(false);
+            $table->boolean('invoicing_supported')->default(false);
+            $table->boolean('invoicing_configured')->default(false);
             $table->json('settings');
             $table->string('visibility', 10);
             $table->timestamps();

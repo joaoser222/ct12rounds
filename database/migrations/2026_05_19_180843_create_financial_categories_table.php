@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('operation_type', 20);
             $table->string('visibility', 20);
             $table->foreignId('cost_center_id')->nullable()->constrained()->onDelete('set null');
+            $table->unique(['name', 'cost_center_id']);
             $table->timestamps();
         });
     }

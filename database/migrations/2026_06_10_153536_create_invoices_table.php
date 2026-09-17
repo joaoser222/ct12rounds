@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('visibility', 10);
             // Relacionamentos
             $table->morphs('holder');
-            $table->morphs('billable');
+            $table->nullableMorphs('billable');
             $table->foreignId('financial_account_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('financial_category_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();

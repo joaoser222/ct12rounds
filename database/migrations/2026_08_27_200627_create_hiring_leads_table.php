@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name', 255);
             $table->string('email', 255);
             $table->string('phone', 20);
-            $table->string('document', 14);
+            $table->string('document', 14)->nullable();
             $table->string('gender', 1)->nullable();
             $table->date('birth_date')->nullable();
             $table->string('address', 200)->nullable();
@@ -28,11 +28,17 @@ return new class extends Migration
             $table->string('address_postal_code', 8)->nullable();
             $table->string('status', 20);
             $table->string('source', 20);
+            $table->string('payment_method', 20)->nullable();
+            $table->boolean('legal_representative')->default(false);
+            $table->string('legal_representative_name', 255)->nullable();
+            $table->string('legal_representative_document', 11)->nullable();
+            $table->date('legal_representative_birth_date')->nullable();
             $table->string('visibility', 10);
             $table->timestamp('accepted_at')->nullable();
             $table->timestamp('converted_at')->nullable();
             $table->foreignId('plan_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('coupon_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('contract_id')->nullable()->constrained('contracts')->nullOnDelete();
             $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });

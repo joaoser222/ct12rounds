@@ -18,6 +18,8 @@ return new class extends Migration
             $table->decimal('discount_limit', 13, 4)->default(0);
             $table->integer('duration')->default(1);
             $table->date('expiration_date')->nullable();
+            $table->integer('max_uses')->nullable();
+            $table->integer('used_count')->default(0);
             $table->string('visibility', 10);
             $table->timestamps();
         });

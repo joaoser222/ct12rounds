@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('modalities', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
+            $table->string('color', 7)->nullable();
             $table->string('visibility', 10);
             $table->timestamps();
         });

@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('postback_event');
             $table->string('postback_type');
+            $table->string('external_event_key')->nullable();
             $table->json('payload');
             $table->string('status', 20);
             $table->foreignId('gateway_account_id')->constrained()->onDelete('cascade');
+            $table->unique(['gateway_account_id', 'external_event_key']);
             $table->timestamps();
         });
     }

@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('gateway_credit_cards', function (Blueprint $table) {
             $table->id();
-            $table->string('gateway_card_token');
-            $table->string('gateway_reference_key');
-            $table->string('status', 20);
-            $table->string('card_brand', 20);
+            $table->string('gateway_card_token')->nullable();
+            $table->string('gateway_reference_key')->nullable();
+            $table->string('status', 20)->nullable();
+            $table->string('card_brand', 20)->nullable();
             $table->string('last_digits', 4);
             $table->foreignId('gateway_account_id')->constrained()->onDelete('cascade');
-            $table->foreignId('gateway_customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('gateway_postback_id')->constrained()->onDelete('cascade');
+            $table->foreignId('gateway_customer_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('gateway_postback_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

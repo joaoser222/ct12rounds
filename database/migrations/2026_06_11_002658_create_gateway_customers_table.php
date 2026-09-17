@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('gateway_reference_key');
             $table->morphs('holder');
             $table->foreignId('gateway_account_id')->constrained()->onDelete('cascade');
-            $table->foreignId('gateway_postback_id')->constrained()->onDelete('cascade');
+            $table->foreignId('gateway_postback_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

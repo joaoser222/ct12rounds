@@ -14,18 +14,20 @@ return new class extends Migration
         Schema::create('contracts', function (Blueprint $table) {
             $table->id();
             $table->string('plan_name');
-            $table->string('modality_quantity', 10);
-            $table->decimal('price', 13, 4);
-            $table->date('start_date');
-            $table->integer('duration');
             $table->string('visibility', 10);
             $table->string('status', 10);
             $table->string('accepted_terms', 255);
             $table->string('annotations', 500)->nullable();
             $table->foreignId('coupon_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('plan_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('plan_category_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('client_id')->constrained()->onDelete('cascade');
+            $table->foreignId('client_id')->nullable()->constrained()->onDelete('cascade');
+            $table->decimal('gross_value', 13, 4)->nullable();
+            $table->decimal('discount_value', 13, 4)->default(0);
+            $table->decimal('total', 13, 4)->nullable();
+            $table->string('payment_method', 20)->nullable();
+            $table->date('first_due_date')->nullable();
+            $table->unsignedInteger('installments')->nullable();
+            $table->string('registration_token', 64)->nullable()->unique();
             $table->timestamps();
         });
     }
