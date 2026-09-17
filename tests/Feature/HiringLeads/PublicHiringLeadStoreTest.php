@@ -11,6 +11,7 @@ use App\Models\Coupon;
 use App\Models\GatewayAccount;
 use App\Models\HiringLead;
 use App\Models\Plan;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -95,6 +96,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'gender' => 'M',
             'birth_date' => '1990-01-01',
             'accepted' => true,
+            'image_rights_accepted' => true,
             'is_contract_flow' => true,
             ...$this->validCardData,
         ])->assertSessionHasErrors(['address', 'address_number', 'address_district', 'address_state', 'address_city', 'address_postal_code']);
@@ -117,6 +119,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'address_city' => 'Sao Paulo',
             'address_postal_code' => '01001000',
             'accepted' => true,
+            'image_rights_accepted' => true,
             'is_contract_flow' => true,
             ...$this->validCardData,
         ])->assertSessionHasErrors('contract');
@@ -212,6 +215,62 @@ class PublicHiringLeadStoreTest extends TestCase
                 ->where('initial.email', 'maria@example.com')
                 ->where('initial.phone', '11999999999')
             );
+    }
+
+    public function test_registration_page_exposes_image_rights_terms(): void
+    {
+        Setting::query()->create([
+            'name' => 'image_rights_terms',
+            'label' => 'Cláusula de Direitos de Imagem',
+            'content' => 'Autorizo o uso da minha imagem.',
+            'object_type' => 'textarea',
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+
+        $this->get('/register?contract='.$contract->registration_token)
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/Registration')
+                ->where('imageRightsTerms', 'Autorizo o uso da minha imagem.')
+            );
+    }
+
+    public function test_contract_registration_requires_image_rights_acceptance(): void
+    {
+        $this->fakeGateway();
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+
+        $payload = $this->contractPayload();
+        unset($payload['image_rights_accepted']);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$payload,
+        ])->assertSessionHasErrors('image_rights_accepted');
+
+        $this->assertDatabaseCount('hiring_leads', 0);
+    }
+
+    public function test_contract_registration_records_image_rights_acceptance(): void
+    {
+        $this->fakeGateway();
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ])->assertSessionHasNoErrors();
+
+        $lead = HiringLead::query()->where('contract_id', $contract->id)->first();
+
+        $this->assertNotNull($lead);
+        $this->assertNotNull($lead->image_rights_accepted_at);
     }
 
     public function test_contract_registration_with_reserved_coupon_is_not_counted_again(): void
@@ -316,6 +375,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'address_city' => 'Sao Paulo',
             'address_postal_code' => '01001000',
             'accepted' => true,
+            'image_rights_accepted' => true,
             'is_contract_flow' => true,
             ...$this->validCardData,
         ];
