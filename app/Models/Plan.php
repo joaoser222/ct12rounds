@@ -26,6 +26,7 @@ class Plan extends Model
 
     protected $casts = [
         'audience' => PlanAudience::class,
+        'price' => 'float',
     ];
 
     protected static function booted(): void

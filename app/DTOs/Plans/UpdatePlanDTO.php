@@ -25,14 +25,14 @@ class UpdatePlanDTO extends BaseDTO
         #[Required, IntegerType, Min(1)]
         public int $plan_category_id,
 
-        #[Nullable, StringType, Max(500)]
-        public ?string $description,
-
         #[Required, Numeric, Min(0)]
         public float $price,
 
         #[Required, IntegerType, Min(1)]
         public int $duration_months,
+
+        #[Nullable, StringType, Max(500)]
+        public ?string $description = null,
 
         #[ArrayType(IntegerType::class)]
         public array $plan_modalities = [],
