@@ -44,6 +44,69 @@ class UpdatePlanActionTest extends TestCase
             'name' => 'Plano Novo',
             'price' => 250.0,
             'duration_months' => 3,
+            'cancellation_fee' => 250.0,
+        ]);
+    }
+
+    public function test_updates_plan_keeping_explicit_cancellation_fee(): void
+    {
+        $category = PlanCategory::query()->create(['name' => 'Basico', 'visibility' => 'visible']);
+        $plan = Plan::query()->create([
+            'name' => 'Plano',
+            'plan_category_id' => $category->id,
+            'price' => 100.0,
+            'duration_months' => 3,
+            'cancellation_fee' => 80.0,
+        ]);
+
+        $action = app(UpdatePlanAction::class);
+        $dto = new UpdatePlanDTO(
+            id: $plan->id,
+            name: 'Plano',
+            plan_category_id: $category->id,
+            price: 100.0,
+            duration_months: 3,
+            cancellation_fee: 80.0,
+            plan_modalities: [],
+        );
+
+        $result = $action->execute($dto);
+
+        $this->assertTrue($result->success);
+        $this->assertDatabaseHas('plans', [
+            'id' => $plan->id,
+            'cancellation_fee' => 80.0,
+        ]);
+    }
+
+    public function test_updates_plan_without_cancellation_fee_when_duration_is_one_month(): void
+    {
+        $category = PlanCategory::query()->create(['name' => 'Basico', 'visibility' => 'visible']);
+        $plan = Plan::query()->create([
+            'name' => 'Plano',
+            'plan_category_id' => $category->id,
+            'price' => 100.0,
+            'duration_months' => 12,
+            'cancellation_fee' => 100.0,
+        ]);
+
+        $action = app(UpdatePlanAction::class);
+        $dto = new UpdatePlanDTO(
+            id: $plan->id,
+            name: 'Plano',
+            plan_category_id: $category->id,
+            price: 100.0,
+            duration_months: 1,
+            cancellation_fee: null,
+            plan_modalities: [],
+        );
+
+        $result = $action->execute($dto);
+
+        $this->assertTrue($result->success);
+        $this->assertDatabaseHas('plans', [
+            'id' => $plan->id,
+            'cancellation_fee' => null,
         ]);
     }
 

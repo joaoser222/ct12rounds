@@ -39,6 +39,56 @@ class CreatePlanActionTest extends TestCase
             'name' => 'Plano Gold',
             'price' => 99.9,
             'duration_months' => 1,
+            'cancellation_fee' => null,
+        ]);
+    }
+
+    public function test_creates_a_plan_with_cancellation_fee_defaulting_to_monthly_price_when_duration_exceeds_one_month(): void
+    {
+        $category = $this->createCategory();
+        $action = app(CreatePlanAction::class);
+
+        $dto = CreatePlanDTO::fromArray([
+            'name' => 'Plano Anual',
+            'plan_category_id' => $category->id,
+            'description' => 'Plano completo',
+            'price' => 199.99,
+            'duration_months' => 12,
+            'plan_modalities' => [],
+        ]);
+
+        $result = $action->execute($dto);
+
+        $this->assertTrue($result->success);
+        $this->assertDatabaseHas('plans', [
+            'name' => 'Plano Anual',
+            'price' => 199.99,
+            'duration_months' => 12,
+            'cancellation_fee' => 199.99,
+        ]);
+    }
+
+    public function test_creates_a_plan_with_explicit_cancellation_fee(): void
+    {
+        $category = $this->createCategory();
+        $action = app(CreatePlanAction::class);
+
+        $dto = CreatePlanDTO::fromArray([
+            'name' => 'Plano Semestral',
+            'plan_category_id' => $category->id,
+            'description' => 'Plano completo',
+            'price' => 159.0,
+            'duration_months' => 6,
+            'cancellation_fee' => 120.0,
+            'plan_modalities' => [],
+        ]);
+
+        $result = $action->execute($dto);
+
+        $this->assertTrue($result->success);
+        $this->assertDatabaseHas('plans', [
+            'name' => 'Plano Semestral',
+            'cancellation_fee' => 120.0,
         ]);
     }
 
