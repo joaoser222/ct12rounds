@@ -13,6 +13,7 @@ use App\Models\Contract;
 use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Repositories\Contracts\InvoiceRepositoryInterface;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 
 class CancelContractAction extends BaseAction
 {
@@ -36,6 +37,8 @@ class CancelContractAction extends BaseAction
 
         $contract = $this->contractRepository->findOrFail($dto->contract_id);
 
+        $cancellationFeeDueDate = $this->resolveCancellationFeeDueDate($contract);
+
         $this->contractRepository->update($contract, [
             'status' => BillableStatus::CANCELED,
         ]);
@@ -46,7 +49,7 @@ class CancelContractAction extends BaseAction
             ->where('status', '!=', InvoiceStatus::PAID->value)
             ->update(['status' => InvoiceStatus::CANCELED->value]);
 
-        $this->createCancellationFeeInvoice($contract);
+        $this->createCancellationFeeInvoice($contract, $cancellationFeeDueDate);
 
         return ActionResultDTO::success(
             null,
@@ -54,7 +57,42 @@ class CancelContractAction extends BaseAction
         );
     }
 
-    private function createCancellationFeeInvoice(Contract $contract): void
+    private function resolveCancellationFeeDueDate(Contract $contract): CarbonImmutable
+    {
+        $today = CarbonImmutable::today();
+
+        $nextPendingDueDate = $this->invoiceRepository->newQuery()
+            ->where('billable_id', $contract->id)
+            ->where('billable_type', $contract->getMorphClass())
+            ->whereNotIn('status', [InvoiceStatus::PAID->value, InvoiceStatus::CANCELED->value])
+            ->whereDate('due_date', '>=', $today->toDateString())
+            ->orderBy('due_date')
+            ->value('due_date');
+
+        if ($nextPendingDueDate !== null) {
+            return CarbonImmutable::parse($nextPendingDueDate);
+        }
+
+        return $this->nextBillingDate($contract->first_due_date, $today);
+    }
+
+    private function nextBillingDate(?CarbonInterface $firstDueDate, CarbonImmutable $today): CarbonImmutable
+    {
+        if ($firstDueDate === null) {
+            return $today;
+        }
+
+        $baseDueDate = CarbonImmutable::instance($firstDueDate);
+        $monthsAhead = 0;
+
+        while ($baseDueDate->addMonthsNoOverflow($monthsAhead)->lessThan($today)) {
+            $monthsAhead++;
+        }
+
+        return $baseDueDate->addMonthsNoOverflow($monthsAhead);
+    }
+
+    private function createCancellationFeeInvoice(Contract $contract, CarbonImmutable $dueDate): void
     {
         if ($contract->client_id === null) {
             return;
@@ -69,7 +107,7 @@ class CancelContractAction extends BaseAction
         $this->invoiceRepository->create([
             'operation_type' => $contract->billingOperationType()->value,
             'invoice_type' => InvoiceType::STANDARD->value,
-            'due_date' => CarbonImmutable::today()->format('Y-m-d'),
+            'due_date' => $dueDate->format('Y-m-d'),
             'payment_method' => $contract->billingPaymentMethod()->value,
             'gross_value' => $cancellationFee,
             'discount_value' => 0,
