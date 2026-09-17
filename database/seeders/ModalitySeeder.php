@@ -10,13 +10,13 @@ class ModalitySeeder extends Seeder
     /**
      * Predefined modalities.
      *
-     * @var array<string, string>
+     * @var array<int, array{name: string, color: string}>
      */
     private const MODALITIES = [
-        'Boxe',
-        'Jiu-jitsu',
-        'Kickboxing',
-        'MMA',
+        ['name' => 'Boxe', 'color' => '#DC2626'],
+        ['name' => 'Jiu-jitsu', 'color' => '#0D9488'],
+        ['name' => 'Kickboxing', 'color' => '#EA580C'],
+        ['name' => 'MMA', 'color' => '#2563EB'],
     ];
 
     /**
@@ -28,8 +28,11 @@ class ModalitySeeder extends Seeder
     {
         $modalities = [];
 
-        foreach (self::MODALITIES as $name) {
-            $modalities[$name] = Modality::firstOrCreate(['name' => $name]);
+        foreach (self::MODALITIES as $modalityData) {
+            $modalities[$modalityData['name']] = Modality::updateOrCreate(
+                ['name' => $modalityData['name']],
+                ['color' => $modalityData['color']],
+            );
         }
 
         return $modalities;
