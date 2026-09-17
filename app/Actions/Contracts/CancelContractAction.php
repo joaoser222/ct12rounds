@@ -7,9 +7,12 @@ use App\DTOs\Contracts\ActionResultDTO;
 use App\DTOs\Contracts\CancelContractDTO;
 use App\Enums\BillableStatus;
 use App\Enums\InvoiceStatus;
+use App\Enums\InvoiceType;
+use App\Models\Client;
 use App\Models\Contract;
 use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Repositories\Contracts\InvoiceRepositoryInterface;
+use Carbon\CarbonImmutable;
 
 class CancelContractAction extends BaseAction
 {
@@ -43,9 +46,44 @@ class CancelContractAction extends BaseAction
             ->where('status', '!=', InvoiceStatus::PAID->value)
             ->update(['status' => InvoiceStatus::CANCELED->value]);
 
+        $this->createCancellationFeeInvoice($contract);
+
         return ActionResultDTO::success(
             null,
             'Contrato cancelado com sucesso.'
         );
+    }
+
+    private function createCancellationFeeInvoice(Contract $contract): void
+    {
+        if ($contract->client_id === null) {
+            return;
+        }
+
+        $cancellationFee = $contract->plan?->cancellation_fee;
+
+        if ($cancellationFee === null || $cancellationFee <= 0) {
+            return;
+        }
+
+        $this->invoiceRepository->create([
+            'operation_type' => $contract->billingOperationType()->value,
+            'invoice_type' => InvoiceType::STANDARD->value,
+            'due_date' => CarbonImmutable::today()->format('Y-m-d'),
+            'payment_method' => $contract->billingPaymentMethod()->value,
+            'gross_value' => $cancellationFee,
+            'discount_value' => 0,
+            'interest_value' => 0,
+            'fine_value' => 0,
+            'paid_value' => 0,
+            'installment_number' => 0,
+            'status' => InvoiceStatus::PENDING->value,
+            'annotations' => 'Multa de cancelamento',
+            'visibility' => 'visible',
+            'holder_id' => $contract->client_id,
+            'holder_type' => (new Client)->getMorphClass(),
+            'billable_id' => $contract->id,
+            'billable_type' => $contract->getMorphClass(),
+        ]);
     }
 }
