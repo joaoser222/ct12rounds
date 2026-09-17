@@ -14,6 +14,7 @@ type Plan = {
     description?: string;
     price?: number;
     duration_months?: number;
+    cancellation_fee?: number | null;
     plan_modalities?: number[];
 };
 
@@ -31,8 +32,14 @@ const defaults = {
     description: '',
     price: 0,
     duration_months: 1,
+    cancellation_fee: null,
     plan_modalities: [],
 };
+
+function onDurationChange(form: Record<string, any>, duration: number): void {
+    const fee = Number(form.price ?? 0);
+    form.cancellation_fee = duration > 1 && fee > 0 ? fee : null;
+}
 
 async function copyPublicLink(): Promise<void> {
     if (!props.publicRegistrationUrl) return;
@@ -91,6 +98,16 @@ async function copyPublicLink(): Promise<void> {
                         type="number"
                         :rules="[required]"
                         :error-messages="errors.duration_months"
+                        @update:model-value="onDurationChange(form, Number($event))"
+                    />
+                </v-col>
+                <v-col cols="12" md="6">
+                    <CurrencyField
+                        v-model="form.cancellation_fee"
+                        label="Multa de cancelamento"
+                        :error-messages="errors.cancellation_fee"
+                        persistent-hint
+                        hint="Preenchida automaticamente com o preço quando a duração é maior que 1 mês."
                     />
                 </v-col>
                 <v-col

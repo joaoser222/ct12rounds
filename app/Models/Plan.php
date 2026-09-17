@@ -19,6 +19,7 @@ class Plan extends Model
         'description',
         'public_slug',
         'price',
+        'cancellation_fee',
         'duration_months',
         'plan_category_id',
         'audience',
@@ -27,6 +28,7 @@ class Plan extends Model
     protected $casts = [
         'audience' => PlanAudience::class,
         'price' => 'float',
+        'cancellation_fee' => 'float',
     ];
 
     protected static function booted(): void
