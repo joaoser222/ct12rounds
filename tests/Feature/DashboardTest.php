@@ -54,6 +54,11 @@ class DashboardTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Dashboard')
                 ->where('auth.user.id', $user->id)
+                ->has('charts.contractsByMonth.labels', 12)
+                ->has('charts.receivedByMonth.labels', 12)
+                ->has('charts.contractsByPlan.labels')
+                ->where('charts.outstanding.pending', 0)
+                ->where('charts.outstanding.overdue', 0)
             );
     }
 }
