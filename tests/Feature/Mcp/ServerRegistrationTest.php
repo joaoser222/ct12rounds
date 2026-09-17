@@ -112,13 +112,12 @@ class ServerRegistrationTest extends TestCase
 
         $expected = [
             'onboard-client',
-            'register-sale',
             'collect-receivable',
             'financial-overview',
             'register-trainer',
         ];
 
-        $this->assertCount(5, $promptNames, 'Expected 5 prompts, got: '.implode(', ', $promptNames));
+        $this->assertCount(4, $promptNames, 'Expected 4 prompts, got: '.implode(', ', $promptNames));
         $this->assertEqualsCanonicalizing($expected, $promptNames);
     }
 

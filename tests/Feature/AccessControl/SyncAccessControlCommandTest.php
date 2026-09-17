@@ -28,7 +28,7 @@ class SyncAccessControlCommandTest extends TestCase
 
         $this->assertDatabaseHas('permissions', [
             'name' => 'clients.view',
-            'description' => 'Clientes - Ver',
+            'description' => 'Pessoas - Ver',
         ]);
 
         $administrator = Role::query()

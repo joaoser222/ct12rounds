@@ -179,6 +179,8 @@ class ModuleDetailsRouteTest extends TestCase
         ]);
         $plan = Plan::query()->create([
             'name' => 'Plano Teste',
+            'price' => 120.50,
+            'duration_months' => 1,
             'modality_quantity' => 1,
             'plan_category_id' => $planCategory->id,
             'visibility' => 'visible',
