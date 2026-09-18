@@ -34,7 +34,7 @@ class UpdatePlanAction extends BaseAction
             'price' => $dto->price,
             'duration_months' => $dto->duration_months,
             'plan_category_id' => $dto->plan_category_id,
-            'cancellation_fee' => $this->cancellationFee($dto),
+            'cancellation_fee' => $dto->cancellation_fee,
         ]);
 
         $plan->modalities()->delete();
@@ -47,14 +47,5 @@ class UpdatePlanAction extends BaseAction
             $plan->refresh()->load('modalities'),
             'Plano atualizado com sucesso.'
         );
-    }
-
-    private function cancellationFee(UpdatePlanDTO $dto): ?float
-    {
-        if ($dto->cancellation_fee !== null) {
-            return $dto->cancellation_fee;
-        }
-
-        return $dto->duration_months > 1 ? $dto->price : null;
     }
 }

@@ -33,7 +33,7 @@ class CreatePlanAction extends BaseAction
             'price' => $dto->price,
             'duration_months' => $dto->duration_months,
             'plan_category_id' => $dto->plan_category_id,
-            'cancellation_fee' => $this->cancellationFee($dto),
+            'cancellation_fee' => $dto->cancellation_fee,
         ]);
 
         $plan->modalities()->createMany(array_map(
@@ -45,14 +45,5 @@ class CreatePlanAction extends BaseAction
             $plan->refresh()->load('modalities'),
             'Plano criado com sucesso.'
         );
-    }
-
-    private function cancellationFee(CreatePlanDTO $dto): ?float
-    {
-        if ($dto->cancellation_fee !== null) {
-            return $dto->cancellation_fee;
-        }
-
-        return $dto->duration_months > 1 ? $dto->price : null;
     }
 }
