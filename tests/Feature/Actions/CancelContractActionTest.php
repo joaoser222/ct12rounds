@@ -10,6 +10,7 @@ use App\Models\Contract;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\PlanCategory;
+use App\Models\Setting;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -49,7 +50,7 @@ class CancelContractActionTest extends TestCase
         ]);
     }
 
-    private function createInvoice(Contract $contract, Client $client, string $dueDate, InvoiceStatus $status): Invoice
+    private function createInvoice(Contract $contract, Client $client, string $dueDate, InvoiceStatus $status, float $paidValue = 0): Invoice
     {
         return Invoice::query()->create([
             'operation_type' => 'receivable',
@@ -60,7 +61,7 @@ class CancelContractActionTest extends TestCase
             'discount_value' => 0,
             'interest_value' => 0,
             'fine_value' => 0,
-            'paid_value' => 0,
+            'paid_value' => $paidValue,
             'installment_number' => 1,
             'status' => $status->value,
             'visibility' => 'visible',
@@ -93,16 +94,100 @@ class CancelContractActionTest extends TestCase
         ]);
     }
 
-    public function test_cancel_contract_does_not_create_fee_invoice_when_plan_has_no_cancellation_fee(): void
+    public function test_cancel_contract_applies_default_fee_of_25_percent_of_remaining_value_when_plan_has_no_cancellation_fee(): void
     {
-        $plan = $this->createPlan(99.9, 1, null);
+        $plan = $this->createPlan(100.0, 1, null);
         $client = Client::factory()->create();
         $contract = $this->createContract($plan, $client);
 
-        $action = app(CancelContractAction::class);
-        $action->execute(new CancelContractDTO(contract_id: $contract->id));
+        app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
 
-        $this->assertDatabaseCount('invoices', 0);
+        $this->assertDatabaseHas('invoices', [
+            'billable_type' => 'contract',
+            'billable_id' => $contract->id,
+            'gross_value' => 25.0,
+            'status' => InvoiceStatus::PENDING->value,
+            'annotations' => 'Multa de cancelamento',
+        ]);
+    }
+
+    public function test_cancel_contract_uses_percentage_configured_in_settings(): void
+    {
+        Setting::query()->create([
+            'name' => 'cancellation_fee_percentage',
+            'label' => 'Percentual da multa de cancelamento (%)',
+            'content' => '10',
+            'object_type' => 'number',
+        ]);
+
+        $plan = $this->createPlan(100.0, 12, null);
+        $client = Client::factory()->create();
+        $contract = $this->createContract($plan, $client);
+
+        $this->createInvoice($contract, $client, '2026-09-09', InvoiceStatus::PAID, 400.0);
+
+        app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
+
+        $this->assertDatabaseHas('invoices', [
+            'billable_type' => 'contract',
+            'billable_id' => $contract->id,
+            'gross_value' => 80.0,
+            'status' => InvoiceStatus::PENDING->value,
+        ]);
+    }
+
+    public function test_cancel_contract_default_fee_uses_remaining_value_discounting_paid_amount(): void
+    {
+        $plan = $this->createPlan(100.0, 12, null);
+        $client = Client::factory()->create();
+        $contract = $this->createContract($plan, $client);
+
+        $this->createInvoice($contract, $client, '2026-09-09', InvoiceStatus::PAID, 400.0);
+
+        app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
+
+        $this->assertDatabaseHas('invoices', [
+            'billable_type' => 'contract',
+            'billable_id' => $contract->id,
+            'gross_value' => 200.0,
+            'status' => InvoiceStatus::PENDING->value,
+        ]);
+    }
+
+    public function test_cancel_contract_plan_cancellation_fee_overrides_default_percentage(): void
+    {
+        $plan = $this->createPlan(100.0, 12, 75.0);
+        $client = Client::factory()->create();
+        $contract = $this->createContract($plan, $client);
+
+        $this->createInvoice($contract, $client, '2026-09-09', InvoiceStatus::PAID, 400.0);
+
+        app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
+
+        $this->assertDatabaseHas('invoices', [
+            'billable_type' => 'contract',
+            'billable_id' => $contract->id,
+            'gross_value' => 75.0,
+            'status' => InvoiceStatus::PENDING->value,
+        ]);
+    }
+
+    public function test_cancel_contract_does_not_create_fee_invoice_when_contract_is_fully_paid(): void
+    {
+        $plan = $this->createPlan(100.0, 1, null);
+        $client = Client::factory()->create();
+        $contract = $this->createContract($plan, $client);
+
+        $this->createInvoice($contract, $client, '2026-09-09', InvoiceStatus::PAID, 100.0);
+
+        app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
+
+        $this->assertDatabaseCount('invoices', 1);
+        $this->assertDatabaseMissing('invoices', [
+            'billable_type' => 'contract',
+            'billable_id' => $contract->id,
+            'annotations' => 'Multa de cancelamento',
+        ]);
     }
 
     public function test_cancel_contract_does_not_create_fee_invoice_without_client(): void
