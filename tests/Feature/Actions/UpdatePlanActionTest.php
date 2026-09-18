@@ -44,7 +44,7 @@ class UpdatePlanActionTest extends TestCase
             'name' => 'Plano Novo',
             'price' => 250.0,
             'duration_months' => 3,
-            'cancellation_fee' => 250.0,
+            'cancellation_fee' => null,
         ]);
     }
 

@@ -43,7 +43,7 @@ class CreatePlanActionTest extends TestCase
         ]);
     }
 
-    public function test_creates_a_plan_with_cancellation_fee_defaulting_to_monthly_price_when_duration_exceeds_one_month(): void
+    public function test_creates_a_plan_without_cancellation_fee_when_not_provided(): void
     {
         $category = $this->createCategory();
         $action = app(CreatePlanAction::class);
@@ -64,7 +64,7 @@ class CreatePlanActionTest extends TestCase
             'name' => 'Plano Anual',
             'price' => 199.99,
             'duration_months' => 12,
-            'cancellation_fee' => 199.99,
+            'cancellation_fee' => null,
         ]);
     }
 
