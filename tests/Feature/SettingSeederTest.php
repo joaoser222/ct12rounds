@@ -23,7 +23,7 @@ class SettingSeederTest extends TestCase
         $this->seed(SettingSeeder::class);
         $this->seed(SettingSeeder::class);
 
-        $this->assertDatabaseCount('settings', 16);
+        $this->assertDatabaseCount('settings', 17);
 
         $this->assertSame('', Setting::query()->where('name', 'contract_default_category')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'purchase_default_category')->value('content'));
@@ -32,6 +32,7 @@ class SettingSeederTest extends TestCase
         $this->assertSame('', Setting::query()->where('name', 'default_financial_account')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'hiring_terms')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'image_rights_terms')->value('content'));
+        $this->assertSame('25', Setting::query()->where('name', 'cancellation_fee_percentage')->value('content'));
         $this->assertSame('1', Setting::query()->where('name', 'landing_enabled')->value('content'));
         $this->assertSame('Começar agora', Setting::query()->where('name', 'landing_main_cta_text')->value('content'));
 
@@ -43,6 +44,8 @@ class SettingSeederTest extends TestCase
         $this->assertSame('select:financial-account', Setting::query()->where('name', 'default_financial_account')->value('object_type'));
         $this->assertSame('textarea', Setting::query()->where('name', 'hiring_terms')->value('object_type'));
         $this->assertSame('textarea', Setting::query()->where('name', 'image_rights_terms')->value('object_type'));
+        $this->assertSame('Percentual da multa de cancelamento (%)', Setting::query()->where('name', 'cancellation_fee_percentage')->value('label'));
+        $this->assertSame('number', Setting::query()->where('name', 'cancellation_fee_percentage')->value('object_type'));
 
         $this->assertSame(1, Setting::query()->where('name', 'contract_default_category')->count());
     }
