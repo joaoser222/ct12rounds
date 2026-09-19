@@ -66,12 +66,12 @@ class SettingController extends AbstractModuleController
     }
 
     /**
-     * @return array<int, array{id: int, name: string, label: string, content: mixed, object_type: string, input_type: string, select_object_name: string|null}>
+     * @return array<int, array{id: int, name: string, label: string, content: mixed, object_type: string, input_type: string, select_object_name: string|null, group: string|null}>
      */
     private function settingsPayload(): array
     {
         return Setting::query()
-            ->select(['id', 'name', 'label', 'content', 'object_type'])
+            ->select(['id', 'name', 'label', 'content', 'object_type', 'group'])
             ->orderBy('id')
             ->get()
             ->map(fn (Setting $setting): array => [
@@ -82,6 +82,7 @@ class SettingController extends AbstractModuleController
                 'object_type' => $setting->object_type,
                 'input_type' => $setting->isSelection() ? 'select' : $setting->object_type,
                 'select_object_name' => $setting->selectObjectName(),
+                'group' => $setting->group,
             ])
             ->all();
     }

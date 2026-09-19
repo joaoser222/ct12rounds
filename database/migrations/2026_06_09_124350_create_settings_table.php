@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('label');
             $table->json('content');
             $table->string('object_type');
+            $table->string('group')->nullable();
             $table->timestamps();
         });
     }

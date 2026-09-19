@@ -21,6 +21,7 @@ class Setting extends Model
         'label',
         'content',
         'object_type',
+        'group',
     ];
 
     protected $casts = [
