@@ -12,11 +12,18 @@ use PHPUnit\Framework\TestCase;
 
 class ReportServiceTest extends TestCase
 {
-    public function test_registry_starts_without_registered_reports(): void
+    public function test_registry_exposes_registered_report_definitions(): void
     {
-        $this->assertSame([], ReportRegistry::all());
-        $this->assertSame([], (new ReportService)->definitions());
-        $this->assertNull((new ReportService)->find('missing'));
+        $definitions = ReportRegistry::all();
+
+        $this->assertCount(1, $definitions);
+        $this->assertSame('monthly_birthdays', $definitions[0]->key);
+
+        $service = new ReportService;
+
+        $this->assertSame(['monthly_birthdays'], array_column($service->definitions(), 'key'));
+        $this->assertSame('Aniversariantes do mês', $service->find('monthly_birthdays')?->label);
+        $this->assertNull($service->find('missing'));
     }
 
     public function test_definition_serializes_filters_and_columns(): void
