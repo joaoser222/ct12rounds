@@ -47,6 +47,15 @@ class SettingSeederTest extends TestCase
         $this->assertSame('Percentual da multa de cancelamento (%)', Setting::query()->where('name', 'cancellation_fee_percentage')->value('label'));
         $this->assertSame('number', Setting::query()->where('name', 'cancellation_fee_percentage')->value('object_type'));
 
+        $this->assertSame('billing', Setting::query()->where('name', 'contract_default_category')->value('group'));
+        $this->assertSame('billing', Setting::query()->where('name', 'sale_default_category')->value('group'));
+        $this->assertSame('billing', Setting::query()->where('name', 'cancellation_fee_percentage')->value('group'));
+        $this->assertSame('financial', Setting::query()->where('name', 'default_financial_account')->value('group'));
+        $this->assertSame('peoples', Setting::query()->where('name', 'hiring_terms')->value('group'));
+        $this->assertSame('peoples', Setting::query()->where('name', 'image_rights_terms')->value('group'));
+        $this->assertSame('landing', Setting::query()->where('name', 'landing_enabled')->value('group'));
+        $this->assertSame('landing', Setting::query()->where('name', 'landing_meta_description')->value('group'));
+
         $this->assertSame(1, Setting::query()->where('name', 'contract_default_category')->count());
     }
 }
