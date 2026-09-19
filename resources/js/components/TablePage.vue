@@ -58,6 +58,7 @@ export type TableRoutes = {
     index: string;
     create?: string;
     show?: string;
+    run?: string;
     destroy?: string;
     changeVisibility?: string;
 };
@@ -94,6 +95,7 @@ interface Props {
     routes?: TableRoutes;
     hideSelection?: boolean;
     hideVisibilityFilter?: boolean;
+    openOnRowClick?: boolean;
     loading?: boolean;
     searchKey?: string;
     title?: string;
@@ -107,6 +109,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
     hideSelection: false,
     hideVisibilityFilter: false,
+    openOnRowClick: false,
     loading: false,
     searchKey: 'search',
     title: 'Items',
@@ -411,6 +414,24 @@ const handleRowDoubleClick = (
     handleEdit(payload.item);
 };
 
+const handleRowClick = (
+    _event: MouseEvent,
+    payload: { item: unknown },
+) => {
+    if (!props.openOnRowClick) {
+        return;
+    }
+
+    const route = props.routes?.show?.replace(
+        ':id',
+        String((payload.item as { id: number }).id),
+    );
+
+    if (route) {
+        router.get(route);
+    }
+};
+
 const formatItemDateTime = (
     item: unknown,
     attribute: 'created_at' | 'updated_at',
@@ -583,6 +604,7 @@ defineExpose({ loadItems, selectedItems, internalLoading });
             loading-text="Carregando..."
             hover
             class="elevation-1"
+            @click:row="handleRowClick"
             @dblclick:row="handleRowDoubleClick"
             @update:options="handleTableUpdate"
             @update:model-value="handleSelection"

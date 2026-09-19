@@ -1,27 +1,24 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import type { TableHeader, TableRoutes } from '@/components/TablePage.vue';
-import { formatDate } from '@/plugins/formatters';
 import type { PaginatedResponse } from '@/shared/page';
 
 defineOptions({ layout: AuthenticatedLayout });
 
 const props = defineProps<{
     reports: PaginatedResponse<any>;
-    routes: Pick<TableRoutes, 'index' | 'show'>;
+    routes: Pick<TableRoutes, 'index' | 'show' | 'run'>;
 }>();
 
 const headers: TableHeader[] = [
     { title: 'ID', key: 'id', sortable: true, width: '80px' },
-    { title: 'Nome', key: 'name', sortable: true, searchable: true },
     { title: 'Rótulo', key: 'label', sortable: true, searchable: true },
     { title: 'Descrição', key: 'description', searchable: true },
-    { title: 'Criado em', key: 'created_at', sortable: true },
 ];
 
 const routes: TableRoutes = {
     index: props.routes.index,
-    show: props.routes.show,
+    show: props.routes.run,
 };
 </script>
 
@@ -38,11 +35,8 @@ const routes: TableRoutes = {
         title="Relatórios"
         hide-selection
         hide-visibility-filter
+        open-on-row-click
         :permission-map="{ create: false, delete: false, visibility: false }"
-        :custom-slots="['created_at']"
-    >
-        <template #column-created_at="{ item }">
-            {{ formatDate(item.created_at) }}
-        </template>
-    </TablePage>
+        :permissions="[]"
+    />
 </template>
