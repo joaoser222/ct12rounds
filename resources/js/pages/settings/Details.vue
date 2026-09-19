@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useModulePermissions } from '@/composables/useModulePermissions';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 
@@ -14,6 +14,7 @@ type SettingField = {
     object_type: string;
     input_type: string;
     select_object_name?: string | null;
+    group: string | null;
 };
 
 const props = defineProps<{
@@ -28,6 +29,39 @@ const form = useForm<{ settings: Record<string, string | number | boolean | null
         props.settings.map((setting) => [setting.name, normalizeValue(setting)]),
     ),
 });
+
+const GROUP_LABEL: Record<string, string> = {
+    billing: 'Faturamento',
+    financial: 'Financeiro',
+    peoples: 'Pessoas',
+    landing: 'Landing page',
+};
+
+const GROUP_ORDER = ['billing', 'financial', 'peoples', 'landing'];
+
+const tabs = computed(() => {
+    const grouped = new Map<string, SettingField[]>();
+
+    for (const setting of props.settings) {
+        const key = setting.group ?? 'geral';
+        grouped.set(key, [...(grouped.get(key) ?? []), setting]);
+    }
+
+    const keys = [
+        ...GROUP_ORDER,
+        ...[...grouped.keys()].filter((key) => !GROUP_ORDER.includes(key)),
+    ];
+
+    return keys
+        .filter((key) => (grouped.get(key)?.length ?? 0) > 0)
+        .map((key) => ({
+            key,
+            label: GROUP_LABEL[key] ?? key,
+            settings: grouped.get(key)!,
+        }));
+});
+
+const activeTab = ref(tabs.value[0]?.key ?? '');
 
 const { hasPermission, ensurePermissionsLoaded } = useModulePermissions<'update'>({
     module: () => 'settings',
@@ -114,66 +148,90 @@ onMounted(() => {
                     Nenhuma configuração foi cadastrada ainda.
                 </v-alert>
 
-                <v-form v-else @submit.prevent="submit">
-                    <v-row class="ma-0">
-                        <v-col
-                            v-for="setting in settings"
-                            :key="setting.id"
-                            cols="12"
-                            md="6"
+                <template v-else>
+                    <div class="mb-4">
+                        <v-btn-group class="bg-secondary" elevation="2" border="0">
+                            <v-btn
+                                v-for="tab in tabs"
+                                :key="tab.key"
+                                :color="activeTab === tab.key ? 'primary' : undefined"
+                                :variant="activeTab === tab.key ? 'flat' : 'text'"
+                                @click="activeTab = tab.key"
+                            >
+                                {{ tab.label }}
+                            </v-btn>
+                        </v-btn-group>
+                    </div>
+
+                    <v-window v-model="activeTab">
+                        <v-window-item
+                            v-for="tab in tabs"
+                            :key="tab.key"
+                            :value="tab.key"
                         >
-                            <v-switch
-                                v-if="isBooleanField(setting)"
-                                v-model="form.settings[setting.name]"
-                                :label="setting.label"
-                                color="primary"
-                                hide-details="auto"
-                                :error-messages="form.errors[`settings.${setting.name}`]"
-                                :disabled="!hasPermission('update') || form.processing"
-                            />
+                            <v-form @submit.prevent="submit">
+                                <v-row class="ma-0">
+                                    <v-col
+                                        v-for="setting in tab.settings"
+                                        :key="setting.id"
+                                        cols="12"
+                                        md="6"
+                                    >
+                                        <v-switch
+                                            v-if="isBooleanField(setting)"
+                                            v-model="form.settings[setting.name]"
+                                            :label="setting.label"
+                                            color="primary"
+                                            hide-details="auto"
+                                            :error-messages="form.errors[`settings.${setting.name}`]"
+                                            :disabled="!hasPermission('update') || form.processing"
+                                        />
 
-                            <ServerAutocomplete
-                                v-else-if="isSelectField(setting)"
-                                v-model="form.settings[setting.name]"
-                                :object-name="setting.select_object_name!"
-                                :label="setting.label"
-                                clearable
-                                persistent-hint
-                                :error-messages="form.errors[`settings.${setting.name}`]"
-                                :disabled="!hasPermission('update') || form.processing"
-                            />
+                                        <ServerAutocomplete
+                                            v-else-if="isSelectField(setting)"
+                                            v-model="form.settings[setting.name]"
+                                            :object-name="setting.select_object_name!"
+                                            :label="setting.label"
+                                            clearable
+                                            persistent-hint
+                                            :error-messages="form.errors[`settings.${setting.name}`]"
+                                            :disabled="!hasPermission('update') || form.processing"
+                                        />
 
-                            <v-text-field
-                                v-else-if="isNumericField(setting)"
-                                v-model="form.settings[setting.name]"
-                                :label="setting.label"
-                                type="number"
-                                persistent-hint
-                                :error-messages="form.errors[`settings.${setting.name}`]"
-                                :disabled="!hasPermission('update') || form.processing"
-                            />
+                                        <v-text-field
+                                            v-else-if="isNumericField(setting)"
+                                            v-model="form.settings[setting.name]"
+                                            :label="setting.label"
+                                            type="number"
+                                            persistent-hint
+                                            :error-messages="form.errors[`settings.${setting.name}`]"
+                                            :disabled="!hasPermission('update') || form.processing"
+                                        />
 
-                            <v-textarea
-                                v-else-if="isTextareaField(setting)"
-                                v-model="form.settings[setting.name]"
-                                :label="setting.label"
-                                rows="4"
-                                persistent-hint
-                                :error-messages="form.errors[`settings.${setting.name}`]"
-                                :disabled="!hasPermission('update') || form.processing"
-                            />
+                                        <v-textarea
+                                            v-else-if="isTextareaField(setting)"
+                                            v-model="form.settings[setting.name]"
+                                            :label="setting.label"
+                                            rows="4"
+                                            persistent-hint
+                                            :error-messages="form.errors[`settings.${setting.name}`]"
+                                            :disabled="!hasPermission('update') || form.processing"
+                                        />
 
-                            <v-text-field
-                                v-else
-                                v-model="form.settings[setting.name]"
-                                :label="setting.label"
-                                persistent-hint
-                                :error-messages="form.errors[`settings.${setting.name}`]"
-                                :disabled="!hasPermission('update') || form.processing"
-                            />
-                        </v-col>
-                    </v-row>
-                </v-form>
+                                        <v-text-field
+                                            v-else
+                                            v-model="form.settings[setting.name]"
+                                            :label="setting.label"
+                                            persistent-hint
+                                            :error-messages="form.errors[`settings.${setting.name}`]"
+                                            :disabled="!hasPermission('update') || form.processing"
+                                        />
+                                    </v-col>
+                                </v-row>
+                            </v-form>
+                        </v-window-item>
+                    </v-window>
+                </template>
             </v-card-text>
         </v-card>
 
