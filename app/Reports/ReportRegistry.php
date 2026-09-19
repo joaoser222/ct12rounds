@@ -2,6 +2,8 @@
 
 namespace App\Reports;
 
+use App\Reports\Definitions\MonthlyBirthdaysReport;
+
 class ReportRegistry
 {
     /**
@@ -10,7 +12,7 @@ class ReportRegistry
     public static function all(): array
     {
         return [
-            // Report definitions will be registered here.
+            MonthlyBirthdaysReport::definition(),
         ];
     }
 

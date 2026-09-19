@@ -21,8 +21,8 @@ use App\Http\Controllers\GatewayPaymentController;
 use App\Http\Controllers\GatewayPostbackController;
 use App\Http\Controllers\GatewayTransferController;
 use App\Http\Controllers\GatewayTransferRecipientController;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HiringLeadController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ModalityController;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\PayableController;
@@ -126,6 +126,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Relatórios
     Route::moduleReadOnly(ReportController::class);
+    Route::get('reports/{report}/run', [ReportController::class, 'run'])->name('reports.run');
 
     // Avançado
     Route::module(FinancialAccountController::class);

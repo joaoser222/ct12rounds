@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             PlanCategorySeeder::class,
             PlanSeeder::class,
             SettingSeeder::class,
+            ReportSeeder::class,
         ]);
     }
 }
