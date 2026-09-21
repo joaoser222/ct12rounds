@@ -24,6 +24,8 @@ use App\Http\Controllers\GatewayTransferRecipientController;
 use App\Http\Controllers\HiringLeadController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ModalityController;
+use App\Http\Controllers\ModalityCategoryController;
+use App\Http\Controllers\ClassScheduleController;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\PayableController;
 use App\Http\Controllers\PlanCategoryController;
@@ -95,6 +97,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Catálogo
     Route::module(ProductController::class);
     Route::module(ModalityController::class);
+    Route::module(ModalityCategoryController::class);
+    Route::module(ClassScheduleController::class);
     Route::module(PlanController::class);
     Route::module(PlanCategoryController::class);
 
