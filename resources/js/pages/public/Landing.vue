@@ -97,7 +97,7 @@ onBeforeUnmount(() => {
         <meta property="og:image" :content="ogImageUrl" />
     </Head>
 
-    <div class="landing">
+    <div class="landing" v-cloak>
 
 <!-- ──────── NAV ──────── -->
 <nav>

@@ -138,6 +138,7 @@ const submitRetryPayment = () => {
 
 <template>
     <v-main
+        v-cloak
         theme="dark"
         class="d-flex align-center justify-center"
         style="min-height: 100vh"

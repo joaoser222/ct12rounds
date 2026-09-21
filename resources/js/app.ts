@@ -46,6 +46,12 @@ createInertiaApp({
         app.directive('text-case', vTextCase);
 
         app.mount(el);
+
+        const loader = document.getElementById('app-loading');
+        if (loader) {
+            loader.classList.add('hide');
+            loader.addEventListener('transitionend', () => loader.remove());
+        }
     },
 
     progress: {
