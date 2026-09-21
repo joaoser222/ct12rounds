@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum PlanAudience: string
+enum Audience: string
 {
     case ADULT = 'adult';
     case CHILD = 'child';
