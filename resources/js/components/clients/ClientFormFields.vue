@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { masks, phoneMask } from '@/plugins/masks';
 import { fillAddressFromCep, type AddressForm } from '@/plugins/viacep';
 import { cpf, email, required } from '@/plugins/validators';
@@ -12,7 +12,7 @@ type ClientFormData = {
     document: string;
     gender: string;
     birth_date: string;
-    legal_representative: boolean;
+    audience_category: string | null;
     legal_representative_name: string;
     legal_representative_document: string;
     legal_representative_birth_date: string;
@@ -42,11 +42,36 @@ const props = withDefaults(
     },
 );
 
+const emit = defineEmits<{
+    'update:audience_category': [value: string];
+}>();
+
 const isLoadingAddress = ref(false);
 
 function phoneFieldMask(): string {
     return phoneMask(props.form.phone);
 }
+
+function calculateAge(birthDate: string): number | null {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+watch(() => props.form.birth_date, (newBirthDate) => {
+    const age = calculateAge(newBirthDate);
+    if (age === null) return;
+    const newCategory = age >= 18 ? 'adult' : 'child';
+    if (props.form.audience_category !== newCategory) {
+        emit('update:audience_category', newCategory);
+    }
+});
 
 async function fillAddress(): Promise<void> {
     if (isLoadingAddress.value) {
@@ -68,16 +93,32 @@ async function fillAddress(): Promise<void> {
 
 <template>
     <v-row class="ma-0">
-        <v-col cols="12" md="6" class="d-flex align-center">
-            <v-checkbox
-                v-model="form.legal_representative"
-                label="Possui responsável legal"
+        <v-col cols="12" md="6">
+            <v-label class="mb-2 text-white"><strong>Tipo de cliente</strong></v-label>
+            <v-radio-group
+                v-model="form.audience_category"
                 :disabled="disabled"
-                :error-messages="errors.legal_representative"
-            />
+                :error-messages="errors.audience_category"
+                inline
+            >
+                <v-radio
+                    label="Adulto"
+                    value="adult"
+                    color="primary"
+                    false-icon="ti ti-circle"
+                    true-icon="ti ti-circle-filled"
+                />
+                <v-radio
+                    label="Infantil"
+                    value="child"
+                    color="primary"
+                    false-icon="ti ti-circle"
+                    true-icon="ti ti-circle-filled"
+                />
+            </v-radio-group>
         </v-col>
 
-        <template v-if="form.legal_representative">
+        <template v-if="form.audience_category === 'child'">
             <v-col cols="12">
                 <v-divider class="my-4">
                     <strong>Dados do Responsável</strong>

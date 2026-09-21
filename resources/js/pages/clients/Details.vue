@@ -15,7 +15,7 @@ type Client = {
     document?: string;
     gender?: string;
     birth_date?: string;
-    legal_representative?: boolean;
+    audience_category?: string | null;
     legal_representative_name?: string | null;
     legal_representative_document?: string | null;
     legal_representative_birth_date?: string | null;
@@ -45,7 +45,7 @@ const defaults = {
     document: '',
     gender: '',
     birth_date: '',
-    legal_representative: false,
+    audience_category: 'adult',
     legal_representative_name: '',
     legal_representative_document: '',
     legal_representative_birth_date: '',
@@ -57,6 +57,10 @@ const defaults = {
     address_state: '',
     address_city: ''
 };
+
+function onAudienceCategoryUpdate(form: Record<string, any>, value: string) {
+    form.audience_category = value;
+}
 </script>
 
 <template>
@@ -73,6 +77,7 @@ const defaults = {
                 :errors="errors"
                 :gender-types="genderTypes"
                 :states="states"
+                @update:audience-category="onAudienceCategoryUpdate(form, $event)"
             />
         </template>
     </DetailsPage>

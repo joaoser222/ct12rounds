@@ -62,7 +62,7 @@ const form = useForm({
     contract: props.contract?.token ?? '',
     accepted: false,
     image_rights_accepted: false,
-    legal_representative: false,
+    audience_category: props.requiresLegalRepresentative ? 'child' : 'adult',
     legal_representative_name: '',
     legal_representative_document: '',
     legal_representative_birth_date: '',
@@ -72,7 +72,6 @@ const form = useForm({
     card_cvv: '',
     card_holder_name: '',
     is_contract_flow: isContractFlow.value,
-    requires_legal_representative: props.requiresLegalRepresentative ?? false,
 });
 
 const isAddressRequired = computed(() => isContractFlow.value);
@@ -87,7 +86,7 @@ const step1Valid = computed(() => {
         if (!form.address_district || !form.address_city || !form.address_state)
             return false;
     }
-    if (props.requiresLegalRepresentative && form.legal_representative) {
+    if (props.requiresLegalRepresentative && form.audience_category === 'child') {
         if (
             !form.legal_representative_name ||
             !form.legal_representative_document ||
@@ -404,56 +403,51 @@ const submitRetryPayment = () => {
                                         <strong>Responsável Legal</strong>
                                     </v-divider>
 
-                                    <v-checkbox
-                                        v-model="form.legal_representative"
-                                        label="Possui responsável legal"
-                                        color="primary"
+                                    <p class="text-body-2 text-medium-emphasis mb-3">
+                                        Para menores de idade, é necessário informar os dados do responsável legal.
+                                    </p>
+
+                                    <v-text-field
+                                        v-model="
+                                            form.legal_representative_name
+                                        "
+                                        v-text-case="'capitalize'"
+                                        label="Nome do responsável"
+                                        :error-messages="
+                                            form.errors
+                                                .legal_representative_name
+                                        "
                                         class="mb-3"
                                     />
-
-                                    <template v-if="form.legal_representative">
-                                        <v-text-field
-                                            v-model="
-                                                form.legal_representative_name
-                                            "
-                                            v-text-case="'capitalize'"
-                                            label="Nome do responsável"
-                                            :error-messages="
-                                                form.errors
-                                                    .legal_representative_name
-                                            "
-                                            class="mb-3"
-                                        />
-                                        <v-row>
-                                            <v-col cols="12" md="6">
-                                                <v-text-field
-                                                    v-model="
-                                                        form.legal_representative_document
-                                                    "
-                                                    label="CPF do responsável"
-                                                    :error-messages="
-                                                        form.errors
-                                                            .legal_representative_document
-                                                    "
-                                                    class="mb-3"
-                                                />
-                                            </v-col>
-                                            <v-col cols="12" md="6">
-                                                <v-text-field
-                                                    v-model="
-                                                        form.legal_representative_birth_date
-                                                    "
-                                                    label="Nascimento do responsável"
-                                                    type="date"
-                                                    :error-messages="
-                                                        form.errors
-                                                            .legal_representative_birth_date
-                                                    "
-                                                    class="mb-3"
-                                                />
-                                            </v-col>
-                                        </v-row>
-                                    </template>
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field
+                                                v-model="
+                                                    form.legal_representative_document
+                                                "
+                                                label="CPF do responsável"
+                                                :error-messages="
+                                                    form.errors
+                                                        .legal_representative_document
+                                                "
+                                                class="mb-3"
+                                            />
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-text-field
+                                                v-model="
+                                                    form.legal_representative_birth_date
+                                                "
+                                                label="Nascimento do responsável"
+                                                type="date"
+                                                :error-messages="
+                                                    form.errors
+                                                        .legal_representative_birth_date
+                                                "
+                                                class="mb-3"
+                                            />
+                                        </v-col>
+                                    </v-row>
                                 </template>
 
                                 <template v-if="terms">
