@@ -36,6 +36,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SelectBoxController;
+use App\Http\Controllers\LoyaltyLevelController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TrainerController;
@@ -107,6 +108,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Financeiro
     Route::module(CostCenterController::class);
     Route::module(FinancialCategoryController::class);
+    Route::module(LoyaltyLevelController::class);
     Route::module(PayableController::class);
     Route::module(ReceivableController::class);
     Route::patch('receivables/{receivable}/mark-paid', [ReceivableController::class, 'markPaid'])->name('receivables.mark-paid');

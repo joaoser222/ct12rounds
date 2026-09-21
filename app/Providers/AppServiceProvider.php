@@ -16,6 +16,7 @@ use App\Repositories\Contracts\CouponRepositoryInterface;
 use App\Repositories\Contracts\DirectLessonRepositoryInterface;
 use App\Repositories\Contracts\FinancialAccountRepositoryInterface;
 use App\Repositories\Contracts\FinancialCategoryRepositoryInterface;
+use App\Repositories\Contracts\LoyaltyLevelRepositoryInterface;
 use App\Repositories\Contracts\GatewayAccountRepositoryInterface;
 use App\Repositories\Contracts\GatewayInvoiceRepositoryInterface;
 use App\Repositories\Contracts\GatewayPaymentRepositoryInterface;
@@ -38,6 +39,7 @@ use App\Repositories\Eloquent\EloquentCouponRepository;
 use App\Repositories\Eloquent\EloquentDirectLessonRepository;
 use App\Repositories\Eloquent\EloquentFinancialAccountRepository;
 use App\Repositories\Eloquent\EloquentFinancialCategoryRepository;
+use App\Repositories\Eloquent\EloquentLoyaltyLevelRepository;
 use App\Repositories\Eloquent\EloquentGatewayAccountRepository;
 use App\Repositories\Eloquent\EloquentGatewayInvoiceRepository;
 use App\Repositories\Eloquent\EloquentGatewayPaymentRepository;
@@ -149,6 +151,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FinancialCategoryRepositoryInterface::class, EloquentFinancialCategoryRepository::class);
         $this->app->bind(CostCenterRepositoryInterface::class, EloquentCostCenterRepository::class);
         $this->app->bind(FinancialAccountRepositoryInterface::class, EloquentFinancialAccountRepository::class);
+        $this->app->bind(LoyaltyLevelRepositoryInterface::class, EloquentLoyaltyLevelRepository::class);
     }
 
     /**

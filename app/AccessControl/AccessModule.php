@@ -34,6 +34,7 @@ enum AccessModule: string
     // Financial
     case COST_CENTER = 'cost_centers';
     case FINANCIAL_CATEGORY = 'financial_categories';
+    case LOYALTY_LEVEL = 'loyalty_levels';
     case PAYABLE = 'payables';
     case RECEIVABLE = 'receivables';
     case MOVEMENT = 'movements';
@@ -74,6 +75,7 @@ enum AccessModule: string
             self::DIRECT_LESSON => 'Aulas Diretas',
             self::COST_CENTER => 'Centros de Custo',
             self::FINANCIAL_CATEGORY => 'Categorias Financeiras',
+            self::LOYALTY_LEVEL => 'Níveis de Fidelidade',
             self::PAYABLE => 'Contas a Pagar',
             self::RECEIVABLE => 'Contas a Receber',
             self::MOVEMENT => 'Fluxo de Caixa',
@@ -140,6 +142,7 @@ enum AccessModule: string
             ],
             self::COST_CENTER => $default_actions,
             self::FINANCIAL_CATEGORY => $default_actions,
+            self::LOYALTY_LEVEL => $default_actions,
             self::PAYABLE => [
                 ...$default_actions,
                 AccessAction::MARK_PAID,

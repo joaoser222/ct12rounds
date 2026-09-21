@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('invoices:mark-overdue-cash')->dailyAt('00:10');
 Schedule::command('gateway:sync-fiscal-invoices')->everyThirtyMinutes();
+Schedule::command('loyalty:refresh')->dailyAt('03:00');

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             BankSeeder::class,
             CostCenterSeeder::class,
             FinancialCategorySeeder::class,
+            LoyaltyLevelSeeder::class,
             FinancialAccountSeeder::class,
             SupplierSeeder::class,
             TrainerSeeder::class,
