@@ -12,10 +12,62 @@ const props = defineProps<{
     ctaText: string;
     contract?: string | null;
     registerUrl?: string | null;
+    schedules?: Array<{
+        modality_name: string;
+        modality_color: string;
+        week_day: number;
+        start_time: string;
+        end_time: string;
+    }>;
 }>();
 
 const heroCtaHref = computed(() => props.registerUrl ?? '/register');
 const heroCtaLabel = computed(() => (props.contract ? 'Continuar cadastro' : props.ctaText));
+
+const weekDayLabels: Record<number, string> = {
+    1: 'Segunda',
+    2: 'Terça',
+    3: 'Quarta',
+    4: 'Quinta',
+    5: 'Sexta',
+    6: 'Sábado',
+};
+
+const scheduleGrid = computed(() => {
+    if (! props.schedules?.length) {
+        return [];
+    }
+
+    const timeSlots = [...new Set(props.schedules.map(s => `${s.start_time} – ${s.end_time}`))].sort();
+    const days = [1, 2, 3, 4, 5, 6];
+
+    return timeSlots.map(time => {
+        const row: Record<string, any> = { time };
+        for (const day of days) {
+            const match = props.schedules?.find(s => `${s.start_time} – ${s.end_time}` === time && s.week_day === day);
+            row[day] = match ?? null;
+        }
+        return row;
+    });
+});
+
+const getSlotColor = (color: string) => {
+    if (! color) return '';
+    const hex = color.startsWith('#') ? color : `#${color}`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},.12)`;
+};
+
+const getSlotTextColor = (color: string) => {
+    if (! color) return '';
+    const hex = color.startsWith('#') ? color : `#${color}`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgb(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)})`;
+};
 
 const canonicalUrl = computed(() =>
     typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '',
@@ -510,18 +562,25 @@ onBeforeUnmount(() => {
   <h2 class="s-title rv d1">HORÁRIOS<br>DAS AULAS</h2>
   <p class="s-sub rv d2">Grade fixa para você planejar sua semana. Turmas reduzidas para máxima qualidade de ensino.</p>
   <div class="schedule-wrap rv d3">
-    <table class="schedule-table">
+    <table class="schedule-table" v-if="scheduleGrid.length">
       <thead>
         <tr>
-          <th>Horário</th><th>Segunda</th><th>Terça</th><th>Quarta</th><th>Quinta</th><th>Sexta</th><th>Sábado</th>
+          <th>Horário</th>
+          <th v-for="(label, day) in weekDayLabels" :key="day">{{ label }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td class="t-col">07:00 – 08:00</td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-kk">Kickboxing</span></td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-kk">Kickboxing</span></td><td><span class="slot s-bx">Boxe</span></td><td>—</td></tr>
-        <tr><td class="t-col">09:00 – 10:00</td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td>—</td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td>—</td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td><span class="slot s-ji">Jiu-Jitsu</span></td></tr>
-        <tr><td class="t-col">16:00 – 17:00</td><td><span class="slot s-ki">Boxe Kids</span></td><td><span class="slot s-ki">Jiu Kids</span></td><td><span class="slot s-ki">Boxe Kids</span></td><td><span class="slot s-ki">Jiu Kids</span></td><td><span class="slot s-ki">Boxe Kids</span></td><td><span class="slot s-ki">Kids Geral</span></td></tr>
-        <tr><td class="t-col">18:00 – 19:00</td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td><span class="slot s-kk">Kickboxing</span></td><td>—</td></tr>
-        <tr><td class="t-col">19:00 – 20:00</td><td><span class="slot s-kk">Kickboxing</span></td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-kk">Kickboxing</span></td><td><span class="slot s-bx">Boxe</span></td><td><span class="slot s-ji">Jiu-Jitsu</span></td><td>—</td></tr>
+        <tr v-for="row in scheduleGrid" :key="row.time">
+          <td class="t-col">{{ row.time }}</td>
+          <td v-for="day in [1,2,3,4,5,6]" :key="day">
+            <span
+              v-if="row[day]"
+              class="slot"
+              :style="{ background: getSlotColor(row[day].modality_color), color: getSlotTextColor(row[day].modality_color) }"
+            >{{ row[day].modality_name }}</span>
+            <span v-else>—</span>
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>

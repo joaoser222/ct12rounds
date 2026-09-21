@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\HiringLeads\CreateSiteLeadAction;
 use App\Http\Requests\PublicHiringLeadRequest;
+use App\Models\ClassSchedule;
 use App\Services\LandingSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,6 +48,20 @@ class HomeController extends Controller
             'whatsappUrl' => $settings['whatsappUrl'],
             'subtitle' => $settings['subtitle'],
             'ctaText' => $settings['ctaText'],
+            'schedules' => ClassSchedule::query()
+                ->where('class_schedules.visibility', 'visible')
+                ->join('modalities', 'class_schedules.modality_id', '=', 'modalities.id')
+                ->select([
+                    'class_schedules.week_day',
+                    'class_schedules.start_time',
+                    'class_schedules.end_time',
+                    'modalities.name as modality_name',
+                    'modalities.color as modality_color',
+                ])
+                ->orderBy('class_schedules.week_day')
+                ->orderBy('class_schedules.start_time')
+                ->get()
+                ->all(),
         ]);
     }
 
