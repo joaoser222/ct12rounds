@@ -33,6 +33,12 @@ const headers: TableHeader[] = [
         sortable: true,
         align: 'center',
     },
+    {
+        title: 'Fidelidade',
+        key: 'loyalty_streak_months',
+        sortable: true,
+        align: 'center',
+    },
     { title: 'Criado em', key: 'created_at', sortable: true },
 ];
 
@@ -63,13 +69,19 @@ const { clientStatus } = useSharedOptions(
         :routes="routes"
         module="clients"
         title="Clientes"
-        :custom-slots="['status', 'created_at', 'phone', 'document']"
+        :custom-slots="['status', 'loyalty_streak_months', 'created_at', 'phone', 'document']"
     >
         <!-- Custom status -->
         <template #column-status="{ item }">
             <v-chip :color="findOption(clientStatus, item.status)?.color">
                 {{ findLabel(clientStatus, item.status) }}
             </v-chip>
+        </template>
+        <template #column-loyalty_streak_months="{ item }">
+            <v-chip v-if="item.loyalty_streak_months > 0" color="primary" size="small">
+                {{ item.loyalty_streak_months }}m
+            </v-chip>
+            <span v-else class="text-medium-emphasis">-</span>
         </template>
         <template #column-created_at="{ item }">
             {{ formatDate(item.created_at) }}

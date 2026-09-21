@@ -29,7 +29,7 @@ class ClientController extends CrudModuleController
     /**
      * @var array<int, string>
      */
-    protected array $fields = ['id', 'name', 'document', 'status', 'phone', 'created_at', 'updated_at'];
+    protected array $fields = ['id', 'name', 'document', 'status', 'phone', 'loyalty_streak_months', 'created_at', 'updated_at'];
 
     /**
      * @var array<int, string>
@@ -152,8 +152,17 @@ class ClientController extends CrudModuleController
         return [
             'options' => [
                 'clientStatus' => $this->enumOptions(ClientStatus::class),
+                'loyaltyLevels' => \App\Models\LoyaltyLevel::query()
+                    ->select(['id', 'name', 'color'])
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (\App\Models\LoyaltyLevel $level): array => [
+                        'value' => (string) $level->getKey(),
+                        'label' => $level->name,
+                        'color' => $level->color,
+                    ])
+                    ->all(),
             ],
-
         ];
     }
 }

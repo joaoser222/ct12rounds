@@ -173,6 +173,12 @@ const menuGroups: MenuGroup[] = [
                 permission: 'financial_categories.view',
             },
             {
+                title: 'Níveis de Fidelidade',
+                icon: 'ti ti-trophy',
+                href: '/loyalty-levels',
+                permission: 'loyalty_levels.view',
+            },
+            {
                 title: 'Pagamentos',
                 icon: 'ti ti-cash-banknote-minus',
                 href: '/payables',
