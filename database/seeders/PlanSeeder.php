@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AudienceCategory;
 use App\Models\Modality;
 use App\Models\Plan;
 use App\Models\PlanCategory;
@@ -35,8 +36,7 @@ class PlanSeeder extends Seeder
     private function getCategories(): array
     {
         return [
-            'Adulto' => PlanCategory::where('name', 'Adulto')->firstOrFail(),
-            'Infantil' => PlanCategory::where('name', 'Infantil')->firstOrFail(),
+            'Geral' => PlanCategory::where('name', 'Geral')->firstOrFail(),
         ];
     }
 
@@ -64,8 +64,7 @@ class PlanSeeder extends Seeder
      */
     private function getPlans(array $categories, array $modalities): array
     {
-        $adulto = $categories['Adulto']->id;
-        $infantil = $categories['Infantil']->id;
+        $geral = $categories['Geral']->id;
 
         $boxe = $modalities['Boxe']->id;
         $jj = $modalities['Jiu-jitsu']->id;
@@ -76,57 +75,64 @@ class PlanSeeder extends Seeder
             [
                 'name' => 'MMA - Tudão',
                 'description' => 'Acesso a todas as modalidades por 1 mês',
-                'category_id' => $adulto,
+                'category_id' => $geral,
                 'price' => 239.99,
                 'duration_months' => 1,
+                'audience' => AudienceCategory::ADULT,
                 'modalities' => [$boxe, $jj, $kb, $mma],
             ],
             [
                 'name' => 'MMA - Desafiante',
                 'description' => 'Acesso a aulas de MMA por 4 meses',
-                'category_id' => $adulto,
+                'category_id' => $geral,
                 'price' => 199.99,
                 'duration_months' => 4,
+                'audience' => AudienceCategory::ADULT,
                 'modalities' => [$mma],
             ],
             [
                 'name' => 'MMA - Dominador',
                 'description' => 'Acesso a aulas de MMA por 6 meses',
-                'category_id' => $adulto,
+                'category_id' => $geral,
                 'price' => 189.99,
                 'duration_months' => 6,
+                'audience' => AudienceCategory::ADULT,
                 'modalities' => [$mma],
             ],
             [
                 'name' => 'MMA - Campeão',
                 'description' => 'Acesso a aulas de MMA por 12 meses',
-                'category_id' => $adulto,
+                'category_id' => $geral,
                 'price' => 179.99,
                 'duration_months' => 12,
+                'audience' => AudienceCategory::ADULT,
                 'modalities' => [$mma],
             ],
             [
                 'name' => 'KIDS - Mensal',
                 'description' => 'Acesso a aulas de jiu-jitsu por 1 meses',
-                'category_id' => $infantil,
+                'category_id' => $geral,
                 'price' => 164.99,
                 'duration_months' => 1,
+                'audience' => AudienceCategory::CHILD,
                 'modalities' => [$jj],
             ],
             [
                 'name' => 'KIDS - Mirim',
                 'description' => 'Acesso a aulas de jiu-jitsu por 4 meses',
-                'category_id' => $infantil,
+                'category_id' => $geral,
                 'price' => 164.99,
                 'duration_months' => 4,
+                'audience' => AudienceCategory::CHILD,
                 'modalities' => [$jj],
             ],
             [
                 'name' => 'KIDS - Dominador Mirim',
                 'description' => 'Acesso a aulas de jiu-jitsu por 6 meses',
-                'category_id' => $infantil,
+                'category_id' => $geral,
                 'price' => 164.99,
                 'duration_months' => 6,
+                'audience' => AudienceCategory::CHILD,
                 'modalities' => [$jj],
             ],
         ];
@@ -146,6 +152,7 @@ class PlanSeeder extends Seeder
                 'price' => $planData['price'],
                 'duration_months' => $planData['duration_months'],
                 'plan_category_id' => $planData['category_id'],
+                'audience' => $planData['audience'] ?? AudienceCategory::ADULT,
             ],
         );
 

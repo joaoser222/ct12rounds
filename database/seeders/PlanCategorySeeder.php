@@ -13,8 +13,7 @@ class PlanCategorySeeder extends Seeder
      * @var list<string>
      */
     private const CATEGORIES = [
-        'Adulto',
-        'Infantil',
+        'Geral',
     ];
 
     /**
