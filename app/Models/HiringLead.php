@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AudienceCategory;
 use App\Enums\HiringLeadSource;
 use App\Enums\HiringLeadStatus;
 use App\Traits\HasVisibility;
@@ -32,7 +33,7 @@ class HiringLead extends Model
         'status',
         'source',
         'payment_method',
-        'legal_representative',
+        'audience_category',
         'legal_representative_name',
         'legal_representative_document',
         'legal_representative_birth_date',
@@ -49,7 +50,7 @@ class HiringLead extends Model
         'status' => HiringLeadStatus::class,
         'source' => HiringLeadSource::class,
         'birth_date' => 'date:Y-m-d',
-        'legal_representative' => 'boolean',
+        'audience_category' => AudienceCategory::class,
         'legal_representative_birth_date' => 'date:Y-m-d',
         'accepted_at' => 'datetime',
         'image_rights_accepted_at' => 'datetime',

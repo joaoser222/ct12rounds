@@ -34,7 +34,7 @@ class ClientFactory extends Factory
             'address_city' => fake()->city(),
             'address_district' => fake()->citySuffix(),
             'address_postal_code' => fake()->numerify('########'),
-            'legal_representative' => false,
+            'audience_category' => 'adult',
             'status' => ClientStatus::ACTIVE->value,
             'visibility' => Visibility::VISIBLE->value,
         ];

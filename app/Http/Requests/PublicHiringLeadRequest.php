@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AudienceCategory;
 use App\Enums\GenderType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -46,7 +47,7 @@ class PublicHiringLeadRequest extends FormRequest
                 'contract' => ['required', 'string', 'max:64'],
                 'accepted' => ['required', 'accepted'],
                 'image_rights_accepted' => ['required', 'accepted'],
-                'legal_representative' => ['nullable', 'boolean'],
+                'audience_category' => ['nullable', Rule::enum(AudienceCategory::class)],
                 'legal_representative_name' => [$requiresLegalRep ? 'required' : 'nullable', 'string', 'max:255'],
                 'legal_representative_document' => [$requiresLegalRep ? 'required' : 'nullable', 'string', 'min:11', 'max:14'],
                 'legal_representative_birth_date' => [$requiresLegalRep ? 'required' : 'nullable', 'date'],

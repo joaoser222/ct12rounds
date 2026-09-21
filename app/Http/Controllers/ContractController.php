@@ -343,6 +343,7 @@ class ContractController extends CrudModuleController
                     'value' => $plan->id,
                     'title' => $plan->name,
                     'category' => $plan->planCategory?->name,
+                    'audience' => $plan->audience?->value,
                     'modality_quantity' => $plan->modalities()->count(),
                     'modalities' => $plan->modalities->map(fn ($pm) => [
                         'id' => $pm->modality->id,

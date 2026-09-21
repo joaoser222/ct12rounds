@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AudienceCategory;
 use App\Enums\ClientStatus;
 use App\Enums\GenderType;
 use App\Models\Client;
@@ -35,7 +36,7 @@ class ClientRequest extends FormRequest
             ],
             'gender' => ['required', 'string', Rule::enum(GenderType::class)],
             'birth_date' => ['required', 'date'],
-            'legal_representative' => ['boolean'],
+            'audience_category' => ['nullable', Rule::enum(AudienceCategory::class)],
             'legal_representative_name' => ['nullable', 'string', 'max:255'],
             'legal_representative_document' => ['nullable', 'string', 'size:11'],
             'legal_representative_birth_date' => ['nullable', 'date'],

@@ -62,7 +62,7 @@ class ConvertHiringLeadAction extends BaseAction
                 'address_state' => $lead->address_state,
                 'address_city' => $lead->address_city,
                 'address_postal_code' => $lead->address_postal_code,
-                'legal_representative' => $lead->legal_representative ?? false,
+                'audience_category' => $lead->audience_category?->value,
                 'legal_representative_name' => $lead->legal_representative_name,
                 'legal_representative_document' => $lead->legal_representative_document,
                 'legal_representative_birth_date' => $lead->legal_representative_birth_date?->format('Y-m-d'),

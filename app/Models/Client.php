@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AudienceCategory;
 use App\Enums\ClientSource;
 use App\Enums\ClientStatus;
 use App\Traits\HasVisibility;
@@ -31,7 +32,7 @@ class Client extends Model
         'address_city',
         'address_district',
         'address_postal_code',
-        'legal_representative',
+        'audience_category',
         'legal_representative_name',
         'legal_representative_document',
         'legal_representative_birth_date',
@@ -44,7 +45,7 @@ class Client extends Model
     ];
 
     protected $casts = [
-        'legal_representative' => 'boolean',
+        'audience_category' => AudienceCategory::class,
         'client_source' => ClientSource::class,
         'birth_date' => 'date:Y-m-d',
         'legal_representative_birth_date' => 'date:Y-m-d',

@@ -3,9 +3,9 @@
 namespace App\DTOs\Clients;
 
 use App\DTOs\Contracts\BaseDTO;
+use App\Enums\AudienceCategory;
 use App\Enums\ClientStatus;
 use App\Enums\GenderType;
-use Spatie\LaravelData\Attributes\Validation\BooleanType;
 use Spatie\LaravelData\Attributes\Validation\Date;
 use Spatie\LaravelData\Attributes\Validation\Email;
 use Spatie\LaravelData\Attributes\Validation\Enum;
@@ -37,8 +37,8 @@ class CreateClientDTO extends BaseDTO
         #[Required, Date]
         public string $birth_date,
 
-        #[BooleanType]
-        public bool $legal_representative = false,
+        #[Nullable, Enum(AudienceCategory::class)]
+        public ?string $audience_category = null,
 
         #[Nullable, StringType, Max(255)]
         public ?string $legal_representative_name = null,

@@ -642,7 +642,7 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
             $payload['state'] = $holder->address_state;
         }
 
-        if ($holder instanceof Client && $holder->legal_representative) {
+        if ($holder instanceof Client && $holder->audience_category?->value === 'child') {
             $payload['foreignCustomer'] = [
                 'name' => $holder->legal_representative_name,
                 'cpfCnpj' => preg_replace('/\D/', '', $holder->legal_representative_document ?? ''),

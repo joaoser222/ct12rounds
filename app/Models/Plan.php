@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\Audience;
+use App\Enums\AudienceCategory;
 use App\Traits\HasVisibility;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +26,7 @@ class Plan extends Model
     ];
 
     protected $casts = [
-        'audience' => Audience::class,
+        'audience' => AudienceCategory::class,
         'price' => 'float',
         'cancellation_fee' => 'float',
     ];
@@ -63,7 +63,7 @@ class Plan extends Model
 
     public function requiresLegalRepresentative(): bool
     {
-        return $this->audience === Audience::CHILD;
+        return $this->audience === AudienceCategory::CHILD;
     }
 
     public function planCategory()
