@@ -74,6 +74,18 @@ const menuGroups: MenuGroup[] = [
                 permission: 'modalities.view',
             },
             {
+                title: 'Categorias de Modalidades',
+                icon: 'ti ti-tag',
+                href: '/modality-categories',
+                permission: 'modality_categories.view',
+            },
+            {
+                title: 'Grade de Horários',
+                icon: 'ti ti-calendar-time',
+                href: '/class-schedules',
+                permission: 'class_schedules.view',
+            },
+            {
                 title: 'Produtos',
                 icon: 'ti ti-packages',
                 href: '/products',
