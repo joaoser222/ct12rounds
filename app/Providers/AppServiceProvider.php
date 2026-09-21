@@ -18,7 +18,6 @@ use App\Repositories\Contracts\FinancialAccountRepositoryInterface;
 use App\Repositories\Contracts\FinancialCategoryRepositoryInterface;
 use App\Repositories\Contracts\LoyaltyLevelRepositoryInterface;
 use App\Repositories\Contracts\ClassScheduleRepositoryInterface;
-use App\Repositories\Contracts\ModalityCategoryRepositoryInterface;
 use App\Repositories\Contracts\GatewayAccountRepositoryInterface;
 use App\Repositories\Contracts\GatewayInvoiceRepositoryInterface;
 use App\Repositories\Contracts\GatewayPaymentRepositoryInterface;
@@ -43,7 +42,6 @@ use App\Repositories\Eloquent\EloquentFinancialAccountRepository;
 use App\Repositories\Eloquent\EloquentFinancialCategoryRepository;
 use App\Repositories\Eloquent\EloquentLoyaltyLevelRepository;
 use App\Repositories\Eloquent\EloquentClassScheduleRepository;
-use App\Repositories\Eloquent\EloquentModalityCategoryRepository;
 use App\Repositories\Eloquent\EloquentGatewayAccountRepository;
 use App\Repositories\Eloquent\EloquentGatewayInvoiceRepository;
 use App\Repositories\Eloquent\EloquentGatewayPaymentRepository;
@@ -157,7 +155,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FinancialAccountRepositoryInterface::class, EloquentFinancialAccountRepository::class);
         $this->app->bind(LoyaltyLevelRepositoryInterface::class, EloquentLoyaltyLevelRepository::class);
         $this->app->bind(ClassScheduleRepositoryInterface::class, EloquentClassScheduleRepository::class);
-        $this->app->bind(ModalityCategoryRepositoryInterface::class, EloquentModalityCategoryRepository::class);
     }
 
     /**

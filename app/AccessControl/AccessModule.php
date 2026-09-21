@@ -21,7 +21,6 @@ enum AccessModule: string
     // Catalog
     case PRODUCT = 'products';
     case MODALITY = 'modalities';
-    case MODALITY_CATEGORY = 'modality_categories';
     case CLASS_SCHEDULE = 'class_schedules';
     case PLAN = 'plans';
     case PLAN_CATEGORY = 'plan_categories';
@@ -68,7 +67,6 @@ enum AccessModule: string
             self::HIRING_LEAD => 'Pré-cadastro de Clientes',
             self::PRODUCT => 'Produtos',
             self::MODALITY => 'Modalidades',
-            self::MODALITY_CATEGORY => 'Categorias de Modalidades',
             self::CLASS_SCHEDULE => 'Grade de Horários',
             self::PLAN => 'Planos',
             self::PLAN_CATEGORY => 'Categorias de Planos',
@@ -122,7 +120,6 @@ enum AccessModule: string
             ],
             self::PRODUCT => $default_actions,
             self::MODALITY => $default_actions,
-            self::MODALITY_CATEGORY => $default_actions,
             self::CLASS_SCHEDULE => $default_actions,
             self::PLAN => $default_actions,
             self::PLAN_CATEGORY => $default_actions,

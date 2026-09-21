@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum Audience: string
+enum AudienceCategory: string
 {
     case ADULT = 'adult';
     case CHILD = 'child';

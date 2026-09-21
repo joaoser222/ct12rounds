@@ -11,13 +11,10 @@ return new class extends Migration
         Schema::create('modality_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
-            $table->string('slug', 100);
             $table->string('audience', 10);
-            $table->string('visibility', 10)->default('visible');
             $table->timestamps();
 
             $table->unique('name');
-            $table->unique('slug');
         });
     }
 

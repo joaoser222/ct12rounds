@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\AudienceCategory;
 use App\Traits\HasVisibility;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Modality extends Model
@@ -17,13 +17,12 @@ class Modality extends Model
     protected $fillable = [
         'name',
         'color',
-        'modality_category_id',
+        'audience_category',
     ];
 
-    public function modalityCategory(): BelongsTo
-    {
-        return $this->belongsTo(ModalityCategory::class);
-    }
+    protected $casts = [
+        'audience_category' => AudienceCategory::class,
+    ];
 
     public function classSchedules(): HasMany
     {

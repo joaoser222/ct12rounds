@@ -24,7 +24,6 @@ class DatabaseSeeder extends Seeder
             FinancialAccountSeeder::class,
             SupplierSeeder::class,
             TrainerSeeder::class,
-            ModalityCategorySeeder::class,
             ModalitySeeder::class,
             ClassScheduleSeeder::class,
             PlanCategorySeeder::class,
