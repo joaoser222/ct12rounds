@@ -739,7 +739,7 @@ nav.scrolled{background:rgba(8,8,8,.92);backdrop-filter:blur(12px);border-bottom
 .nav-cta:hover{background:#1a6bff;transform:translateY(-1px)}
 
 /* ── HERO ── */
-.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:stretch;overflow:hidden}
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;padding:108px 0}
 .hero-photo{position:absolute;top:0;right:0;width:58%;height:100%;z-index:1}
 .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;filter:grayscale(20%)}
 .hero-photo-tint{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,40,160,.18) 0%,rgba(0,87,255,.08) 60%,transparent 100%);mix-blend-mode:multiply;pointer-events:none}
@@ -763,7 +763,7 @@ nav.scrolled{background:rgba(8,8,8,.92);backdrop-filter:blur(12px);border-bottom
 .btn-outline{color:var(--white);padding:15px 34px;font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.18);transition:.25s}
 .btn-outline:hover{border-color:rgba(255,255,255,.45);transform:translateY(-2px)}
 .hero-stats-bar{position:relative;width:100%;z-index:4;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:0;display:flex;justify-content:space-between;opacity:0;animation:fadeUp .7s .7s ease forwards}
-.hero-stat{padding:24px 32px;border-right:1px solid var(--border);display:flex;flex:1;flex-direction:column;gap:4px;justify-content:center}
+.hero-stat{padding:24px 32px;border-right:1px solid var(--border);display:flex;flex:1;flex-direction:column;gap:4px;justify-content:center;align-items:center;text-align:center}
 .hero-stat:first-child{padding-left:0}
 .hero-stat:last-child{border:none;padding-right:0}
 .hero-stat-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--white);line-height:1}
@@ -1143,7 +1143,7 @@ footer{background:#040404;border-top:1px solid var(--border);padding:64px;displa
   }
   .hero-stat:last-child{border-bottom:none}
   .hero-stat-num{font-size:30px;min-width:auto}
-  .hero-stat-label{font-size:10px;letter-spacing:1.5px;text-align:left}
+  .hero-stat-label{font-size:10px;letter-spacing:1.5px;text-align:center}
 
   /* MODALIDADES */
   .modalidades{padding-bottom:0}
