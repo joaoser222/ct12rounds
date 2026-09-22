@@ -237,7 +237,7 @@ const submitRetryPayment = () => {
                             :loading="form.processing"
                             :disabled="form.processing || !step1Valid"
                         >
-                            Finalizar pré-cadastro
+                            Finalizar
                         </v-clipped-button>
                     </v-form>
 
