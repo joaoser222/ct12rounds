@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature\HiringLeads;
 
 use App\Enums\HiringLeadSource;
+use App\Enums\Visibility;
+use App\Models\Modality;
 use App\Models\Setting;
+use App\Models\Trainer;
+use App\Models\TrainerModality;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -103,6 +107,55 @@ class PublicHiringLandingTest extends TestCase
                 ->component('public/Landing')
                 ->where('contract', 'token-abc')
                 ->where('registerUrl', route('public.register', ['contract' => 'token-abc'])));
+    }
+
+    public function test_landing_lists_visible_trainers(): void
+    {
+        $this->enableLanding();
+
+        $boxe = Modality::query()->create(['name' => 'Boxe']);
+        $jiu = Modality::query()->create(['name' => 'Jiu-Jitsu']);
+
+        $ana = Trainer::query()->create([
+            'name' => 'Ana Silva',
+            'document' => '11111111111',
+            'phone' => '11999999999',
+            'gender' => 'female',
+            'profile_image' => 'https://example.com/ana.jpg',
+        ]);
+        TrainerModality::query()->create([
+            'trainer_id' => $ana->id,
+            'modality_id' => $boxe->id,
+        ]);
+        TrainerModality::query()->create([
+            'trainer_id' => $ana->id,
+            'modality_id' => $jiu->id,
+        ]);
+
+        Trainer::query()->create([
+            'name' => 'Bruno Souza',
+            'document' => '22222222222',
+            'phone' => '11888888888',
+            'gender' => 'male',
+        ]);
+        Trainer::query()->create([
+            'name' => 'Carlos Lima',
+            'document' => '33333333333',
+            'phone' => '11777777777',
+            'gender' => 'male',
+            'visibility' => Visibility::HIDDEN->value,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/Landing')
+                ->has('trainers', 2)
+                ->where('trainers.0.name', 'Ana Silva')
+                ->where('trainers.0.profile_image', 'https://example.com/ana.jpg')
+                ->where('trainers.0.modalities', ['Boxe', 'Jiu-Jitsu'])
+                ->where('trainers.1.name', 'Bruno Souza')
+                ->where('trainers.1.modalities', []));
     }
 
     private function enableLanding(): void

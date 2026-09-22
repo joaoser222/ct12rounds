@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, onMounted } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useDisplay } from 'vuetify';
 
 defineOptions({ layout: null });
 
@@ -12,6 +13,12 @@ const props = defineProps<{
     ctaText: string;
     contract?: string | null;
     registerUrl?: string | null;
+    trainers?: Array<{
+        id: number;
+        name: string;
+        profile_image?: string | null;
+        modalities?: Array<string>;
+    }>;
     schedules?: Array<{
         modality_name: string;
         modality_color: string;
@@ -75,6 +82,26 @@ const canonicalUrl = computed(() =>
 const ogImageUrl = computed(() =>
     typeof window !== 'undefined' ? `${window.location.origin}/landing-assets/img/AnyConv.com__encarada.webp` : '',
 );
+
+const { mdAndUp, smAndUp } = useDisplay();
+
+const trainerPerView = computed(() => (mdAndUp.value ? 3 : smAndUp.value ? 2 : 1));
+
+const trainerSlides = computed(() => {
+    const trainers = props.trainers ?? [];
+    const slides: Array<typeof props.trainers> = [];
+    const size = trainerPerView.value;
+    for (let i = 0; i < trainers.length; i += size) {
+        slides.push(trainers.slice(i, i + size));
+    }
+    return slides;
+});
+
+const activeTrainerSlide = ref(0);
+
+watch(trainerPerView, () => {
+    activeTrainerSlide.value = 0;
+});
 
 let observer: IntersectionObserver | null = null;
 let hamBtn: HTMLElement | null = null;
@@ -466,44 +493,31 @@ onBeforeUnmount(() => {
   <div class="s-tag rv"><span>Quem ensina</span></div>
   <h2 class="s-title rv d1">NOSSOS<br>INSTRUTORES</h2>
   <p class="s-sub rv d2">Profissionais certificados, atletas ativos e apaixonados por transformar vidas através das lutas.</p>
-  <div class="inst-grid rv d3">
-    <div class="inst-card">
-      <div class="inst-photo-area">
-        <div class="inst-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg><span>Foto do professor</span></div>
+  <v-carousel
+    v-if="trainerSlides.length > 0"
+    v-model="activeTrainerSlide"
+    class="inst-carousel rv d3"
+    height="auto"
+    show-arrows="hover"
+    hide-delimiter-background
+  >
+    <v-carousel-item v-for="(group, slideIndex) in trainerSlides" :key="group[0]?.id ?? slideIndex">
+      <div class="inst-grid" :style="{ gridTemplateColumns: `repeat(${trainerPerView}, 1fr)` }">
+        <div v-for="trainer in group" :key="trainer.id" class="inst-card">
+          <div class="inst-photo-area">
+            <img v-if="trainer.profile_image" :src="trainer.profile_image" :alt="trainer.name" loading="lazy">
+            <div v-else class="inst-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg><span>Foto do professor</span></div>
+          </div>
+          <div class="inst-body">
+            <div class="inst-name">{{ trainer.name }}</div>
+            <div v-if="trainer.modalities?.length" class="inst-tags"><span v-for="modality in trainer.modalities" :key="modality" class="inst-tag">{{ modality }}</span></div>
+          </div>
+          <div class="inst-line"></div>
+        </div>
       </div>
-      <div class="inst-body">
-        <div class="inst-role">Head Coach & CEO</div>
-        <div class="inst-name">Ronald Castilho</div>
-        <p class="inst-bio">Criador da Metodologia 12 Rounds. Atleta e instrutor com mais de uma década formando campeões dentro e fora do ring.</p>
-        <div class="inst-tags"><span class="inst-tag">Boxe</span><span class="inst-tag">Kickboxing</span><span class="inst-tag">Personal</span></div>
-      </div>
-      <div class="inst-line"></div>
-    </div>
-    <div class="inst-card">
-      <div class="inst-photo-area">
-        <div class="inst-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg><span>Foto do professor</span></div>
-      </div>
-      <div class="inst-body">
-        <div class="inst-role">Jiu-Jitsu — Faixa Preta</div>
-        <div class="inst-name">Prof. Instrutor</div>
-        <p class="inst-bio">Especialista em Jiu-Jitsu competitivo e defesa pessoal. Formou atletas para campeonatos estaduais e nacionais.</p>
-        <div class="inst-tags"><span class="inst-tag">Jiu-Jitsu</span><span class="inst-tag">Defesa Pessoal</span><span class="inst-tag">Competição</span></div>
-      </div>
-      <div class="inst-line"></div>
-    </div>
-    <div class="inst-card">
-      <div class="inst-photo-area">
-        <div class="inst-ph"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg><span>Foto do professor</span></div>
-      </div>
-      <div class="inst-body">
-        <div class="inst-role">Pedagogia & Lutas Infantis</div>
-        <div class="inst-name">Coord. Kids</div>
-        <p class="inst-bio">Especialista em desenvolvimento infantil através do esporte. Metodologia lúdica que garante aprendizado e diversão.</p>
-        <div class="inst-tags"><span class="inst-tag">Boxe Kids</span><span class="inst-tag">Jiu Kids</span><span class="inst-tag">Pedagogia</span></div>
-      </div>
-      <div class="inst-line"></div>
-    </div>
-  </div>
+    </v-carousel-item>
+  </v-carousel>
+  <p v-else class="inst-empty rv d3">Em breve divulgaremos nossa equipe de instrutores.</p>
 </section>
 
 <!-- ──────── DEPOIMENTOS ──────── -->
@@ -927,6 +941,14 @@ section{padding:108px 64px}
 .inst-tag{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 9px;border:1px solid var(--border2);color:var(--muted2)}
 .inst-line{height:2px;width:0;background:var(--blue);transition:.4s;position:absolute;bottom:0;left:0}
 .inst-card:hover .inst-line{width:100%}
+.inst-carousel{padding-bottom:52px}
+.inst-carousel .v-window__controls .v-btn{background:rgba(10,10,10,.6);color:#f2f2f2;border:1px solid rgba(239,239,239,.16);backdrop-filter:blur(4px)}
+.inst-carousel .v-window__controls .v-btn:hover{background:rgba(10,10,10,.85)}
+.inst-carousel .v-window__controls .v-btn .v-icon{color:inherit}
+.inst-carousel .v-carousel__controls{height:52px}
+.inst-carousel .v-carousel__controls__item .v-icon{opacity:.45;color:rgba(239,239,239,.75)}
+.inst-carousel .v-carousel__controls__item--active .v-icon{opacity:1;color:var(--blue)}
+.inst-empty{font-size:14px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;text-align:center;margin-top:64px}
 
 /* ── DEPOIMENTOS ── */
 .depoimentos{background:var(--dark)}
