@@ -25,6 +25,7 @@ type Trainer = {
     address_district?: string | null;
     address_state?: string | null;
     address_city?: string | null;
+    trainer_modalities?: number[];
 };
 
 defineProps<{
@@ -33,7 +34,7 @@ defineProps<{
 }>();
 
 const sharedProps = usePage().props;
-const { genderTypes, states } = useSharedOptions(sharedProps.options ?? {});
+const { genderTypes, states, modalities } = useSharedOptions(sharedProps.options ?? {});
 
 const defaults = {
     name: '',
@@ -49,6 +50,7 @@ const defaults = {
     address_district: '',
     address_state: '',
     address_city: '',
+    trainer_modalities: [],
 };
 
 const isLoadingAddress = ref(false);
@@ -129,6 +131,28 @@ async function fillAddress(form: AddressForm): Promise<void> {
                         :mask="phoneMask(form.phone)"
                         :rules="[required, phone]"
                         :error-messages="errors.phone"
+                    />
+                </v-col>
+            </v-row>
+
+            <v-divider class="my-4">
+                <strong>Modalidades</strong>
+            </v-divider>
+            <v-row class="ma-0">
+                <v-col cols="12">
+                    <v-autocomplete
+                        v-model="form.trainer_modalities"
+                        label="Modalidades que leciona"
+                        :items="modalities"
+                        multiple
+                        chips
+                        closable-chips
+                        clearable
+                        item-title="title"
+                        item-value="value"
+                        :error-messages="errors.trainer_modalities"
+                        hint="Modalidades exibidas no card do instrutor na landing"
+                        persistent-hint
                     />
                 </v-col>
             </v-row>

@@ -42,6 +42,7 @@ class CreateTrainerTool extends Tool
             'address_city' => 'nullable|string|max:255',
             'address_district' => 'nullable|string|max:255',
             'address_postal_code' => 'nullable|string|max:10',
+            'trainer_modalities' => 'nullable|array',
         ]);
 
         $dto = CreateTrainerDTO::from($validated);
@@ -81,6 +82,7 @@ class CreateTrainerTool extends Tool
             'address_city' => $schema->string()->description('Cidade do endereço')->nullable(),
             'address_district' => $schema->string()->description('Bairro do endereço')->nullable(),
             'address_postal_code' => $schema->string()->description('CEP do endereço')->nullable(),
+            'trainer_modalities' => $schema->array()->description('Modalidades vinculadas ao instrutor')->nullable(),
         ];
     }
 }

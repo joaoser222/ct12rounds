@@ -44,6 +44,7 @@ class UpdateTrainerTool extends Tool
             'address_city' => 'nullable|string|max:255',
             'address_district' => 'nullable|string|max:255',
             'address_postal_code' => 'nullable|string|max:10',
+            'trainer_modalities' => 'nullable|array',
         ]);
 
         $trainer = Trainer::find($validated['id']);
@@ -94,6 +95,7 @@ class UpdateTrainerTool extends Tool
             'address_city' => $schema->string()->description('Nova cidade do endereço')->nullable(),
             'address_district' => $schema->string()->description('Novo bairro do endereço')->nullable(),
             'address_postal_code' => $schema->string()->description('Novo CEP do endereço')->nullable(),
+            'trainer_modalities' => $schema->array()->description('Novas modalidades vinculadas ao instrutor')->nullable(),
         ];
     }
 }

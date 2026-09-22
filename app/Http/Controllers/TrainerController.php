@@ -9,12 +9,16 @@ use App\Actions\Trainer\UpdateTrainerAction;
 use App\DTOs\Trainer\CreateTrainerDTO;
 use App\DTOs\Trainer\UpdateTrainerDTO;
 use App\Enums\GenderType;
+use App\Models\Modality;
 use App\Models\Trainer;
 use App\Models\State;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class TrainerController extends CrudModuleController
 {
@@ -68,6 +72,8 @@ class TrainerController extends CrudModuleController
                 'address_city' => ['nullable', 'string', 'max:255'],
                 'address_district' => ['nullable', 'string', 'max:255'],
                 'address_postal_code' => ['required', 'string', 'max:10'],
+                'trainer_modalities' => ['nullable', 'array'],
+                'trainer_modalities.*' => ['integer', 'distinct', Rule::exists('modalities', 'id')],
             ]))
         );
 
@@ -106,6 +112,8 @@ class TrainerController extends CrudModuleController
                     'address_city' => ['nullable', 'string', 'max:255'],
                     'address_district' => ['nullable', 'string', 'max:255'],
                     'address_postal_code' => ['required', 'string', 'max:10'],
+                    'trainer_modalities' => ['nullable', 'array'],
+                    'trainer_modalities.*' => ['integer', 'distinct', Rule::exists('modalities', 'id')],
                 ]),
                 'id' => $trainer->getKey(),
             ])
@@ -128,8 +136,39 @@ class TrainerController extends CrudModuleController
             'options' => [
                 'genderTypes' => $this->enumOptions(GenderType::class),
                 'states' => $this->modelOptions(State::class),
+                'modalities' => Modality::query()
+                    ->select(['id', 'name'])
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (Modality $modality): array => [
+                        'value' => $modality->id,
+                        'label' => $modality->name,
+                    ])
+                    ->all(),
             ],
         ];
+    }
+
+    public function show(Request $request): Response|JsonResponse
+    {
+        $this->authorizeAccess(AccessAction::VIEW);
+
+        /** @var Trainer $trainer */
+        $trainer = $this->modelFromRoute($request)->load('modalities');
+        $trainer->setAttribute('trainer_modalities', $trainer->modalities->pluck('modality_id')->all());
+
+        if ($request->expectsJson()) {
+            return response()->json($trainer);
+        }
+
+        $this->shareModuleRoutes();
+
+        return Inertia::render($this->detailsComponent(), [
+            $this->itemPropName() => $trainer,
+            'id' => $trainer->getKey(),
+            'routes' => $this->getModuleRoutes(),
+            ...$this->moduleDetailsProps($trainer),
+        ]);
     }
 
     private function actionFailureResponse(Request $request, ?array $errors, ?string $message): RedirectResponse|JsonResponse

@@ -43,8 +43,13 @@ class CreateTrainerAction extends BaseAction
             'address_postal_code' => $dto->address_postal_code,
         ]);
 
+        $trainer->modalities()->createMany(array_map(
+            fn (int $modalityId): array => ['modality_id' => $modalityId],
+            $dto->trainer_modalities,
+        ));
+
         return ActionResultDTO::success(
-            $trainer,
+            $trainer->refresh()->load('modalities'),
             'Instrutor criado com sucesso.'
         );
     }

@@ -47,8 +47,14 @@ class UpdateTrainerAction extends BaseAction
 
         $this->trainerRepository->update($trainer, $updateData);
 
+        $trainer->modalities()->delete();
+        $trainer->modalities()->createMany(array_map(
+            fn (int $modalityId): array => ['modality_id' => $modalityId],
+            $dto->trainer_modalities,
+        ));
+
         return ActionResultDTO::success(
-            $trainer->refresh(),
+            $trainer->refresh()->load('modalities'),
             'Instrutor atualizado com sucesso.'
         );
     }

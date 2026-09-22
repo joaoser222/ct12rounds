@@ -27,4 +27,9 @@ class Trainer extends Model
         'address_district',
         'address_postal_code',
     ];
+
+    public function modalities()
+    {
+        return $this->hasMany(TrainerModality::class);
+    }
 }

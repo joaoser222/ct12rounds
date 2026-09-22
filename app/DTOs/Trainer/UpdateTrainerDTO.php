@@ -60,5 +60,8 @@ class UpdateTrainerDTO extends BaseDTO
 
         #[Nullable, StringType, Max(10)]
         public ?string $address_postal_code = null,
+
+        /** @param array<int, int> $trainer_modalities */
+        public array $trainer_modalities = [],
     ) {}
 }
