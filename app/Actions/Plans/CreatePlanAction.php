@@ -33,7 +33,7 @@ class CreatePlanAction extends BaseAction
             'price' => $dto->price,
             'duration_months' => $dto->duration_months,
             'plan_category_id' => $dto->plan_category_id,
-            'cancellation_fee' => $dto->cancellation_fee,
+            'cancellation_fee_percentage' => $dto->cancellation_fee_percentage,
         ]);
 
         $plan->modalities()->createMany(array_map(

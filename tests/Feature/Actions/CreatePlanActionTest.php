@@ -39,7 +39,7 @@ class CreatePlanActionTest extends TestCase
             'name' => 'Plano Gold',
             'price' => 99.9,
             'duration_months' => 1,
-            'cancellation_fee' => null,
+            'cancellation_fee_percentage' => null,
         ]);
     }
 
@@ -64,11 +64,11 @@ class CreatePlanActionTest extends TestCase
             'name' => 'Plano Anual',
             'price' => 199.99,
             'duration_months' => 12,
-            'cancellation_fee' => null,
+            'cancellation_fee_percentage' => null,
         ]);
     }
 
-    public function test_creates_a_plan_with_explicit_cancellation_fee(): void
+    public function test_creates_a_plan_with_explicit_cancellation_fee_percentage(): void
     {
         $category = $this->createCategory();
         $action = app(CreatePlanAction::class);
@@ -79,7 +79,7 @@ class CreatePlanActionTest extends TestCase
             'description' => 'Plano completo',
             'price' => 159.0,
             'duration_months' => 6,
-            'cancellation_fee' => 120.0,
+            'cancellation_fee_percentage' => 120.0,
             'plan_modalities' => [],
         ]);
 
@@ -88,7 +88,7 @@ class CreatePlanActionTest extends TestCase
         $this->assertTrue($result->success);
         $this->assertDatabaseHas('plans', [
             'name' => 'Plano Semestral',
-            'cancellation_fee' => 120.0,
+            'cancellation_fee_percentage' => 120.0,
         ]);
     }
 

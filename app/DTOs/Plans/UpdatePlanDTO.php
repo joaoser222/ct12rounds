@@ -32,7 +32,7 @@ class UpdatePlanDTO extends BaseDTO
         public int $duration_months,
 
         #[Nullable, Numeric, Min(0)]
-        public ?float $cancellation_fee = null,
+        public ?float $cancellation_fee_percentage = null,
 
         #[Nullable, StringType, Max(500)]
         public ?string $description = null,
@@ -51,7 +51,7 @@ class UpdatePlanDTO extends BaseDTO
             description: $data['description'] ?? null,
             price: $data['price'],
             duration_months: $data['duration_months'],
-            cancellation_fee: $data['cancellation_fee'] ?? null,
+            cancellation_fee_percentage: $data['cancellation_fee_percentage'] ?? null,
             plan_modalities: array_map(
                 fn (mixed $modalityId): int => (int) $modalityId,
                 $data['plan_modalities'] ?? [],

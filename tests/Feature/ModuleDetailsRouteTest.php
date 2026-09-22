@@ -166,6 +166,57 @@ class ModuleDetailsRouteTest extends TestCase
         );
     }
 
+    public function test_authenticated_users_can_visit_plan_create_with_default_cancellation_fee_percentage_from_settings(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'plans.create');
+
+        Setting::query()->create([
+            'name' => 'cancellation_fee_percentage',
+            'label' => 'Percentual da multa de cancelamento (%)',
+            'content' => '15',
+            'object_type' => 'number',
+            'group' => 'billing',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('plans.create'));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('plans/Details')
+            ->where('defaultCancellationFeePercentage', 15)
+        );
+    }
+
+    public function test_authenticated_users_can_visit_plan_show_without_default_cancellation_fee_percentage(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'plans.view');
+
+        $planCategory = PlanCategory::query()->create([
+            'name' => 'Premium',
+            'visibility' => 'visible',
+        ]);
+
+        $plan = Plan::query()->create([
+            'name' => 'Plano Teste',
+            'plan_category_id' => $planCategory->id,
+            'price' => 120.50,
+            'duration_months' => 1,
+            'cancellation_fee_percentage' => 30.0,
+            'visibility' => 'visible',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('plans.show', $plan));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('plans/Details')
+            ->where('defaultCancellationFeePercentage', null)
+            ->where('plan.cancellation_fee_percentage', 30)
+        );
+    }
+
     public function test_authenticated_users_can_visit_contract_details_with_cancel_route(): void
     {
         $user = User::factory()->create();

@@ -11,6 +11,7 @@ use App\DTOs\Plans\UpdatePlanDTO;
 use App\Http\Requests\PlanRequest;
 use App\Models\Modality;
 use App\Models\Plan;
+use App\Services\CancellationFeeService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +24,7 @@ class PlanController extends CrudModuleController
     public function __construct(
         private readonly CreatePlanAction $createPlan,
         private readonly UpdatePlanAction $updatePlan,
+        private readonly CancellationFeeService $cancellationFeeService,
     ) {}
 
     /**
@@ -78,6 +80,9 @@ class PlanController extends CrudModuleController
                     ->all(),
             ],
             'publicRegistrationUrl' => $model ? $this->publicRegistrationUrl($model) : null,
+            'defaultCancellationFeePercentage' => $model === null
+                ? $this->cancellationFeeService->configuredPercentage()
+                : null,
         ];
     }
 

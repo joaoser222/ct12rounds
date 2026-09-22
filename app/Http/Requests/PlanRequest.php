@@ -25,7 +25,7 @@ class PlanRequest extends FormRequest
             'plan_category_id' => ['required', 'integer', Rule::exists('plan_categories', 'id')],
             'description' => ['nullable', 'string', 'max:500'],
             'price' => ['required', 'numeric', 'min:0'],
-            'cancellation_fee' => ['nullable', 'numeric', 'min:0'],
+            'cancellation_fee_percentage' => ['nullable', 'numeric', 'min:0'],
             'duration_months' => ['required', 'integer', 'min:1'],
             'plan_modalities' => ['nullable', 'array'],
             'plan_modalities.*' => ['integer', 'distinct', Rule::exists('modalities', 'id')],

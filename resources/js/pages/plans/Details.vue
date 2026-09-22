@@ -14,7 +14,7 @@ type Plan = {
     description?: string;
     price?: number;
     duration_months?: number;
-    cancellation_fee?: number | null;
+    cancellation_fee_percentage?: number | null;
     plan_modalities?: number[];
 };
 
@@ -22,6 +22,7 @@ const props = defineProps<{
     plan?: Plan | null;
     routes: DetailsRoutes;
     publicRegistrationUrl?: string | null;
+    defaultCancellationFeePercentage?: number | null;
 }>();
 
 const { modalities } = useSharedOptions(usePage().props.options ?? {});
@@ -32,7 +33,7 @@ const defaults = {
     description: '',
     price: 0,
     duration_months: 1,
-    cancellation_fee: null,
+    cancellation_fee_percentage: props.defaultCancellationFeePercentage ?? null,
     plan_modalities: [],
 };
 
@@ -96,12 +97,14 @@ async function copyPublicLink(): Promise<void> {
                     />
                 </v-col>
                 <v-col cols="12" md="6">
-                    <CurrencyField
-                        v-model="form.cancellation_fee"
-                        label="Multa de cancelamento"
-                        :error-messages="errors.cancellation_fee"
+                    <v-text-field
+                        v-model="form.cancellation_fee_percentage"
+                        label="Percentual da multa de cancelamento (%)"
+                        type="number"
+                        suffix="%"
+                        :error-messages="errors.cancellation_fee_percentage"
                         persistent-hint
-                        hint="Opcional. Se vazio, aplica o percentual padrão definido nas configurações."
+                        hint="Pré-preenchido com o percentual padrão definido nas configurações. Pode ser editado."
                     />
                 </v-col>
                 <v-col
