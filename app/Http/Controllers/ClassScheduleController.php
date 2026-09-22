@@ -23,12 +23,27 @@ class ClassScheduleController extends CrudModuleController
     /**
      * @var array<int, string>
      */
-    protected array $fields = ['id', 'modality_id', 'week_day', 'start_time', 'end_time', 'created_at'];
+    protected array $fields = ['id', 'modality_name', 'week_day', 'start_time', 'end_time', 'created_at'];
+
+    protected array $joins = ['modality'];
+
+    /**
+     * @var array<string, string>
+     */
+    protected array $fieldsMapping = [
+        'id' => 'class_schedules.id',
+        'modality_id' => 'class_schedules.modality_id',
+        'modality_name' => 'modalities.name',
+        'week_day' => 'class_schedules.week_day',
+        'start_time' => 'class_schedules.start_time',
+        'end_time' => 'class_schedules.end_time',
+        'created_at' => 'class_schedules.created_at',
+    ];
 
     /**
      * @var array<int, string>
      */
-    protected array $searchableFields = [];
+    protected array $searchableFields = ['modality_name'];
 
     /**
      * @var array<int, string>

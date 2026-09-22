@@ -71,6 +71,28 @@ class ClassScheduleModuleTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_class_schedule_index_lists_modality_name(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'class_schedules.view');
+        $modality = Modality::factory()->create(['name' => 'Jiu-Jitsu']);
+        ClassSchedule::factory()->create([
+            'modality_id' => $modality->id,
+            'week_day' => 1,
+            'start_time' => '07:00',
+            'end_time' => '08:00',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('class-schedules.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('class_schedules/Index')
+            ->has('class-schedules.data', 1)
+            ->where('class-schedules.data.0.modality_name', 'Jiu-Jitsu')
+        );
+    }
+
     public function test_users_can_create_class_schedule(): void
     {
         $user = User::factory()->create();
