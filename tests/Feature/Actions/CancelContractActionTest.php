@@ -19,7 +19,7 @@ class CancelContractActionTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function createPlan(float $price, int $durationMonths, ?float $cancellationFee): Plan
+    private function createPlan(float $price, int $durationMonths, ?float $cancellationFeePercentage): Plan
     {
         $category = PlanCategory::query()->create(['name' => 'Premium', 'visibility' => 'visible']);
 
@@ -28,7 +28,7 @@ class CancelContractActionTest extends TestCase
             'plan_category_id' => $category->id,
             'price' => $price,
             'duration_months' => $durationMonths,
-            'cancellation_fee' => $cancellationFee,
+            'cancellation_fee_percentage' => $cancellationFeePercentage,
         ]);
     }
 
@@ -42,7 +42,7 @@ class CancelContractActionTest extends TestCase
             'total' => $plan->price * $plan->duration_months,
             'payment_method' => 'cash',
             'first_due_date' => $firstDueDate ?? now()->toDateString(),
-            'installments' => 12,
+            'installments' => $plan->duration_months,
             'accepted_terms' => 'accepted',
             'visibility' => 'visible',
             'status' => 'open',
@@ -74,7 +74,7 @@ class CancelContractActionTest extends TestCase
 
     public function test_cancel_contract_creates_pending_cancellation_fee_invoice(): void
     {
-        $plan = $this->createPlan(199.99, 12, 199.99);
+        $plan = $this->createPlan(199.99, 12, 25.0);
         $client = Client::factory()->create();
         $contract = $this->createContract($plan, $client);
 
@@ -89,12 +89,12 @@ class CancelContractActionTest extends TestCase
         $this->assertDatabaseHas('invoices', [
             'billable_type' => 'contract',
             'billable_id' => $contract->id,
-            'gross_value' => 199.99,
+            'gross_value' => 599.97,
             'status' => 'pending',
         ]);
     }
 
-    public function test_cancel_contract_applies_default_fee_of_25_percent_of_remaining_value_when_plan_has_no_cancellation_fee(): void
+    public function test_cancel_contract_applies_default_fee_of_25_percent_of_the_total_contract_value_when_plan_has_no_cancellation_fee(): void
     {
         $plan = $this->createPlan(100.0, 1, null);
         $client = Client::factory()->create();
@@ -124,55 +124,40 @@ class CancelContractActionTest extends TestCase
         $client = Client::factory()->create();
         $contract = $this->createContract($plan, $client);
 
-        $this->createInvoice($contract, $client, '2026-09-09', InvoiceStatus::PAID, 400.0);
-
         app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
 
         $this->assertDatabaseHas('invoices', [
             'billable_type' => 'contract',
             'billable_id' => $contract->id,
-            'gross_value' => 80.0,
+            'gross_value' => 120.0,
             'status' => InvoiceStatus::PENDING->value,
         ]);
     }
 
-    public function test_cancel_contract_default_fee_uses_remaining_value_discounting_paid_amount(): void
+    public function test_cancel_contract_plan_cancellation_fee_percentage_overrides_default_percentage(): void
     {
-        $plan = $this->createPlan(100.0, 12, null);
+        Setting::query()->create([
+            'name' => 'cancellation_fee_percentage',
+            'label' => 'Percentual da multa de cancelamento (%)',
+            'content' => '10',
+            'object_type' => 'number',
+        ]);
+
+        $plan = $this->createPlan(100.0, 12, 50.0);
         $client = Client::factory()->create();
         $contract = $this->createContract($plan, $client);
 
-        $this->createInvoice($contract, $client, '2026-09-09', InvoiceStatus::PAID, 400.0);
-
         app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
 
         $this->assertDatabaseHas('invoices', [
             'billable_type' => 'contract',
             'billable_id' => $contract->id,
-            'gross_value' => 200.0,
+            'gross_value' => 600.0,
             'status' => InvoiceStatus::PENDING->value,
         ]);
     }
 
-    public function test_cancel_contract_plan_cancellation_fee_overrides_default_percentage(): void
-    {
-        $plan = $this->createPlan(100.0, 12, 75.0);
-        $client = Client::factory()->create();
-        $contract = $this->createContract($plan, $client);
-
-        $this->createInvoice($contract, $client, '2026-09-09', InvoiceStatus::PAID, 400.0);
-
-        app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
-
-        $this->assertDatabaseHas('invoices', [
-            'billable_type' => 'contract',
-            'billable_id' => $contract->id,
-            'gross_value' => 75.0,
-            'status' => InvoiceStatus::PENDING->value,
-        ]);
-    }
-
-    public function test_cancel_contract_does_not_create_fee_invoice_when_contract_is_fully_paid(): void
+    public function test_cancel_contract_applies_fee_to_the_total_contract_value_even_when_fully_paid(): void
     {
         $plan = $this->createPlan(100.0, 1, null);
         $client = Client::factory()->create();
@@ -182,10 +167,11 @@ class CancelContractActionTest extends TestCase
 
         app(CancelContractAction::class)->execute(new CancelContractDTO(contract_id: $contract->id));
 
-        $this->assertDatabaseCount('invoices', 1);
-        $this->assertDatabaseMissing('invoices', [
+        $this->assertDatabaseHas('invoices', [
             'billable_type' => 'contract',
             'billable_id' => $contract->id,
+            'gross_value' => 25.0,
+            'status' => InvoiceStatus::PENDING->value,
             'annotations' => 'Multa de cancelamento',
         ]);
     }
@@ -215,7 +201,7 @@ class CancelContractActionTest extends TestCase
 
     public function test_cancel_contract_cancels_existing_pending_invoices_but_keeps_fee_invoice(): void
     {
-        $plan = $this->createPlan(100.0, 12, 100.0);
+        $plan = $this->createPlan(100.0, 12, 25.0);
         $client = Client::factory()->create();
         $contract = $this->createContract($plan, $client);
 
@@ -250,7 +236,7 @@ class CancelContractActionTest extends TestCase
         $this->assertDatabaseHas('invoices', [
             'billable_type' => 'contract',
             'billable_id' => $contract->id,
-            'gross_value' => 100.0,
+            'gross_value' => 300.0,
             'status' => InvoiceStatus::PENDING->value,
         ]);
     }
@@ -259,7 +245,7 @@ class CancelContractActionTest extends TestCase
     {
         $this->travelTo(CarbonImmutable::parse('2026-09-30'));
 
-        $plan = $this->createPlan(100.0, 12, 100.0);
+        $plan = $this->createPlan(100.0, 12, 25.0);
         $client = Client::factory()->create();
         $contract = $this->createContract($plan, $client, '2026-09-09');
 
@@ -282,7 +268,7 @@ class CancelContractActionTest extends TestCase
     {
         $this->travelTo(CarbonImmutable::parse('2026-09-30'));
 
-        $plan = $this->createPlan(100.0, 12, 100.0);
+        $plan = $this->createPlan(100.0, 12, 25.0);
         $client = Client::factory()->create();
         $contract = $this->createContract($plan, $client, '2026-09-09');
 
@@ -301,7 +287,7 @@ class CancelContractActionTest extends TestCase
     {
         $this->travelTo(CarbonImmutable::parse('2026-09-05'));
 
-        $plan = $this->createPlan(100.0, 12, 100.0);
+        $plan = $this->createPlan(100.0, 12, 25.0);
         $client = Client::factory()->create();
         $contract = $this->createContract($plan, $client, '2026-09-09');
 

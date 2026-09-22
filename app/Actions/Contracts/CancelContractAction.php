@@ -10,18 +10,14 @@ use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Models\Client;
 use App\Models\Contract;
-use App\Models\Setting;
 use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Repositories\Contracts\InvoiceRepositoryInterface;
+use App\Services\CancellationFeeService;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 
 class CancelContractAction extends BaseAction
 {
-    private const DEFAULT_CANCELLATION_FEE_PERCENTAGE = 25.0;
-
-    private const CANCELLATION_FEE_PERCENTAGE_SETTING = 'cancellation_fee_percentage';
-
     /** Module access is enforced by the HTTP controller's permission check. */
     protected string $ability = '';
 
@@ -30,6 +26,7 @@ class CancelContractAction extends BaseAction
     public function __construct(
         private readonly ContractRepositoryInterface $contractRepository,
         private readonly InvoiceRepositoryInterface $invoiceRepository,
+        private readonly CancellationFeeService $cancellationFeeService,
     ) {}
 
     protected function handle(mixed $input): ActionResultDTO
@@ -132,42 +129,11 @@ class CancelContractAction extends BaseAction
 
     private function resolveCancellationFee(Contract $contract): ?float
     {
-        $planCancellationFee = $contract->plan?->cancellation_fee;
+        $planPercentage = $contract->plan?->cancellation_fee_percentage;
 
-        if ($planCancellationFee !== null && $planCancellationFee > 0) {
-            return (float) $planCancellationFee;
-        }
-
-        $remainingValue = (float) $contract->total - $this->paidAmount($contract);
-
-        if ($remainingValue <= 0) {
-            return null;
-        }
-
-        return round($remainingValue * ($this->cancellationFeePercentage() / 100), 2);
-    }
-
-    private function cancellationFeePercentage(): float
-    {
-        $percentage = Setting::query()
-            ->where('name', self::CANCELLATION_FEE_PERCENTAGE_SETTING)
-            ->value('content');
-
-        if (! is_numeric($percentage)) {
-            return self::DEFAULT_CANCELLATION_FEE_PERCENTAGE;
-        }
-
-        $percentage = (float) $percentage;
-
-        return $percentage > 0 ? $percentage : self::DEFAULT_CANCELLATION_FEE_PERCENTAGE;
-    }
-
-    private function paidAmount(Contract $contract): float
-    {
-        return (float) $this->invoiceRepository->newQuery()
-            ->where('billable_id', $contract->id)
-            ->where('billable_type', $contract->getMorphClass())
-            ->where('status', InvoiceStatus::PAID->value)
-            ->sum('paid_value');
+        return $this->cancellationFeeService->feeValue(
+            (float) $contract->total,
+            $planPercentage,
+        );
     }
 }
