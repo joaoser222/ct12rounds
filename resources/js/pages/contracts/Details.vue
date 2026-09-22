@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import ContractActions from '@/pages/contracts/ContractActions.vue';
 import ContractSummary from '@/pages/contracts/ContractSummary.vue';
@@ -123,6 +123,14 @@ const isCreating = !props.contract?.id;
 const isPending = computed(() => {
     return (
         !isCreating && props.contract?.client_id == null && !!props.registration
+    );
+});
+
+const isApplied = computed(() => {
+    return (
+        !isCreating &&
+        props.contract?.client_id != null &&
+        props.contract?.accepted_terms === 'accepted'
     );
 });
 
@@ -412,8 +420,58 @@ function splitAmount(amount: number, installments: number): number[] {
     });
 }
 
+let pollTimer: number | null = null;
+
+const POLL_INTERVAL_MS = 5000;
+
+const pollProps = [
+    'contract',
+    'registration',
+    'linkedLead',
+    'applicationRoute',
+    'cancelRoute',
+    'clientInfo',
+];
+
+function startPollingWhilePending(): void {
+    if (pollTimer !== null || !isPending.value) {
+        return;
+    }
+
+    pollTimer = window.setInterval(() => {
+        if (!isPending.value) {
+            stopPolling();
+
+            return;
+        }
+
+        router.reload({
+            only: pollProps,
+            preserveScroll: true,
+        });
+    }, POLL_INTERVAL_MS);
+}
+
+function stopPolling(): void {
+    if (pollTimer !== null) {
+        window.clearInterval(pollTimer);
+        pollTimer = null;
+    }
+}
+
 onMounted(() => {
     void ensureApplyLoaded();
+    startPollingWhilePending();
+});
+
+onUnmounted(stopPolling);
+
+watchEffect(() => {
+    if (isPending.value) {
+        startPollingWhilePending();
+    } else {
+        stopPolling();
+    }
 });
 </script>
 
@@ -462,6 +520,12 @@ onMounted(() => {
                                         color="warning"
                                     >
                                         Pendente
+                                    </v-chip>
+                                    <v-chip
+                                        v-else-if="isApplied"
+                                        color="success"
+                                    >
+                                        Contrato efetuado
                                     </v-chip>
                                     <v-chip
                                         v-else
@@ -671,9 +735,9 @@ onMounted(() => {
                                             border="start"
                                         >
                                             Após salvar, um QR Code será gerado
-                                            para o cliente preencher o cadastro
-                                            e o contrato ficará pendente até a
-                                            aplicação.
+                                            para o cliente preencher o cadastro.
+                                            Ao concluir, o contrato será
+                                            efetuado automaticamente.
                                         </v-alert>
                                     </v-col>
                                 </v-row>
@@ -690,7 +754,8 @@ onMounted(() => {
                                     >
                                         Autorize o contrato exibindo o QR Code
                                         abaixo para o cliente preencher o
-                                        cadastro.
+                                        cadastro. Ao finalizar, o contrato será
+                                        efetuado automaticamente.
                                     </v-alert>
 
                                     <div
@@ -822,10 +887,9 @@ onMounted(() => {
                                                     border="start"
                                                     class="mt-4"
                                                 >
-                                                    Cliente já preencheu o
-                                                    cadastro. Aplique o contrato
-                                                    para criar o cliente e gerar
-                                                    as faturas.
+                                                    Cadastro recebido. O
+                                                    contrato será efetuado
+                                                    automaticamente.
                                                 </v-alert>
                                             </template>
 
@@ -863,6 +927,16 @@ onMounted(() => {
                         <template v-else>
                             <v-row class="ma-0">
                                 <v-col cols="12">
+                                    <v-alert
+                                        v-if="isApplied"
+                                        type="success"
+                                        variant="tonal"
+                                        border="start"
+                                        class="mb-4"
+                                    >
+                                        Contrato efetuado
+                                    </v-alert>
+
                                     <v-textarea
                                         v-model="form.annotations"
                                         label="Anotações"

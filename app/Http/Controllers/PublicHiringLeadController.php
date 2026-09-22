@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Contracts\ApplyContractAction;
 use App\Actions\HiringLeads\CreateSiteLeadAction;
 use App\Enums\HiringLeadSource;
 use App\Enums\HiringLeadStatus;
@@ -31,6 +32,7 @@ class PublicHiringLeadController extends Controller
         private readonly ClientRepositoryInterface $clientRepository,
         private readonly GatewayAdapterResolver $gatewayResolver,
         private readonly CreateSiteLeadAction $createLead,
+        private readonly ApplyContractAction $applyContract,
     ) {}
 
     public function create(Request $request): Response
@@ -263,6 +265,12 @@ class PublicHiringLeadController extends Controller
                 $coupon->increment('used_count');
             }
 
+            $applied = $this->applyContract->execute($contract->getKey());
+
+            if (! $applied->success) {
+                return back()->withErrors($applied->errors ?? ['contract' => $applied->message])->withInput();
+            }
+
             $request->session()->forget('registration_client_id');
             $request->session()->put('hiring_lead_success', true);
 
@@ -326,6 +334,11 @@ class PublicHiringLeadController extends Controller
 
         if ($contract === null) {
             return back()->withErrors(['contract' => 'O link de cadastro não é válido.'])->withInput();
+        }
+
+        if ($contract->client_id !== null) {
+            $request->session()->forget('registration_client_id');
+            return back()->withErrors(['contract' => 'Este contrato já possui um cadastro vinculado.'])->withInput();
         }
 
         $client = Client::find($clientId);
@@ -397,6 +410,12 @@ class PublicHiringLeadController extends Controller
 
             if ($coupon !== null && $this->shouldCountCouponUse($contract, $coupon)) {
                 $coupon->increment('used_count');
+            }
+
+            $applied = $this->applyContract->execute($contract->getKey());
+
+            if (! $applied->success) {
+                return back()->withErrors($applied->errors ?? ['contract' => $applied->message])->withInput();
             }
 
             $request->session()->forget('registration_client_id');

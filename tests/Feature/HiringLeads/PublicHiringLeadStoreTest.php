@@ -273,6 +273,31 @@ class PublicHiringLeadStoreTest extends TestCase
         $this->assertNotNull($lead->image_rights_accepted_at);
     }
 
+    public function test_contract_registration_auto_applies_the_contract(): void
+    {
+        $this->fakeGateway();
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ])->assertSessionHasNoErrors();
+
+        $contract->refresh();
+
+        $this->assertNotNull($contract->client_id);
+        $this->assertSame('accepted', $contract->accepted_terms);
+        $this->assertDatabaseCount('clients', 1);
+        $this->assertDatabaseCount('invoices', 1);
+
+        $lead = HiringLead::query()->where('contract_id', $contract->id)->first();
+
+        $this->assertNotNull($lead);
+        $this->assertSame($contract->client_id, $lead->client_id);
+    }
+
     public function test_contract_registration_with_reserved_coupon_is_not_counted_again(): void
     {
         $this->fakeGateway();
