@@ -5,6 +5,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import DateField from '@/components/inputs/DateField.vue';
 import MaskedTextField from '@/components/inputs/MaskedTextField.vue';
 import { VSelect, VTextField } from 'vuetify/components';
+import { useDisplay } from 'vuetify';
 import {
     useModulePermissions,
     type ModulePermissionMap,
@@ -128,6 +129,8 @@ const emit = defineEmits<{
     selection: [items: unknown[]];
     reload: [];
 }>();
+
+const { mobile } = useDisplay();
 
 // ─── Estado ──────────────────────────────────────────────────────────────────
 
@@ -569,7 +572,13 @@ defineExpose({ loadItems, selectedItems, internalLoading });
 
         <!-- Filtro de visibilidade -->
         <div v-if="!hideVisibilityFilter" class="mb-4">
-            <v-btn-group class="bg-secondary" elevation="2" border="0">
+            <v-btn-group
+                class="bg-secondary"
+                elevation="2"
+                border="0"
+                :class="mobile ? 'w-100' : ''"
+                :direction="mobile ? 'vertical' : 'horizontal'"
+            >
                 <v-btn
                     v-for="item in visibilityOptions"
                     :key="item.value"

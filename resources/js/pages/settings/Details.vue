@@ -163,27 +163,29 @@ onMounted(() => {
             </div>
         </div>
 
-        <v-card class="overflow-hidden">
+        <div class="mb-4">
             <v-btn-group
                 v-if="settings.length > 0"
-                class="bg-secondary border-0 w-100"
-                :class="mobile ? 'flex-column' : ''"
-                :stretch="!mobile"
-                style="border-radius: 0"
+                class="bg-secondary"
+                elevation="2"
+                border="0"
+                :class="mobile ? 'w-100' : ''"
+                :direction="mobile ? 'vertical' : 'horizontal'"
             >
                 <v-btn
                     v-for="tab in tabs"
                     :key="tab.key"
                     :color="activeTab === tab.key ? 'primary' : undefined"
                     :variant="activeTab === tab.key ? 'flat' : 'text'"
-                    class="text-none py-3"
-                    height="auto"
+                    class="text-none"
                     @click="activeTab = tab.key"
                 >
                     {{ tab.label }}
                 </v-btn>
             </v-btn-group>
+        </div>
 
+        <v-card class="overflow-hidden elevation-1">
             <v-card-text>
                 <v-alert
                     v-if="settings.length === 0"
@@ -310,7 +312,7 @@ onMounted(() => {
                 :disabled="!canSave"
                 @click="submit"
             >
-                Salvar configurações
+                Salvar
             </v-clipped-button>
         </div>
     </div>
