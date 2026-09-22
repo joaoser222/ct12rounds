@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 255);
             $table->string('color', 7)->nullable();
+            $table->string('audience_category', 10)->nullable();
             $table->string('visibility', 10);
             $table->timestamps();
         });

@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('address_city', 100)->nullable();
             $table->string('address_district', 100)->nullable();
             $table->string('address_postal_code', 8)->nullable();
-            $table->boolean('legal_representative')->default(false);
+            $table->string('audience_category', 10)->nullable()->after('profile_image');
             $table->string('legal_representative_name', 255)->nullable();
             $table->string('legal_representative_document', 11)->nullable();
             $table->date('legal_representative_birth_date')->nullable();

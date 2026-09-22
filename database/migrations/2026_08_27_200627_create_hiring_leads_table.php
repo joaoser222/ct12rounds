@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('status', 20);
             $table->string('source', 20);
             $table->string('payment_method', 20)->nullable();
-            $table->boolean('legal_representative')->default(false);
+            $table->string('audience_category', 10)->nullable()->after('payment_method');
             $table->string('legal_representative_name', 255)->nullable();
             $table->string('legal_representative_document', 11)->nullable();
             $table->date('legal_representative_birth_date')->nullable();
