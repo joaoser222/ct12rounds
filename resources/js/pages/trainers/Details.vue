@@ -34,7 +34,9 @@ defineProps<{
 }>();
 
 const sharedProps = usePage().props;
-const { genderTypes, states, modalities } = useSharedOptions(sharedProps.options ?? {});
+const { genderTypes, states, modalities } = useSharedOptions(
+    sharedProps.options ?? {},
+);
 
 const defaults = {
     name: '',
@@ -85,7 +87,7 @@ async function fillAddress(form: AddressForm): Promise<void> {
                         label="Nome"
                         :rules="[required]"
                         :error-messages="errors.name"
-                        v-text-case="'capitalize'"
+                        v-text-case="'capitalize-exclusive'"
                     />
                 </v-col>
                 <v-col cols="12" md="4">
@@ -162,15 +164,15 @@ async function fillAddress(form: AddressForm): Promise<void> {
             </v-divider>
             <v-row class="ma-0">
                 <v-col cols="12" md="4">
-                <MaskedTextField
-                    v-model="form.address_postal_code"
-                    label="CEP"
-                    :mask="masks.cep"
-                    :loading="isLoadingAddress"
-                    :rules="[required]"
-                    :error-messages="errors.address_postal_code"
-                    @blur="fillAddress(form)"
-                />
+                    <MaskedTextField
+                        v-model="form.address_postal_code"
+                        label="CEP"
+                        :mask="masks.cep"
+                        :loading="isLoadingAddress"
+                        :rules="[required]"
+                        :error-messages="errors.address_postal_code"
+                        @blur="fillAddress(form)"
+                    />
                 </v-col>
                 <v-col cols="12" md="8">
                     <v-text-field
@@ -180,13 +182,13 @@ async function fillAddress(form: AddressForm): Promise<void> {
                     />
                 </v-col>
                 <v-col cols="12" md="4">
-                <v-text-field
-                    v-model="form.address_number"
-                    label="Número"
-                    :rules="[required]"
-                    :error-messages="errors.address_number"
-                    v-text-case="'upper'"
-                />
+                    <v-text-field
+                        v-model="form.address_number"
+                        label="Número"
+                        :rules="[required]"
+                        :error-messages="errors.address_number"
+                        v-text-case="'upper'"
+                    />
                 </v-col>
                 <v-col cols="12" md="8">
                     <v-text-field
@@ -205,17 +207,19 @@ async function fillAddress(form: AddressForm): Promise<void> {
                     />
                 </v-col>
                 <v-col cols="12" md="4">
-                <v-select
-                    v-model="form.address_state"
-                    label="Estado"
-                    :items="states"
-                    :error-messages="errors.address_state"
-                />
+                    <v-select
+                        v-model="form.address_state"
+                        label="Estado"
+                        :items="states"
+                        readonly
+                        :error-messages="errors.address_state"
+                    />
                 </v-col>
                 <v-col cols="12" md="4">
                     <v-text-field
                         v-model="form.address_city"
                         label="Cidade"
+                        readonly
                         :error-messages="errors.address_city"
                         v-text-case="'capitalize'"
                     />

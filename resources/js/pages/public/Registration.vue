@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import CreditCardField from '@/components/CreditCardField.vue';
 import { useForm } from '@inertiajs/vue3';
-import { masks } from '@/plugins/masks';
-import { cep, cpf, email, exactLength, required } from '@/plugins/validators';
+import { masks, phoneMask } from '@/plugins/masks';
+import {
+    cep,
+    cpf,
+    email,
+    exactLength,
+    phone,
+    required,
+} from '@/plugins/validators';
 import { fillAddressFromCep, type AddressForm } from '@/plugins/viacep';
 import { computed, ref } from 'vue';
 
@@ -41,7 +48,7 @@ const props = defineProps<{
 
 const showTerms = ref(false);
 const showImageRights = ref(false);
-const currentStep = ref(1);
+const currentStep = ref<'clientData' | 'paymentData'>('clientData');
 const isLoadingAddress = ref(false);
 
 const isContractFlow = computed(() => !!props.contract);
@@ -84,11 +91,12 @@ const isEmailValid = (value: string) => email(value) === true;
 const isCpfValid = (value: string) => cpf(value) === true;
 const isCepValid = (value: string) => cep(value) === true;
 
-const step1Valid = computed(() => {
+const clientDataValid = computed(() => {
     if (required(form.name) !== true) return false;
     if (required(form.email) !== true || !isEmailValid(form.email))
         return false;
-    if (required(form.phone) !== true) return false;
+    if (required(form.phone) !== true || phone(form.phone) !== true)
+        return false;
 
     if (isContractFlow.value) {
         if (required(form.document) !== true || !isCpfValid(form.document))
@@ -130,7 +138,7 @@ const step1Valid = computed(() => {
     return true;
 });
 
-const step2Valid = computed(() => {
+const paymentDataValid = computed(() => {
     if (!form.card_number || form.card_number.replace(/\D/g, '').length < 13)
         return false;
     if (!form.card_expiry_month || form.card_expiry_month.length < 2)
@@ -142,28 +150,28 @@ const step2Valid = computed(() => {
     return true;
 });
 
-const goToStep2 = () => {
-    if (step1Valid.value) {
-        currentStep.value = 2;
+const goToPaymentData = () => {
+    if (clientDataValid.value) {
+        currentStep.value = 'paymentData';
     }
 };
 
-const goToStep1 = () => {
-    currentStep.value = 1;
+const goToClientData = () => {
+    currentStep.value = 'clientData';
 };
 
 const submitPreRegistration = () => {
-    if (!step1Valid.value) return;
+    if (!clientDataValid.value) return;
     form.post('/register');
 };
 
 const submitContractRegistration = () => {
-    if (!step2Valid.value) return;
+    if (!paymentDataValid.value) return;
     form.post('/register');
 };
 
 const submitRetryPayment = () => {
-    if (!step2Valid.value) return;
+    if (!paymentDataValid.value) return;
     form.post('/register/retry-payment');
 };
 
@@ -254,7 +262,7 @@ async function fillAddress(): Promise<void> {
                     >
                         <v-text-field
                             v-model="form.name"
-                            v-text-case="'capitalize'"
+                            v-text-case="'capitalize-exclusive'"
                             label="Nome completo"
                             :rules="[required]"
                             :error-messages="form.errors.name"
@@ -272,10 +280,11 @@ async function fillAddress(): Promise<void> {
                                 />
                             </v-col>
                             <v-col cols="12" md="6">
-                                <v-text-field
+                                <MaskedTextField
                                     v-model="form.phone"
                                     label="Telefone"
-                                    :rules="[required]"
+                                    :mask="phoneMask(form.phone)"
+                                    :rules="[required, phone]"
                                     :error-messages="form.errors.phone"
                                     class="mb-5"
                                 />
@@ -288,7 +297,7 @@ async function fillAddress(): Promise<void> {
                             block
                             class="cta-finalize"
                             :loading="form.processing"
-                            :disabled="form.processing || !step1Valid"
+                            :disabled="form.processing || !clientDataValid"
                         >
                             Finalizar
                         </v-clipped-button>
@@ -300,13 +309,15 @@ async function fillAddress(): Promise<void> {
                             @submit.prevent="
                                 isRetry
                                     ? submitRetryPayment()
-                                    : submitContractRegistration
+                                    : submitContractRegistration()
                             "
                         >
-                            <template v-if="!isRetry && currentStep === 1">
+                            <template
+                                v-if="!isRetry && currentStep === 'clientData'"
+                            >
                                 <v-text-field
                                     v-model="form.name"
-                                    v-text-case="'capitalize'"
+                                    v-text-case="'capitalize-exclusive'"
                                     label="Nome completo"
                                     :rules="[required]"
                                     :error-messages="form.errors.name"
@@ -324,10 +335,11 @@ async function fillAddress(): Promise<void> {
                                         />
                                     </v-col>
                                     <v-col cols="12" md="6">
-                                        <v-text-field
+                                        <MaskedTextField
                                             v-model="form.phone"
                                             label="Telefone"
-                                            :rules="[required]"
+                                            :mask="phoneMask(form.phone)"
+                                            :rules="[required, phone]"
                                             :error-messages="form.errors.phone"
                                             class="mb-5"
                                         />
@@ -437,6 +449,7 @@ async function fillAddress(): Promise<void> {
                                             <v-text-field
                                                 v-model="form.address_city"
                                                 label="Cidade"
+                                                readonly
                                                 :rules="[required]"
                                                 :error-messages="
                                                     form.errors.address_city
@@ -449,6 +462,7 @@ async function fillAddress(): Promise<void> {
                                                 v-model="form.address_state"
                                                 label="UF"
                                                 maxlength="2"
+                                                readonly
                                                 :rules="[
                                                     required,
                                                     exactLength(2),
@@ -476,7 +490,7 @@ async function fillAddress(): Promise<void> {
 
                                     <v-text-field
                                         v-model="form.legal_representative_name"
-                                        v-text-case="'capitalize'"
+                                        v-text-case="'capitalize-exclusive'"
                                         label="Nome do responsável"
                                         :rules="[required]"
                                         :error-messages="
@@ -622,14 +636,16 @@ async function fillAddress(): Promise<void> {
                                     color="primary"
                                     size="large"
                                     block
-                                    :disabled="!step1Valid"
-                                    @click="goToStep2"
+                                    :disabled="!clientDataValid"
+                                    @click="goToPaymentData"
                                 >
                                     Avançar
                                 </v-btn>
                             </template>
 
-                            <template v-if="isRetry || currentStep === 2">
+                            <template
+                                v-if="isRetry || currentStep === 'paymentData'"
+                            >
                                 <v-divider class="mb-4">
                                     <strong>Dados do Cartão de Crédito</strong>
                                 </v-divider>
@@ -674,7 +690,7 @@ async function fillAddress(): Promise<void> {
                                             variant="outlined"
                                             size="large"
                                             block
-                                            @click="goToStep1"
+                                            @click="goToClientData"
                                         >
                                             Voltar
                                         </v-btn>
@@ -687,7 +703,8 @@ async function fillAddress(): Promise<void> {
                                             block
                                             :loading="form.processing"
                                             :disabled="
-                                                form.processing || !step2Valid
+                                                form.processing ||
+                                                !paymentDataValid
                                             "
                                         >
                                             {{

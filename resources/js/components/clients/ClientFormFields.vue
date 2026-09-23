@@ -58,20 +58,26 @@ function calculateAge(birthDate: string): number | null {
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
         age--;
     }
     return age;
 }
 
-watch(() => props.form.birth_date, (newBirthDate) => {
-    const age = calculateAge(newBirthDate);
-    if (age === null) return;
-    const newCategory = age >= 18 ? 'adult' : 'child';
-    if (props.form.audience_category !== newCategory) {
-        emit('update:audience_category', newCategory);
-    }
-});
+watch(
+    () => props.form.birth_date,
+    (newBirthDate) => {
+        const age = calculateAge(newBirthDate);
+        if (age === null) return;
+        const newCategory = age >= 18 ? 'adult' : 'child';
+        if (props.form.audience_category !== newCategory) {
+            emit('update:audience_category', newCategory);
+        }
+    },
+);
 
 async function fillAddress(): Promise<void> {
     if (isLoadingAddress.value) {
@@ -94,7 +100,9 @@ async function fillAddress(): Promise<void> {
 <template>
     <v-row class="ma-0">
         <v-col cols="12" md="6">
-            <v-label class="mb-2 text-white"><strong>Tipo de cliente</strong></v-label>
+            <v-label class="mb-2 text-white"
+                ><strong>Tipo de cliente</strong></v-label
+            >
             <v-radio-group
                 v-model="form.audience_category"
                 :disabled="disabled"
@@ -125,14 +133,14 @@ async function fillAddress(): Promise<void> {
                 </v-divider>
             </v-col>
             <v-col cols="12">
-            <v-text-field
-                v-model="form.legal_representative_name"
-                label="Nome do responsável"
-                :rules="[required]"
-                :disabled="disabled"
-                :error-messages="errors.legal_representative_name"
-                v-text-case="'capitalize'"
-            />
+                <v-text-field
+                    v-model="form.legal_representative_name"
+                    label="Nome do responsável"
+                    :rules="[required]"
+                    :disabled="disabled"
+                    :error-messages="errors.legal_representative_name"
+                    v-text-case="'capitalize-exclusive'"
+                />
             </v-col>
             <v-col cols="12" md="6">
                 <MaskedTextField
@@ -167,7 +175,7 @@ async function fillAddress(): Promise<void> {
                 :rules="[required]"
                 :disabled="disabled"
                 :error-messages="errors.name"
-                v-text-case="'capitalize'"
+                v-text-case="'capitalize-exclusive'"
             />
         </v-col>
         <v-col cols="12" md="4">
@@ -282,6 +290,7 @@ async function fillAddress(): Promise<void> {
                 :items="states"
                 :rules="requireAddressState ? [required] : []"
                 :disabled="disabled"
+                readonly
                 :error-messages="errors.address_state"
             />
         </v-col>
@@ -290,6 +299,7 @@ async function fillAddress(): Promise<void> {
                 v-model="form.address_city"
                 label="Cidade"
                 :disabled="disabled"
+                readonly
                 :error-messages="errors.address_city"
                 v-text-case="'capitalize'"
             />

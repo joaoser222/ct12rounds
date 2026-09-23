@@ -1,17 +1,35 @@
 import type { Directive } from 'vue';
 
-type TextCaseMode = 'upper' | 'lower' | 'capitalize';
+type TextCaseMode = 'upper' | 'lower' | 'capitalize' | 'capitalize-exclusive';
 
 const prepositions = new Set([
-    'a', 'à', 'as',
-    'ao', 'aos',
-    'com', 'como',
-    'da', 'das', 'de', 'do', 'dos',
-    'em', 'entre',
-    'na', 'nas', 'no', 'nos',
-    'para', 'perante', 'por',
-    'sem', 'sob', 'sobre',
-    'até', 'desde', 'contra',
+    'a',
+    'à',
+    'as',
+    'ao',
+    'aos',
+    'com',
+    'como',
+    'da',
+    'das',
+    'de',
+    'do',
+    'dos',
+    'em',
+    'entre',
+    'na',
+    'nas',
+    'no',
+    'nos',
+    'para',
+    'perante',
+    'por',
+    'sem',
+    'sob',
+    'sobre',
+    'até',
+    'desde',
+    'contra',
 ]);
 
 export function capitalize(value: string): string {
@@ -31,10 +49,24 @@ export function capitalize(value: string): string {
         .join(' ');
 }
 
+export function capitalizeExclusive(value: string): string {
+    return value
+        .split(/\s+/)
+        .map((word, i) => {
+            if (i > 0 && prepositions.has(word.toLowerCase())) {
+                return word.toLowerCase();
+            }
+
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .join(' ');
+}
+
 const transforms: Record<TextCaseMode, (v: string) => string> = {
     upper: (v) => v.toUpperCase(),
     lower: (v) => v.toLowerCase(),
     capitalize,
+    'capitalize-exclusive': capitalizeExclusive,
 };
 
 const processing = new WeakSet<EventTarget>();
@@ -45,7 +77,8 @@ export const vTextCase: Directive<HTMLInputElement, TextCaseMode> = {
 
         if (!input) return;
 
-        const getTransform = () => transforms[binding.value] ?? transforms.upper;
+        const getTransform = () =>
+            transforms[binding.value] ?? transforms.upper;
 
         input.addEventListener('input', () => {
             if (processing.has(input)) return;
@@ -65,7 +98,8 @@ export const vTextCase: Directive<HTMLInputElement, TextCaseMode> = {
     },
     updated(el, binding) {
         if (binding.value !== binding.oldValue) {
-            const input = el.tagName === 'INPUT' ? el : el.querySelector('input');
+            const input =
+                el.tagName === 'INPUT' ? el : el.querySelector('input');
 
             if (input) {
                 const transform = transforms[binding.value] ?? transforms.upper;

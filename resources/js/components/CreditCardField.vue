@@ -87,7 +87,7 @@ const cardNumberFormatted = computed(() => {
             class="mb-5"
         />
 
-        <v-row>
+        <v-row class="mb-5">
             <v-col cols="6">
                 <v-text-field
                     v-model="cardExpiryMonth"
@@ -97,6 +97,7 @@ const cardNumberFormatted = computed(() => {
                     placeholder="MM"
                     :rules="[required, exactLength(2)]"
                     :error-messages="errors?.card_expiry_month"
+                    class="mb-0"
                 />
             </v-col>
             <v-col cols="6">
@@ -108,6 +109,7 @@ const cardNumberFormatted = computed(() => {
                     placeholder="AAAA"
                     :rules="[required, exactLength(4)]"
                     :error-messages="errors?.card_expiry_year"
+                    class="mb-0"
                 />
             </v-col>
         </v-row>
@@ -121,7 +123,7 @@ const cardNumberFormatted = computed(() => {
             placeholder="***"
             :rules="[required, minLength(3), maxLength(4)]"
             :error-messages="errors?.card_cvv"
-            class="mb-5"
+            class="mb-0"
         />
     </div>
 </template>
