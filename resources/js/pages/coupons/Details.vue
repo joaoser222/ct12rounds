@@ -67,7 +67,7 @@ const defaults = {
                 <v-col cols="12" md="4">
                     <v-text-field
                         v-model="form.duration"
-                        label="Duração (dias)"
+                        label="Duração (meses)"
                         type="number"
                         :error-messages="errors.duration"
                     />
