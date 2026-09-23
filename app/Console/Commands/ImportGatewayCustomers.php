@@ -3,8 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\GatewayAccount;
-use App\PaymentGateways\Adapters\AsaasPaymentGatewayAdapter;
-use App\Services\Gateway\AsaasInvoiceImporter;
+use App\Services\Gateway\GatewaySyncService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -13,7 +12,7 @@ use Illuminate\Console\Command;
 #[Description('Import Asaas customers into Ct12rounds clients and gateway_customers')]
 class ImportGatewayCustomers extends Command
 {
-    public function handle(): int
+    public function handle(GatewaySyncService $syncService): int
     {
         $accountName = $this->option('account');
 
@@ -25,11 +24,9 @@ class ImportGatewayCustomers extends Command
             return self::FAILURE;
         }
 
-        $adapter = app(AsaasPaymentGatewayAdapter::class, ['gatewayAccount' => $account]);
-
         $this->components->info("Importing Asaas customers from account \"{$accountName}\"...");
 
-        $stats = (new AsaasInvoiceImporter($adapter))->importCustomers();
+        $stats = $syncService->sync($account, 'customers');
 
         $this->components->twoColumnDetail('Customers created', (string) $stats['customers_created']);
         $this->components->twoColumnDetail('Customers skipped (existing)', (string) $stats['customers_skipped']);

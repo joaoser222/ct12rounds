@@ -320,6 +320,64 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
         }
     }
 
+    public function refreshPayment(GatewayPayment $payment): bool
+    {
+        if (blank($payment->gateway_reference_key)) {
+            return false;
+        }
+
+        $body = $this->findPayment($payment);
+
+        if ($body === null) {
+            return false;
+        }
+
+        $this->updateGatewayPaymentFromResponse($payment, $body);
+
+        return true;
+    }
+
+    public function refreshTransfer(GatewayTransfer $transfer): bool
+    {
+        if (blank($transfer->gateway_reference_key)) {
+            return false;
+        }
+
+        $body = $this->findTransfer($transfer);
+
+        if ($body === null) {
+            return false;
+        }
+
+        $transfer->update([
+            'status' => $this->mapTransferStatus($body['status'] ?? 'PENDING'),
+            'gross_value' => (float) ($body['value'] ?? $transfer->gross_value),
+            'fee_value' => max(
+                0,
+                (float) ($body['value'] ?? $transfer->gross_value)
+                    - (float) ($body['netValue'] ?? $body['value'] ?? $transfer->gross_value),
+            ),
+        ]);
+
+        return true;
+    }
+
+    public function reprocessPostback(GatewayPostback $postback): GatewayPostback
+    {
+        $payload = is_array($postback->payload) ? $postback->payload : [];
+
+        try {
+            $this->handlePostbackEvent($postback->postback_event, $payload, $postback);
+            $postback->update(['status' => PostbackStatus::SUCCESS]);
+        } catch (\Throwable $e) {
+            $postback->update(['status' => PostbackStatus::FAILED]);
+
+            throw $e;
+        }
+
+        return $postback->fresh();
+    }
+
     public function requestInvoice(GatewayPayment $payment, array $configuration, ?GatewayInvoice $invoice = null): GatewayInvoice
     {
         $payload = $this->sanitizePayload([

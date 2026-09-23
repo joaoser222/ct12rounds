@@ -3,8 +3,7 @@ import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import type { TableHeader, TableRoutes } from '@/components/TablePage.vue';
 import { formatDate } from '@/plugins/formatters';
 import type { PaginatedResponse, IndexRoutes } from '@/shared/page';
-import { usePage } from '@inertiajs/vue3';
-import { useSharedOptions } from '@/shared/options';
+import GatewayAccountSyncAction from '@/components/gateway/GatewayAccountSyncAction.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
 
@@ -44,6 +43,10 @@ const routes: TableRoutes = {
     >
         <template #column-created_at="{ item }">
             {{ formatDate(item.created_at) }}
+        </template>
+
+        <template #extra-actions="{ item }">
+            <GatewayAccountSyncAction :account-id="item.id" />
         </template>
     </TablePage>
 </template>

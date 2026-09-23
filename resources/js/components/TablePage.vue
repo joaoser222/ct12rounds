@@ -417,10 +417,7 @@ const handleRowDoubleClick = (
     handleEdit(payload.item);
 };
 
-const handleRowClick = (
-    _event: MouseEvent,
-    payload: { item: unknown },
-) => {
+const handleRowClick = (_event: MouseEvent, payload: { item: unknown }) => {
     if (!props.openOnRowClick) {
         return;
     }
@@ -445,7 +442,9 @@ const formatItemDateTime = (
 
     const value = (item as Record<string, unknown>)[attribute];
 
-    return value instanceof Date || typeof value === 'string' || typeof value === 'number'
+    return value instanceof Date ||
+        typeof value === 'string' ||
+        typeof value === 'number'
         ? formatDateTime(value)
         : formatDateTime(null);
 };
@@ -536,6 +535,8 @@ defineExpose({ loadItems, selectedItems, internalLoading });
             />
 
             <div class="flex-grow-1" />
+
+            <slot name="toolbar-actions" />
 
             <v-clipped-button
                 v-if="permissions.create"

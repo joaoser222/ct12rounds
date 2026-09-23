@@ -19,6 +19,8 @@ use App\Http\Controllers\GatewayCustomerController;
 use App\Http\Controllers\GatewayInvoiceController;
 use App\Http\Controllers\GatewayPaymentController;
 use App\Http\Controllers\GatewayPostbackController;
+use App\Http\Controllers\GatewayAccountSyncController;
+use App\Http\Controllers\GatewaySyncController;
 use App\Http\Controllers\GatewayTransferController;
 use App\Http\Controllers\GatewayTransferRecipientController;
 use App\Http\Controllers\HiringLeadController;
@@ -127,6 +129,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::moduleReadOnly(GatewayCustomerController::class);
     Route::moduleReadOnly(GatewayCreditCardController::class);
     Route::moduleReadOnly(GatewayInvoiceController::class);
+    Route::post('gateway/sync/{scope}', GatewaySyncController::class)
+        ->where('scope', 'payments|transfers|customers|postbacks')
+        ->name('gateway.sync');
+    Route::post('gateway-accounts/{gateway_account}/sync', GatewayAccountSyncController::class)
+        ->name('gateway-accounts.sync');
 
     // Relatórios
     Route::moduleReadOnly(ReportController::class);

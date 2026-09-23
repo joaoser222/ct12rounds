@@ -3,8 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\GatewayAccount;
-use App\PaymentGateways\Adapters\AsaasPaymentGatewayAdapter;
-use App\Services\Gateway\AsaasInvoiceImporter;
+use App\Services\Gateway\GatewaySyncService;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -13,7 +12,7 @@ use Illuminate\Console\Command;
 #[Description('Import Asaas transfers into Ct12rounds gateway transfers')]
 class ImportGatewayTransfers extends Command
 {
-    public function handle(): int
+    public function handle(GatewaySyncService $syncService): int
     {
         $accountName = $this->option('account');
 
@@ -25,14 +24,13 @@ class ImportGatewayTransfers extends Command
             return self::FAILURE;
         }
 
-        $adapter = app(AsaasPaymentGatewayAdapter::class, ['gatewayAccount' => $account]);
-
         $this->components->info("Importing Asaas transfers from account \"{$accountName}\"...");
 
-        $stats = (new AsaasInvoiceImporter($adapter))->importTransfers();
+        $stats = $syncService->sync($account, 'transfers');
 
         $this->components->twoColumnDetail('Transfers created', (string) $stats['transfers_created']);
         $this->components->twoColumnDetail('Transfers skipped (existing)', (string) $stats['transfers_skipped']);
+        $this->components->twoColumnDetail('Transfers refreshed', (string) $stats['transfers_refreshed']);
 
         return self::SUCCESS;
     }

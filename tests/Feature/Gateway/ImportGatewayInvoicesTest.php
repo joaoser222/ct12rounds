@@ -18,7 +18,17 @@ class ImportGatewayInvoicesTest extends TestCase
 
     private function fakeAsaas(array $customers = [], array $payments = [], array $transfers = []): void
     {
-        Http::fake([
+        $responses = [];
+
+        foreach ($payments as $payment) {
+            $responses["sandbox.asaas.com/api/v3/payments/{$payment['id']}"] = Http::response($payment);
+        }
+
+        foreach ($transfers as $transfer) {
+            $responses["sandbox.asaas.com/api/v3/transfers/{$transfer['id']}"] = Http::response($transfer);
+        }
+
+        $responses += [
             'sandbox.asaas.com/api/v3/customers*' => Http::response([
                 'object' => 'list',
                 'hasMore' => false,
@@ -34,7 +44,9 @@ class ImportGatewayInvoicesTest extends TestCase
                 'hasMore' => false,
                 'data' => $transfers,
             ]),
-        ]);
+        ];
+
+        Http::fake($responses);
     }
 
     private function asaasAccount(): GatewayAccount

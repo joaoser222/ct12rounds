@@ -9,6 +9,7 @@ import {
 } from '@/plugins/formatters';
 import type { PaginatedResponse } from '@/shared/page';
 import { findLabel, findOption, useSharedOptions } from '@/shared/options';
+import GatewaySyncButton from '@/components/gateway/GatewaySyncButton.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
 
@@ -86,6 +87,9 @@ const { paymentMethods, transactionStatus } = useSharedOptions(
             'created_at',
         ]"
     >
+        <template #toolbar-actions>
+            <GatewaySyncButton scope="payments" />
+        </template>
         <template #column-payment_method="{ item }">
             {{
                 findLabel(paymentMethods, item.payment_method) ??
@@ -96,9 +100,7 @@ const { paymentMethods, transactionStatus } = useSharedOptions(
             {{ formatDate(item.payment_date) }}
         </template>
         <template #column-status="{ item }">
-            <v-chip
-                :color="findOption(transactionStatus, item.status)?.color"
-            >
+            <v-chip :color="findOption(transactionStatus, item.status)?.color">
                 {{ findLabel(transactionStatus, item.status) ?? item.status }}
             </v-chip>
         </template>

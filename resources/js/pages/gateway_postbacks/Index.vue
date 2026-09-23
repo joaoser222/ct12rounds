@@ -5,6 +5,7 @@ import type { TableHeader, TableRoutes } from '@/components/TablePage.vue';
 import { formatDateTime } from '@/plugins/formatters';
 import type { PaginatedResponse } from '@/shared/page';
 import { findLabel, findOption, useSharedOptions } from '@/shared/options';
+import GatewaySyncButton from '@/components/gateway/GatewaySyncButton.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
 
@@ -61,10 +62,11 @@ const { postbackStatus } = useSharedOptions(sharedProps.options ?? {});
         :permission-map="{ create: false, delete: false, visibility: false }"
         :custom-slots="['status', 'created_at']"
     >
+        <template #toolbar-actions>
+            <GatewaySyncButton scope="postbacks" />
+        </template>
         <template #column-status="{ item }">
-            <v-chip
-                :color="findOption(postbackStatus, item.status)?.color"
-            >
+            <v-chip :color="findOption(postbackStatus, item.status)?.color">
                 {{ findLabel(postbackStatus, item.status) ?? item.status }}
             </v-chip>
         </template>

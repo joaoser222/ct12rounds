@@ -5,6 +5,7 @@ import type { TableHeader, TableRoutes } from '@/components/TablePage.vue';
 import { formatCurrency, formatDateTime } from '@/plugins/formatters';
 import type { PaginatedResponse } from '@/shared/page';
 import { findLabel, findOption, useSharedOptions } from '@/shared/options';
+import GatewaySyncButton from '@/components/gateway/GatewaySyncButton.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
 
@@ -64,6 +65,9 @@ const { transactionStatus } = useSharedOptions(sharedProps.options ?? {});
             'created_at',
         ]"
     >
+        <template #toolbar-actions>
+            <GatewaySyncButton scope="transfers" />
+        </template>
         <template #column-gross_value="{ item }">
             {{ formatCurrency(item.gross_value) }}
         </template>
@@ -74,9 +78,7 @@ const { transactionStatus } = useSharedOptions(sharedProps.options ?? {});
             {{ formatCurrency(item.total) }}
         </template>
         <template #column-status="{ item }">
-            <v-chip
-                :color="findOption(transactionStatus, item.status)?.color"
-            >
+            <v-chip :color="findOption(transactionStatus, item.status)?.color">
                 {{ findLabel(transactionStatus, item.status) ?? item.status }}
             </v-chip>
         </template>

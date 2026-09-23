@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import type { TableHeader, TableRoutes } from '@/components/TablePage.vue';
 import { formatDateTime } from '@/plugins/formatters';
 import type { PaginatedResponse } from '@/shared/page';
+import GatewaySyncButton from '@/components/gateway/GatewaySyncButton.vue';
 
 defineOptions({ layout: AuthenticatedLayout });
 
@@ -43,6 +44,9 @@ const routes: TableRoutes = {
         :permission-map="{ create: false, delete: false, visibility: false }"
         :custom-slots="['created_at']"
     >
+        <template #toolbar-actions>
+            <GatewaySyncButton scope="customers" />
+        </template>
         <template #column-created_at="{ item }">
             {{ formatDateTime(item.created_at) }}
         </template>
