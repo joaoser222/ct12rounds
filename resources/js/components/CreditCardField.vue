@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import {
+    exactLength,
+    maxLength,
+    minLength,
+    required,
+} from '@/plugins/validators';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -20,7 +26,8 @@ const emit = defineEmits<{
 
 const cardNumber = computed({
     get: () => props.cardNumber ?? '',
-    set: (val: string) => emit('update:cardNumber', val.replace(/\D/g, '').slice(0, 19)),
+    set: (val: string) =>
+        emit('update:cardNumber', val.replace(/\D/g, '').slice(0, 19)),
 });
 
 const cardExpiryMonth = computed({
@@ -41,7 +48,8 @@ const cardExpiryYear = computed({
 
 const cardCvv = computed({
     get: () => props.cardCvv ?? '',
-    set: (val: string) => emit('update:cardCvv', val.replace(/\D/g, '').slice(0, 4)),
+    set: (val: string) =>
+        emit('update:cardCvv', val.replace(/\D/g, '').slice(0, 4)),
 });
 
 const cardHolderName = computed({
@@ -61,8 +69,9 @@ const cardNumberFormatted = computed(() => {
             v-model="cardHolderName"
             label="Nome no Cartão"
             v-text-case="'upper'"
+            :rules="[required]"
             :error-messages="errors?.card_holder_name"
-            class="mb-3"
+            class="mb-5"
         />
 
         <v-text-field
@@ -73,8 +82,9 @@ const cardNumberFormatted = computed(() => {
             inputmode="numeric"
             maxlength="19"
             placeholder="0000 0000 0000 0000"
+            :rules="[required, minLength(13), maxLength(19)]"
             :error-messages="errors?.card_number"
-            class="mb-3"
+            class="mb-5"
         />
 
         <v-row>
@@ -85,6 +95,7 @@ const cardNumberFormatted = computed(() => {
                     inputmode="numeric"
                     maxlength="2"
                     placeholder="MM"
+                    :rules="[required, exactLength(2)]"
                     :error-messages="errors?.card_expiry_month"
                 />
             </v-col>
@@ -95,6 +106,7 @@ const cardNumberFormatted = computed(() => {
                     inputmode="numeric"
                     maxlength="4"
                     placeholder="AAAA"
+                    :rules="[required, exactLength(4)]"
                     :error-messages="errors?.card_expiry_year"
                 />
             </v-col>
@@ -107,8 +119,9 @@ const cardNumberFormatted = computed(() => {
             inputmode="numeric"
             maxlength="4"
             placeholder="***"
+            :rules="[required, minLength(3), maxLength(4)]"
             :error-messages="errors?.card_cvv"
-            class="mb-3"
+            class="mb-5"
         />
     </div>
 </template>

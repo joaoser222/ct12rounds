@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import CreditCardField from '@/components/CreditCardField.vue';
 import { useForm } from '@inertiajs/vue3';
+import { masks } from '@/plugins/masks';
+import { cep, cpf, email, exactLength, required } from '@/plugins/validators';
+import { fillAddressFromCep, type AddressForm } from '@/plugins/viacep';
 import { computed, ref } from 'vue';
 
 defineOptions({ layout: null });
@@ -39,6 +42,7 @@ const props = defineProps<{
 const showTerms = ref(false);
 const showImageRights = ref(false);
 const currentStep = ref(1);
+const isLoadingAddress = ref(false);
 
 const isContractFlow = computed(() => !!props.contract);
 const isRetry = computed(() => !!props.retryClientId);
@@ -76,24 +80,53 @@ const form = useForm({
 
 const isAddressRequired = computed(() => isContractFlow.value);
 
+const isEmailValid = (value: string) => email(value) === true;
+const isCpfValid = (value: string) => cpf(value) === true;
+const isCepValid = (value: string) => cep(value) === true;
+
 const step1Valid = computed(() => {
-    if (!form.name || !form.email || !form.phone) return false;
+    if (required(form.name) !== true) return false;
+    if (required(form.email) !== true || !isEmailValid(form.email))
+        return false;
+    if (required(form.phone) !== true) return false;
+
     if (isContractFlow.value) {
-        if (!form.document) return false;
-        if (!form.gender || !form.birth_date) return false;
-        if (!form.address_postal_code || !form.address || !form.address_number)
+        if (required(form.document) !== true || !isCpfValid(form.document))
             return false;
-        if (!form.address_district || !form.address_city || !form.address_state)
-            return false;
-    }
-    if (props.requiresLegalRepresentative && form.audience_category === 'child') {
+        if (required(form.gender) !== true) return false;
+        if (required(form.birth_date) !== true) return false;
         if (
-            !form.legal_representative_name ||
-            !form.legal_representative_document ||
-            !form.legal_representative_birth_date
+            required(form.address_postal_code) !== true ||
+            !isCepValid(form.address_postal_code)
         )
             return false;
+        if (required(form.address) !== true) return false;
+        if (required(form.address_number) !== true) return false;
+        if (required(form.address_district) !== true) return false;
+        if (required(form.address_city) !== true) return false;
+        if (
+            required(form.address_state) !== true ||
+            exactLength(2)(form.address_state) !== true
+        )
+            return false;
+        if (!form.accepted) return false;
+        if (!form.image_rights_accepted) return false;
     }
+
+    if (
+        props.requiresLegalRepresentative &&
+        form.audience_category === 'child'
+    ) {
+        if (required(form.legal_representative_name) !== true) return false;
+        if (
+            required(form.legal_representative_document) !== true ||
+            !isCpfValid(form.legal_representative_document)
+        )
+            return false;
+        if (required(form.legal_representative_birth_date) !== true)
+            return false;
+    }
+
     return true;
 });
 
@@ -133,6 +166,23 @@ const submitRetryPayment = () => {
     if (!step2Valid.value) return;
     form.post('/register/retry-payment');
 };
+
+async function fillAddress(): Promise<void> {
+    if (isLoadingAddress.value) {
+        return;
+    }
+
+    isLoadingAddress.value = true;
+
+    try {
+        await fillAddressFromCep(
+            form as AddressForm,
+            String(form.address_postal_code ?? ''),
+        );
+    } finally {
+        isLoadingAddress.value = false;
+    }
+}
 </script>
 
 <template>
@@ -206,8 +256,9 @@ const submitRetryPayment = () => {
                             v-model="form.name"
                             v-text-case="'capitalize'"
                             label="Nome completo"
+                            :rules="[required]"
                             :error-messages="form.errors.name"
-                            class="mb-3"
+                            class="mb-5"
                         />
                         <v-row>
                             <v-col cols="12" md="6">
@@ -215,16 +266,18 @@ const submitRetryPayment = () => {
                                     v-model="form.email"
                                     label="E-mail"
                                     type="email"
+                                    :rules="[required, email]"
                                     :error-messages="form.errors.email"
-                                    class="mb-3"
+                                    class="mb-5"
                                 />
                             </v-col>
                             <v-col cols="12" md="6">
                                 <v-text-field
                                     v-model="form.phone"
                                     label="Telefone"
+                                    :rules="[required]"
                                     :error-messages="form.errors.phone"
-                                    class="mb-3"
+                                    class="mb-5"
                                 />
                             </v-col>
                         </v-row>
@@ -243,14 +296,6 @@ const submitRetryPayment = () => {
 
                     <!-- Cadastro com contrato: multi-step -->
                     <template v-else>
-                        <v-stepper
-                            v-if="!isRetry"
-                            v-model="currentStep"
-                            :items="['Dados Pessoais', 'Pagamento']"
-                            flat
-                            class="mb-4"
-                        />
-
                         <v-form
                             @submit.prevent="
                                 isRetry
@@ -263,8 +308,9 @@ const submitRetryPayment = () => {
                                     v-model="form.name"
                                     v-text-case="'capitalize'"
                                     label="Nome completo"
+                                    :rules="[required]"
                                     :error-messages="form.errors.name"
-                                    class="mb-3"
+                                    class="mb-5"
                                 />
                                 <v-row>
                                     <v-col cols="12" md="6">
@@ -272,29 +318,33 @@ const submitRetryPayment = () => {
                                             v-model="form.email"
                                             label="E-mail"
                                             type="email"
+                                            :rules="[required, email]"
                                             :error-messages="form.errors.email"
-                                            class="mb-3"
+                                            class="mb-5"
                                         />
                                     </v-col>
                                     <v-col cols="12" md="6">
                                         <v-text-field
                                             v-model="form.phone"
                                             label="Telefone"
+                                            :rules="[required]"
                                             :error-messages="form.errors.phone"
-                                            class="mb-3"
+                                            class="mb-5"
                                         />
                                     </v-col>
                                 </v-row>
 
                                 <v-row>
                                     <v-col cols="12" md="6">
-                                        <v-text-field
+                                        <MaskedTextField
                                             v-model="form.document"
                                             label="CPF"
+                                            :mask="masks.cpf"
+                                            :rules="[required, cpf]"
                                             :error-messages="
                                                 form.errors.document
                                             "
-                                            class="mb-3"
+                                            class="mb-5"
                                         />
                                     </v-col>
                                     <v-col cols="12" md="6">
@@ -311,8 +361,9 @@ const submitRetryPayment = () => {
                                                     value: 'F',
                                                 },
                                             ]"
+                                            :rules="[required]"
                                             :error-messages="form.errors.gender"
-                                            class="mb-3"
+                                            class="mb-5"
                                         />
                                     </v-col>
                                 </v-row>
@@ -321,34 +372,41 @@ const submitRetryPayment = () => {
                                     v-model="form.birth_date"
                                     label="Data de nascimento"
                                     type="date"
+                                    :rules="[required]"
                                     :error-messages="form.errors.birth_date"
-                                    class="mb-3"
+                                    class="mb-5"
                                 />
 
                                 <template v-if="isAddressRequired">
-                                    <v-text-field
+                                    <MaskedTextField
                                         v-model="form.address_postal_code"
                                         label="CEP"
+                                        :mask="masks.cep"
+                                        :rules="[required, cep]"
+                                        :loading="isLoadingAddress"
                                         :error-messages="
                                             form.errors.address_postal_code
                                         "
-                                        class="mb-3"
+                                        class="mb-5"
+                                        @blur="fillAddress"
                                     />
                                     <v-text-field
                                         v-model="form.address"
                                         label="Endereço (rua)"
+                                        :rules="[required]"
                                         :error-messages="form.errors.address"
-                                        class="mb-3"
+                                        class="mb-5"
                                     />
                                     <v-row>
                                         <v-col cols="12" md="4">
                                             <v-text-field
                                                 v-model="form.address_number"
                                                 label="Número"
+                                                :rules="[required]"
                                                 :error-messages="
                                                     form.errors.address_number
                                                 "
-                                                class="mb-3"
+                                                class="mb-5"
                                             />
                                         </v-col>
                                         <v-col cols="12" md="8">
@@ -361,27 +419,29 @@ const submitRetryPayment = () => {
                                                     form.errors
                                                         .address_complement
                                                 "
-                                                class="mb-3"
+                                                class="mb-5"
                                             />
                                         </v-col>
                                     </v-row>
                                     <v-text-field
                                         v-model="form.address_district"
                                         label="Bairro"
+                                        :rules="[required]"
                                         :error-messages="
                                             form.errors.address_district
                                         "
-                                        class="mb-3"
+                                        class="mb-5"
                                     />
                                     <v-row>
                                         <v-col cols="12" md="6">
                                             <v-text-field
                                                 v-model="form.address_city"
                                                 label="Cidade"
+                                                :rules="[required]"
                                                 :error-messages="
                                                     form.errors.address_city
                                                 "
-                                                class="mb-3"
+                                                class="mb-5"
                                             />
                                         </v-col>
                                         <v-col cols="12" md="6">
@@ -389,10 +449,14 @@ const submitRetryPayment = () => {
                                                 v-model="form.address_state"
                                                 label="UF"
                                                 maxlength="2"
+                                                :rules="[
+                                                    required,
+                                                    exactLength(2),
+                                                ]"
                                                 :error-messages="
                                                     form.errors.address_state
                                                 "
-                                                class="mb-3"
+                                                class="mb-5"
                                             />
                                         </v-col>
                                     </v-row>
@@ -403,34 +467,38 @@ const submitRetryPayment = () => {
                                         <strong>Responsável Legal</strong>
                                     </v-divider>
 
-                                    <p class="text-body-2 text-medium-emphasis mb-3">
-                                        Para menores de idade, é necessário informar os dados do responsável legal.
+                                    <p
+                                        class="text-body-2 text-medium-emphasis mb-3"
+                                    >
+                                        Para menores de idade, é necessário
+                                        informar os dados do responsável legal.
                                     </p>
 
                                     <v-text-field
-                                        v-model="
-                                            form.legal_representative_name
-                                        "
+                                        v-model="form.legal_representative_name"
                                         v-text-case="'capitalize'"
                                         label="Nome do responsável"
+                                        :rules="[required]"
                                         :error-messages="
                                             form.errors
                                                 .legal_representative_name
                                         "
-                                        class="mb-3"
+                                        class="mb-5"
                                     />
                                     <v-row>
                                         <v-col cols="12" md="6">
-                                            <v-text-field
+                                            <MaskedTextField
                                                 v-model="
                                                     form.legal_representative_document
                                                 "
                                                 label="CPF do responsável"
+                                                :mask="masks.cpf"
+                                                :rules="[required, cpf]"
                                                 :error-messages="
                                                     form.errors
                                                         .legal_representative_document
                                                 "
-                                                class="mb-3"
+                                                class="mb-5"
                                             />
                                         </v-col>
                                         <v-col cols="12" md="6">
@@ -440,18 +508,19 @@ const submitRetryPayment = () => {
                                                 "
                                                 label="Nascimento do responsável"
                                                 type="date"
+                                                :rules="[required]"
                                                 :error-messages="
                                                     form.errors
                                                         .legal_representative_birth_date
                                                 "
-                                                class="mb-3"
+                                                class="mb-5"
                                             />
                                         </v-col>
                                     </v-row>
                                 </template>
 
                                 <template v-if="terms">
-                                    <v-card variant="tonal" class="mb-3">
+                                    <v-card variant="tonal" class="mb-5">
                                         <v-card-actions>
                                             <span class="text-body-2"
                                                 >Termos e condições</span
@@ -494,11 +563,11 @@ const submitRetryPayment = () => {
                                     label="Li e aceito os termos do contrato."
                                     :error-messages="form.errors.accepted"
                                     color="primary"
-                                    class="mb-3"
+                                    class="mb-5"
                                 />
 
                                 <template v-if="imageRightsTerms">
-                                    <v-card variant="tonal" class="mb-3">
+                                    <v-card variant="tonal" class="mb-5">
                                         <v-card-actions>
                                             <span class="text-body-2"
                                                 >Direitos de imagem</span
@@ -546,7 +615,7 @@ const submitRetryPayment = () => {
                                         form.errors.image_rights_accepted
                                     "
                                     color="primary"
-                                    class="mb-3"
+                                    class="mb-5"
                                 />
 
                                 <v-btn
