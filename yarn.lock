@@ -728,6 +728,18 @@ anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
+apex-commons@^0.8.0:
+  version "0.8.1"
+  resolved "https://registry.npmjs.org/apex-commons/-/apex-commons-0.8.1.tgz"
+  integrity sha512-F7fqJVh0smeTu1d86uuRSNNZvaM/l11GNQMbu6oAiSvuXp+K8KCufg0oZTy2VQBEEipRLAdFqkHnphlVpTG0Gw==
+
+apexcharts@^7.4.0, apexcharts@>=5.10.0:
+  version "7.4.0"
+  resolved "https://registry.npmjs.org/apexcharts/-/apexcharts-7.4.0.tgz"
+  integrity sha512-p7c9d44vWfR6vLyg4gZr1nNwD8dL8+BYXP1kysbDS0jZgca8YF+IVUQMtOnkGc8L4SMRHgadnPj54xbDP75tsQ==
+  dependencies:
+    apex-commons "^0.8.0"
+
 argparse@^2.0.1:
   version "2.0.1"
   resolved "https://registry.npmjs.org/argparse/-/argparse-2.0.1.tgz"
@@ -3217,7 +3229,7 @@ vue-tsc@^2.2.0:
     "@volar/typescript" "2.4.15"
     "@vue/language-core" "2.2.12"
 
-"vue@^2.7 || ^3.0.0", vue@^3.0.0, vue@^3.2.25, vue@^3.5.0, vue@^3.5.11, vue@^3.5.17, "vue@2 || 3":
+"vue@^2.7 || ^3.0.0", vue@^3.0.0, vue@^3.2.25, vue@^3.5.0, vue@^3.5.11, vue@^3.5.17, vue@>=3.0.0, "vue@2 || 3":
   version "3.5.41"
   resolved "https://registry.npmjs.org/vue/-/vue-3.5.41.tgz"
   integrity sha512-2laE0p+aK+/AOPG/XL/WepOs/GlK755LJ1XECi9kDUrz1FKNw8rb2Xzlw9JS1rqEV55nb0ttsKxVlTCcd+R5cg==
@@ -3227,6 +3239,11 @@ vue-tsc@^2.2.0:
     "@vue/runtime-dom" "3.5.41"
     "@vue/server-renderer" "3.5.41"
     "@vue/shared" "3.5.41"
+
+vue3-apexcharts@^1.11.1:
+  version "1.11.1"
+  resolved "https://registry.npmjs.org/vue3-apexcharts/-/vue3-apexcharts-1.11.1.tgz"
+  integrity sha512-MbN3vg8bMG19wc0Lm1HkeQvODgLm56DgpIxtNUO0xpf/JCzYWVGE4jzXp2JISzy2s3Kul1yOxNQUYsLvKQ5L9g==
 
 vuetify@^3.10.0, vuetify@>=3:
   version "3.13.3"
