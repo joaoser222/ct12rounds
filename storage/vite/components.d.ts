@@ -17,6 +17,8 @@ declare module 'vue' {
     DateField: typeof import('./../../resources/js/components/inputs/DateField.vue')['default']
     DetailsPage: typeof import('./../../resources/js/components/DetailsPage.vue')['default']
     EditableRowsTable: typeof import('./../../resources/js/components/EditableRowsTable.vue')['default']
+    GatewayAccountSyncAction: typeof import('./../../resources/js/components/gateway/GatewayAccountSyncAction.vue')['default']
+    GatewaySyncButton: typeof import('./../../resources/js/components/gateway/GatewaySyncButton.vue')['default']
     GlobalDialog: typeof import('./../../resources/js/components/GlobalDialog.vue')['default']
     GlobalToast: typeof import('./../../resources/js/components/GlobalToast.vue')['default']
     MaskedTextField: typeof import('./../../resources/js/components/inputs/MaskedTextField.vue')['default']

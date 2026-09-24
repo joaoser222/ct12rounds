@@ -111,7 +111,7 @@ async function confirmSync(): Promise<void> {
 <template>
     <div v-if="canSync">
         <v-btn-icon
-            icon="ti ti-refresh"
+            icon="ti ti-arrows-exchange"
             size="small"
             color="secondary"
             :loading="syncing"
@@ -123,7 +123,7 @@ async function confirmSync(): Promise<void> {
         <v-dialog v-model="dialog" max-width="460" persistent>
             <v-card>
                 <v-card-title class="d-flex align-center ga-2">
-                    <v-icon icon="ti ti-refresh" color="warning" />
+                    <v-icon icon="ti ti-arrows-exchange" color="warning" />
                     Sincronização completa
                 </v-card-title>
                 <v-card-text>

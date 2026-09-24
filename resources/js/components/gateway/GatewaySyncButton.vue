@@ -104,7 +104,7 @@ async function sync(): Promise<void> {
     <v-clipped-button
         v-if="canSync"
         color="secondary"
-        prepend-icon="ti ti-refresh"
+        prepend-icon="ti ti-arrows-exchange"
         class="ml-2"
         :loading="syncing"
         :disabled="syncing"
