@@ -23,7 +23,7 @@ class GatewayTransferRecipientModuleTest extends TestCase
             ->postJson(route('gateway-transfer-recipients.store'), [
                 'gateway_account_id' => $gatewayAccount->id,
                 'label' => 'Personal trainer',
-                'holder_name' => 'Maria Silva',
+                'holder_name' => '  MARIA   DA   SILVA  ',
                 'holder_document' => '12345678901',
                 'pix_key' => 'maria@example.com',
                 'pix_key_type' => 'EMAIL',
@@ -32,6 +32,7 @@ class GatewayTransferRecipientModuleTest extends TestCase
 
         $recipient = GatewayTransferRecipient::query()->sole();
         $this->assertSame('maria@example.com', $recipient->pix_key);
+        $this->assertSame('Maria da Silva', $recipient->holder_name);
         $this->assertDatabaseHas('gateway_transfer_recipients', [
             'gateway_account_id' => $gatewayAccount->id,
             'label' => 'Personal trainer',

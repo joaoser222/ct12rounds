@@ -16,6 +16,10 @@ class GatewayCustomer extends Model
         'gateway_postback_id',
     ];
 
+    protected $appends = [
+        'holder_name',
+    ];
+
     protected $morphMaps = [
         'holder_type' => [
             'client' => Client::class,
@@ -27,6 +31,13 @@ class GatewayCustomer extends Model
     public function holder()
     {
         return $this->morphTo();
+    }
+
+    public function getHolderNameAttribute(): ?string
+    {
+        $holder = $this->holder;
+
+        return is_string($holder?->name) ? $holder->name : null;
     }
 
     public function gatewayAccount()

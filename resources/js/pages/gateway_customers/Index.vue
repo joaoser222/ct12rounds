@@ -16,7 +16,7 @@ const headers: TableHeader[] = [
     { title: 'ID', key: 'id', sortable: true, width: '80px' },
     { title: 'Referência', key: 'gateway_reference_key', searchable: true },
     { title: 'Tipo', key: 'holder_type', sortable: true, searchable: true },
-    { title: 'Pessoa', key: 'holder_id', sortable: true },
+    { title: 'Titular', key: 'holder_name' },
     { title: 'Conta', key: 'gateway_account_id' },
     { title: 'Postback', key: 'gateway_postback_id' },
     { title: 'Criado em', key: 'created_at', sortable: true },

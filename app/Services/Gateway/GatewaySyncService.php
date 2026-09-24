@@ -19,6 +19,7 @@ class GatewaySyncService
 
     public function __construct(
         private readonly GatewayAdapterResolver $gatewayResolver,
+        private readonly GatewayCustomerSanitizer $customerSanitizer,
     ) {}
 
     /**
@@ -54,7 +55,7 @@ class GatewaySyncService
         ];
 
         if ($adapter instanceof AsaasPaymentGatewayAdapter) {
-            $importStats = (new AsaasInvoiceImporter($adapter))->importPayments();
+            $importStats = (new AsaasInvoiceImporter($adapter, $this->customerSanitizer))->importPayments();
             $stats['invoices_created'] = $importStats['invoices_created'] ?? 0;
             $stats['payments_created'] = $importStats['payments_created'] ?? 0;
             $stats['payments_skipped'] = $importStats['payments_skipped'] ?? 0;
@@ -87,7 +88,7 @@ class GatewaySyncService
         ];
 
         if ($adapter instanceof AsaasPaymentGatewayAdapter) {
-            $importStats = (new AsaasInvoiceImporter($adapter))->importTransfers();
+            $importStats = (new AsaasInvoiceImporter($adapter, $this->customerSanitizer))->importTransfers();
             $stats['transfers_created'] = $importStats['transfers_created'] ?? 0;
             $stats['transfers_skipped'] = $importStats['transfers_skipped'] ?? 0;
 
@@ -113,12 +114,16 @@ class GatewaySyncService
     {
         $stats = [
             'customers_created' => 0,
+            'customers_updated' => 0,
+            'customers_normalized' => 0,
             'customers_skipped' => 0,
         ];
 
         if ($adapter instanceof AsaasPaymentGatewayAdapter) {
-            $importStats = (new AsaasInvoiceImporter($adapter))->importCustomers();
+            $importStats = (new AsaasInvoiceImporter($adapter, $this->customerSanitizer))->importCustomers();
             $stats['customers_created'] = $importStats['customers_created'] ?? 0;
+            $stats['customers_updated'] = $importStats['customers_updated'] ?? 0;
+            $stats['customers_normalized'] = $importStats['customers_normalized'] ?? 0;
             $stats['customers_skipped'] = $importStats['customers_skipped'] ?? 0;
         }
 

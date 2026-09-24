@@ -19,6 +19,7 @@ use App\Models\Supplier;
 use App\Models\Trainer;
 use App\PaymentGateways\Contracts\PaymentGatewayAdapter;
 use App\PaymentGateways\Contracts\PaymentGatewayInvoicingAdapter;
+use App\Services\Gateway\GatewayCustomerSanitizer;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
@@ -53,10 +54,14 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
         'CREDIT_CARD' => 'credit_card',
     ];
 
+    private readonly GatewayCustomerSanitizer $customerSanitizer;
+
     public function __construct(
         private ?GatewayAccount $gatewayAccount = null,
+        ?GatewayCustomerSanitizer $customerSanitizer = null,
     ) {
         $this->gatewayAccount ??= GatewayAccount::where('name', 'Asaas')->first();
+        $this->customerSanitizer = $customerSanitizer ?? new GatewayCustomerSanitizer;
 
         if ($this->gatewayAccount === null) {
             throw new RuntimeException(
@@ -113,6 +118,26 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
         }
 
         $payload = $this->buildCustomerPayload($holder);
+
+        try {
+            $this->client()->put(
+                "/customers/{$customer->gateway_reference_key}",
+                $payload,
+            )->throw();
+
+            return true;
+        } catch (RequestException) {
+            return false;
+        }
+    }
+
+    public function syncCustomerData(GatewayCustomer $customer, array $data): bool
+    {
+        $payload = $this->buildCustomerProfilePayload($data);
+
+        if ($payload === []) {
+            return true;
+        }
 
         try {
             $this->client()->put(
@@ -660,55 +685,72 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
             default => throw new InvalidArgumentException('Unsupported holder type: '.$holder::class),
         };
 
-        $cpfCnpj = $holder->document ?? '';
-        $email = $holder->email ?? '';
-        $phone = $holder->phone ?? '';
-
         $payload = [
-            'name' => $name,
-            'cpfCnpj' => preg_replace('/\D/', '', $cpfCnpj),
-            'email' => $email,
-            'phone' => preg_replace('/\D/', '', $phone),
+            'name' => $this->customerSanitizer->sanitizeName($name),
+            'cpfCnpj' => $this->customerSanitizer->sanitizeDigits($holder->document ?? ''),
+            'email' => $this->customerSanitizer->sanitizeEmail($holder->email ?? ''),
+            'phone' => $this->customerSanitizer->sanitizeDigits($holder->phone ?? ''),
             'externalReference' => (string) $holder->getKey(),
         ];
 
-        if (property_exists($holder, 'address') && filled($holder->address)) {
-            $payload['address'] = $holder->address;
+        if ($holder->isFillable('address') && filled($holder->address)) {
+            $payload['address'] = $this->customerSanitizer->sanitizeAddressLine($holder->address);
         }
 
-        if (property_exists($holder, 'address_number') && filled($holder->address_number)) {
-            $payload['addressNumber'] = $holder->address_number;
+        if ($holder->isFillable('address_number') && filled($holder->address_number)) {
+            $payload['addressNumber'] = $this->customerSanitizer->sanitizeAddressNumber($holder->address_number);
         }
 
-        if (property_exists($holder, 'address_complement') && filled($holder->address_complement)) {
-            $payload['complement'] = $holder->address_complement;
+        if ($holder->isFillable('address_complement') && filled($holder->address_complement)) {
+            $payload['complement'] = $this->customerSanitizer->sanitizeAddressLine($holder->address_complement);
         }
 
-        if (property_exists($holder, 'address_district') && filled($holder->address_district)) {
-            $payload['province'] = $holder->address_district;
+        if ($holder->isFillable('address_district') && filled($holder->address_district)) {
+            $payload['province'] = $this->customerSanitizer->sanitizeAddressLine($holder->address_district);
         }
 
-        if (property_exists($holder, 'address_postal_code') && filled($holder->address_postal_code)) {
-            $payload['postalCode'] = preg_replace('/\D/', '', $holder->address_postal_code);
+        if ($holder->isFillable('address_postal_code') && filled($holder->address_postal_code)) {
+            $payload['postalCode'] = $this->customerSanitizer->sanitizePostalCode($holder->address_postal_code);
         }
 
-        if (property_exists($holder, 'address_city') && filled($holder->address_city)) {
-            $payload['city'] = $holder->address_city;
+        if ($holder->isFillable('address_city') && filled($holder->address_city)) {
+            $payload['city'] = $this->customerSanitizer->sanitizeAddressLine($holder->address_city);
         }
 
-        if (property_exists($holder, 'address_state') && filled($holder->address_state)) {
-            $payload['state'] = $holder->address_state;
+        if ($holder->isFillable('address_state') && filled($holder->address_state)) {
+            $payload['state'] = $this->customerSanitizer->sanitizeState($holder->address_state);
         }
 
         if ($holder instanceof Client && $holder->audience_category?->value === 'child') {
             $payload['foreignCustomer'] = [
-                'name' => $holder->legal_representative_name,
-                'cpfCnpj' => preg_replace('/\D/', '', $holder->legal_representative_document ?? ''),
+                'name' => $this->customerSanitizer->sanitizeName($holder->legal_representative_name),
+                'cpfCnpj' => $this->customerSanitizer->sanitizeDigits($holder->legal_representative_document ?? ''),
                 'birthDate' => $holder->legal_representative_birth_date?->format('Y-m-d'),
             ];
         }
 
         return $payload;
+    }
+
+    /**
+     * @param  array<string, string>  $data
+     * @return array<string, string>
+     */
+    private function buildCustomerProfilePayload(array $data): array
+    {
+        return $this->sanitizePayload([
+            'name' => $this->customerSanitizer->sanitizeName($data['name'] ?? null),
+            'cpfCnpj' => $this->customerSanitizer->sanitizeDigits($data['document'] ?? null),
+            'email' => $this->customerSanitizer->sanitizeEmail($data['email'] ?? null),
+            'phone' => $this->customerSanitizer->sanitizeDigits($data['phone'] ?? null),
+            'address' => $this->customerSanitizer->sanitizeAddressLine($data['address'] ?? null),
+            'addressNumber' => $this->customerSanitizer->sanitizeAddressNumber($data['address_number'] ?? null),
+            'complement' => $this->customerSanitizer->sanitizeAddressLine($data['address_complement'] ?? null),
+            'province' => $this->customerSanitizer->sanitizeAddressLine($data['address_district'] ?? null),
+            'postalCode' => $this->customerSanitizer->sanitizePostalCode($data['address_postal_code'] ?? null),
+            'city' => $this->customerSanitizer->sanitizeAddressLine($data['address_city'] ?? null),
+            'state' => $this->customerSanitizer->sanitizeState($data['address_state'] ?? null),
+        ]);
     }
 
     private function findExistingCustomer(Model $holder): ?GatewayCustomer

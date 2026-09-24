@@ -29,7 +29,9 @@ class ImportGatewayCustomers extends Command
         $stats = $syncService->sync($account, 'customers');
 
         $this->components->twoColumnDetail('Customers created', (string) $stats['customers_created']);
-        $this->components->twoColumnDetail('Customers skipped (existing)', (string) $stats['customers_skipped']);
+        $this->components->twoColumnDetail('Customers updated', (string) $stats['customers_updated']);
+        $this->components->twoColumnDetail('Customers normalized in Asaas', (string) $stats['customers_normalized']);
+        $this->components->twoColumnDetail('Customers skipped (unchanged)', (string) $stats['customers_skipped']);
 
         return self::SUCCESS;
     }

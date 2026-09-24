@@ -17,6 +17,11 @@ interface PaymentGatewayAdapter
 
     public function syncCustomer(GatewayCustomer $customer): bool;
 
+    /**
+     * @param  array<string, string>  $data
+     */
+    public function syncCustomerData(GatewayCustomer $customer, array $data): bool;
+
     public function createPayment(Invoice $invoice, GatewayCustomer $customer, array $options = []): GatewayPayment;
 
     public function findPayment(GatewayPayment $payment): ?array;

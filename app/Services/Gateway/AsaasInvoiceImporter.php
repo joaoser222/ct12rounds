@@ -13,6 +13,8 @@ use App\Models\GatewayTransfer;
 use App\Models\Invoice;
 use App\PaymentGateways\Adapters\AsaasPaymentGatewayAdapter;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
+use RuntimeException;
 
 /**
  * Imports data already issued in Asaas into Ct12rounds.
@@ -25,14 +27,22 @@ class AsaasInvoiceImporter
 {
     private const PAGE_LIMIT = 100;
 
-    public function __construct(private readonly AsaasPaymentGatewayAdapter $adapter) {}
+    public function __construct(
+        private readonly AsaasPaymentGatewayAdapter $adapter,
+        private readonly GatewayCustomerSanitizer $customerSanitizer,
+    ) {}
 
     /**
      * @return array<string, int>
      */
     public function importCustomers(): array
     {
-        $stats = ['customers_created' => 0, 'customers_skipped' => 0];
+        $stats = [
+            'customers_created' => 0,
+            'customers_updated' => 0,
+            'customers_normalized' => 0,
+            'customers_skipped' => 0,
+        ];
 
         $this->syncCustomers($stats);
 
@@ -113,56 +123,109 @@ class AsaasInvoiceImporter
     {
         $referenceKey = $body['id'] ?? null;
 
-        if ($referenceKey === null) {
+        if (! is_string($referenceKey) || $referenceKey === '') {
             return;
         }
 
+        $attributes = $this->customerSanitizer->sanitize($body);
         $accountId = $this->adapter->gatewayAccount()->id;
-
-        if (GatewayCustomer::where('gateway_reference_key', $referenceKey)
+        $gatewayCustomer = GatewayCustomer::query()
+            ->with('holder')
+            ->where('gateway_reference_key', $referenceKey)
             ->where('gateway_account_id', $accountId)
-            ->exists()) {
-            $stats['customers_skipped']++;
+            ->first();
 
-            return;
+        if ($gatewayCustomer?->holder instanceof Model) {
+            $holderUpdated = $this->updateHolder($gatewayCustomer->holder, $body, $attributes);
+            $stats['customers_updated'] += $holderUpdated ? 1 : 0;
+            $stats['customers_skipped'] += $holderUpdated ? 0 : 1;
+        } elseif ($gatewayCustomer !== null) {
+            throw new RuntimeException("Gateway customer [{$referenceKey}] has no local holder.");
+        } else {
+            $client = $this->resolveClient($body, $attributes);
+            $gatewayCustomer = GatewayCustomer::query()->create([
+                'gateway_reference_key' => $referenceKey,
+                'holder_id' => $client->getKey(),
+                'holder_type' => $client->getMorphClass(),
+                'gateway_account_id' => $accountId,
+            ]);
+            $stats['customers_created']++;
         }
 
-        $client = $this->resolveClient($body);
+        if ($this->customerSanitizer->hasRemoteChanges($body, $attributes)) {
+            if (! $this->adapter->syncCustomerData($gatewayCustomer, $attributes)) {
+                throw new RuntimeException("Failed to normalize gateway customer [{$referenceKey}].");
+            }
 
-        GatewayCustomer::create([
-            'gateway_reference_key' => $referenceKey,
-            'holder_id' => $client->id,
-            'holder_type' => $client->getMorphClass(),
-            'gateway_account_id' => $accountId,
+            $stats['customers_normalized']++;
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $body
+     * @param  array<string, string>  $attributes
+     */
+    private function resolveClient(array $body, array $attributes): Client
+    {
+        $referenceKey = $body['id'] ?? null;
+        $document = $attributes['document'] ?? null;
+        $phone = $attributes['phone'] ?? null;
+
+        if ($document !== null) {
+            $existing = Client::query()->where('document', $document)->first();
+
+            if ($existing !== null) {
+                $this->updateHolder($existing, $body, $attributes);
+
+                return $existing;
+            }
+        }
+
+        return Client::query()->create([
+            ...$attributes,
+            'phone' => $phone ?? $this->placeholderDocument($referenceKey, 11),
+            'document' => $document ?? $this->placeholderDocument($referenceKey, 11),
+            'birth_date' => $this->birthDate($body),
         ]);
+    }
 
-        $stats['customers_created']++;
+    /**
+     * @param  array<string, mixed>  $body
+     * @param  array<string, string>  $attributes
+     */
+    private function updateHolder(Model $holder, array $body, array $attributes): bool
+    {
+        $attributes = array_filter(
+            $attributes,
+            static fn (string $attribute): bool => $holder->isFillable($attribute),
+            ARRAY_FILTER_USE_KEY,
+        );
+
+        if (($birthDate = $this->birthDate($body)) !== null && $holder->isFillable('birth_date')) {
+            $attributes['birth_date'] = $birthDate;
+        }
+
+        $holder->fill($attributes);
+
+        if (! $holder->isDirty()) {
+            return false;
+        }
+
+        $holder->save();
+
+        return true;
     }
 
     /**
      * @param  array<string, mixed>  $body
      */
-    private function resolveClient(array $body): Client
+    private function birthDate(array $body): ?CarbonImmutable
     {
-        $referenceKey = $body['id'] ?? null;
-        $document = preg_replace('/\D/', '', (string) ($body['cpfCnpj'] ?? ''));
-        $phone = preg_replace('/\D/', '', (string) ($body['phone'] ?? ''));
-
-        if ($document !== '') {
-            $existing = Client::where('document', $document)->first();
-
-            if ($existing !== null) {
-                return $existing;
-            }
+        if (! isset($body['birthDate'])) {
+            return null;
         }
 
-        return Client::create([
-            'name' => $body['name'] ?? 'Cliente Asaas',
-            'email' => $body['email'] ?? null,
-            'phone' => $phone !== '' ? $phone : $this->placeholderDocument($referenceKey, 11),
-            'document' => $document !== '' ? $document : $this->placeholderDocument($referenceKey, 11),
-            'birth_date' => isset($body['birthDate']) ? CarbonImmutable::parse($body['birthDate']) : null,
-        ]);
+        return CarbonImmutable::parse($body['birthDate']);
     }
 
     /**

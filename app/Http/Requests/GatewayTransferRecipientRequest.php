@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Gateway\GatewayCustomerSanitizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,6 +11,17 @@ class GatewayTransferRecipientRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $holderName = $this->input('holder_name');
+
+        if (is_string($holderName)) {
+            $this->merge([
+                'holder_name' => app(GatewayCustomerSanitizer::class)->sanitizeName($holderName),
+            ]);
+        }
     }
 
     /**

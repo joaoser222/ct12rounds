@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\AccessControl\AccessModule;
 use App\Models\GatewayCustomer;
+use Illuminate\Database\Eloquent\Builder;
 
 class GatewayCustomerController extends ReadOnlyModuleController
 {
@@ -15,7 +16,10 @@ class GatewayCustomerController extends ReadOnlyModuleController
         'gateway_reference_key',
         'holder_type',
         'holder_id',
+        'gateway_account_id',
+        'gateway_postback_id',
         'created_at',
+        'updated_at',
     ];
 
     /**
@@ -36,5 +40,10 @@ class GatewayCustomerController extends ReadOnlyModuleController
     protected function modelClass(): string
     {
         return GatewayCustomer::class;
+    }
+
+    protected function newModelQuery(): Builder
+    {
+        return parent::newModelQuery()->with('holder');
     }
 }

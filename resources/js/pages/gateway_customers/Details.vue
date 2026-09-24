@@ -16,7 +16,7 @@ const fields: ReadOnlyField[] = [
     { title: 'ID', key: 'id' },
     { title: 'Referência', key: 'gateway_reference_key' },
     { title: 'Tipo do titular', key: 'holder_type' },
-    { title: 'Titular', key: 'holder_id' },
+    { title: 'Titular', key: 'holder_name' },
     { title: 'Conta Gateway', key: 'gateway_account_id' },
     { title: 'Postback', key: 'gateway_postback_id' },
     { title: 'Criado em', key: 'created_at' },
