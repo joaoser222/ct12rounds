@@ -38,6 +38,7 @@ type ImageRightsDefaults = {
     site_name: string;
     site_domain: string;
     forum_city: string;
+    legal_representative_relationship: string;
 };
 
 const props = defineProps<{
@@ -208,6 +209,15 @@ function generateImageRightsPdf(): void {
                             <v-text-field
                                 v-model="imageRightsForm.forum_city"
                                 label="Cidade do foro"
+                                hide-details
+                            />
+                        </v-col>
+                        <v-col cols="12" md="6">
+                            <v-text-field
+                                v-model="
+                                    imageRightsForm.legal_representative_relationship
+                                "
+                                label="Parentesco do responsável legal"
                                 hide-details
                             />
                         </v-col>

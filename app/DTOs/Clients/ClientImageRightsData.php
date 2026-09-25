@@ -8,7 +8,7 @@ use App\Models\Client;
 final class ClientImageRightsData
 {
     /**
-     * @param  array<string, string>  $values
+     * @param  array<string, bool|string>  $values
      */
     private function __construct(private readonly array $values) {}
 
@@ -25,10 +25,16 @@ final class ClientImageRightsData
             : $client->document;
 
         return new self([
+            'is_minor' => $client->audience_category === AudienceCategory::CHILD,
+            'minor_name' => (string) $client->name,
+            'minor_birth_date' => $client->birth_date?->format('d/m/Y') ?? '',
             'authorized_person_name' => (string) $authorizedPersonName,
             'authorized_person_cpf' => (string) $authorizedPersonDocument,
             'authorized_person_address' => self::address($client),
             'authorized_person_email' => (string) $client->email,
+            'legal_representative_name' => (string) ($client->legal_representative_name ?: $authorizedPersonName),
+            'legal_representative_document' => (string) $authorizedPersonDocument,
+            'legal_representative_relationship' => (string) ($data['legal_representative_relationship'] ?? 'responsável legal'),
             'image_producer_name' => (string) ($data['image_producer_name'] ?? config('app.name')),
             'image_usage_purpose' => (string) ($data['image_usage_purpose'] ?? 'divulgação institucional e promocional'),
             'image_description' => (string) ($data['image_description'] ?? 'imagem do cliente'),
@@ -42,7 +48,7 @@ final class ClientImageRightsData
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, bool|string>
      */
     public function toArray(): array
     {

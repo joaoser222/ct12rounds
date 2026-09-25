@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\DTOs\Clients\ClientImageRightsData;
+use App\Enums\AudienceCategory;
 use App\Models\Client;
 use App\Models\User;
 use App\Services\PrintableReportService;
@@ -66,7 +67,7 @@ class ImageRightsReportTest extends TestCase
         ]);
 
         $html = app(PrintableReportService::class)->render(
-            'templates/image_rights.md',
+            'templates/image_rights.blade.php',
             ClientImageRightsData::from($client, [
                 'image_description' => 'Foto "especial" & aérea',
             ])->toArray(),
@@ -76,5 +77,43 @@ class ImageRightsReportTest extends TestCase
         $this->assertStringContainsString('Foto &quot;especial&quot; &amp; aérea', $html);
         $this->assertStringNotContainsString('<b>aérea</b>', $html);
         $this->assertStringNotContainsString('{{', $html);
+    }
+
+    public function test_image_rights_report_includes_minor_clause_for_a_child(): void
+    {
+        $client = Client::factory()->create([
+            'audience_category' => AudienceCategory::CHILD->value,
+            'birth_date' => '2015-05-10',
+            'legal_representative_name' => 'Responsável Legal',
+            'legal_representative_document' => '12345678901',
+        ]);
+
+        $html = app(PrintableReportService::class)->render(
+            'templates/image_rights.blade.php',
+            ClientImageRightsData::from($client)->toArray(),
+        );
+
+        $this->assertStringContainsString('7. Autorização do Menor de Idade', $html);
+        $this->assertStringContainsString('Responsável legal', $html);
+        $this->assertStringContainsString('Responsável Legal', $html);
+        $this->assertStringContainsString('12345678901', $html);
+        $this->assertStringNotContainsString('Assinaturas', $html);
+        $this->assertStringNotContainsString('________________________________', $html);
+    }
+
+    public function test_image_rights_report_omits_minor_clause_for_an_adult(): void
+    {
+        $client = Client::factory()->create([
+            'audience_category' => AudienceCategory::ADULT->value,
+        ]);
+
+        $html = app(PrintableReportService::class)->render(
+            'templates/image_rights.blade.php',
+            ClientImageRightsData::from($client)->toArray(),
+        );
+
+        $this->assertStringNotContainsString('7. Autorização do Menor de Idade', $html);
+        $this->assertStringNotContainsString('Assinaturas', $html);
+        $this->assertStringNotContainsString('________________________________', $html);
     }
 }

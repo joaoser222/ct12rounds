@@ -147,11 +147,12 @@ class ClientController extends CrudModuleController
             'site_name' => ['nullable', 'string', 'max:255'],
             'site_domain' => ['nullable', 'string', 'max:255'],
             'forum_city' => ['nullable', 'string', 'max:120'],
+            'legal_representative_relationship' => ['nullable', 'string', 'max:120'],
         ]);
 
         return $reportService->pdf(
-            template: 'templates/image_rights.md',
-            values: ClientImageRightsData::from($client, $data)->toArray(),
+            template: 'templates/image_rights.blade.php',
+            data: ClientImageRightsData::from($client, $data)->toArray(),
             filename: 'autorizacao-de-imagem-'.(Str::slug($client->name) ?: 'cliente').'.pdf',
             title: 'Autorização de Uso e Cessão de Direitos de Imagem',
         );
@@ -193,6 +194,7 @@ class ClientController extends CrudModuleController
                 'site_name' => (string) config('app.name'),
                 'site_domain' => parse_url((string) config('app.url'), PHP_URL_HOST) ?: '',
                 'forum_city' => $model instanceof Client ? $model->address_city : '',
+                'legal_representative_relationship' => 'responsável legal',
             ],
 
         ];
