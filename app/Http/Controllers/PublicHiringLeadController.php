@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Actions\Contracts\ApplyContractAction;
 use App\Actions\HiringLeads\CreateSiteLeadAction;
+use App\DTOs\Contracts\ContractPreviewData;
+use App\Enums\ClientSource;
+use App\Enums\ClientStatus;
 use App\Enums\HiringLeadSource;
 use App\Enums\HiringLeadStatus;
+use App\Http\Requests\PreparePublicClientRequest;
 use App\Http\Requests\PublicHiringLeadRequest;
 use App\Models\Client;
 use App\Models\Contract;
@@ -15,21 +19,26 @@ use App\Models\GatewayCreditCard;
 use App\Models\GatewayCustomer;
 use App\Models\HiringLead;
 use App\Models\Plan;
-use App\Models\Setting;
 use App\PaymentGateways\Contracts\PaymentGatewayAdapter;
 use App\Repositories\Contracts\ClientRepositoryInterface;
+use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Services\Gateway\GatewayAdapterResolver;
+use App\Services\PrintableReportService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PublicHiringLeadController extends Controller
 {
+    private const string ACTIVE_CONTRACT_ERROR = 'document';
+
     public function __construct(
         private readonly ClientRepositoryInterface $clientRepository,
+        private readonly ContractRepositoryInterface $contractRepository,
         private readonly GatewayAdapterResolver $gatewayResolver,
         private readonly CreateSiteLeadAction $createLead,
         private readonly ApplyContractAction $applyContract,
@@ -60,6 +69,12 @@ class PublicHiringLeadController extends Controller
                         'name' => $linkedLead->name,
                         'email' => $linkedLead->email,
                         'phone' => $linkedLead->phone,
+                    ];
+                } elseif ($pendingClient = $this->pendingClientFromSession($request, $contract)) {
+                    $initial = [
+                        'name' => $pendingClient->name,
+                        'email' => $pendingClient->email,
+                        'phone' => $pendingClient->phone,
                     ];
                 }
             }
@@ -97,23 +112,142 @@ class PublicHiringLeadController extends Controller
                 'id' => $contract->id,
                 'token' => $contract->registration_token,
                 'plan' => $contract->plan?->name,
+                'preview_url' => route('public.contract-preview', [
+                    'contract' => $contract->registration_token,
+                ]),
             ] : null,
-            'terms' => $this->settingContent('hiring_terms'),
-            'imageRightsTerms' => $this->settingContent('image_rights_terms'),
             'success' => $request->session()->pull('hiring_lead_success'),
             'retryClientId' => $request->session()->get('registration_client_id'),
         ]);
     }
 
-    private function settingContent(string $name): ?string
+    public function contractPreview(string $contract, PrintableReportService $printableReport, Request $request): HttpResponse
     {
-        $setting = Setting::query()
-            ->where('name', $name)
+        $model = Contract::query()
+            ->where('registration_token', $contract)
+            ->firstOrFail();
+
+        $html = $printableReport->render(
+            'templates/contract.blade.php',
+            ContractPreviewData::from($model, null, $this->pendingClientFromSession($request, $model))->toArray(),
+        );
+
+        return response(view('public.contract-preview', [
+            'content' => $html,
+        ])->render(), 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+        ]);
+    }
+
+    public function prepareClient(PreparePublicClientRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $contract = Contract::query()
+            ->where('registration_token', $data['contract'])
             ->first();
 
-        $content = $setting?->content;
+        if ($contract === null) {
+            return back()->withErrors(['contract' => 'O link de cadastro não é válido.'])->withInput();
+        }
 
-        return is_string($content) && trim($content) !== '' ? $content : null;
+        if ($contract->client_id !== null || $contract->accepted_terms !== 'pending') {
+            return back()->withErrors(['contract' => 'Este contrato já possui um cadastro vinculado.'])->withInput();
+        }
+
+        $client = $this->resolvePendingClient($data);
+
+        if ($client === null) {
+            return back()->withErrors([self::ACTIVE_CONTRACT_ERROR => 'Este cliente já possui um contrato ativo.'])->withInput();
+        }
+
+        $request->session()->put('registration_pending_client', [
+            'contract' => $contract->registration_token,
+            'client_id' => $client->id,
+        ]);
+
+        return back();
+    }
+
+    /**
+     * Reuses the existing client when the document is already registered, keeping pending clients in sync with the submitted data.
+     *
+     * @param  array<string, mixed>  $data
+     * @return Client|null Null when the existing client already has an active contract.
+     */
+    private function resolvePendingClient(array $data): ?Client
+    {
+        $document = preg_replace('/\D/', '', (string) $data['document']);
+
+        /** @var Client|null $client */
+        $client = $this->clientRepository->findByDocument($document);
+
+        if ($client !== null && $this->contractRepository->findActiveByClient($client->id) !== null) {
+            return null;
+        }
+
+        $payload = [
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'document' => $document,
+            'gender' => $data['gender'] ?? null,
+            'birth_date' => $data['birth_date'] ?? null,
+            'address' => $data['address'] ?? null,
+            'address_number' => $data['address_number'] ?? null,
+            'address_complement' => $data['address_complement'] ?? null,
+            'address_district' => $data['address_district'] ?? null,
+            'address_state' => $data['address_state'] ?? null,
+            'address_city' => $data['address_city'] ?? null,
+            'address_postal_code' => $data['address_postal_code'] ?? null,
+            'audience_category' => $data['audience_category'] ?? null,
+            'legal_representative_name' => $data['legal_representative_name'] ?? null,
+            'legal_representative_document' => ! empty($data['legal_representative_document']) ? preg_replace('/\D/', '', (string) $data['legal_representative_document']) : null,
+            'legal_representative_birth_date' => $data['legal_representative_birth_date'] ?? null,
+            'client_source' => ClientSource::SITE->value,
+        ];
+
+        if ($client === null) {
+            /** @var Client $created */
+            $created = $this->clientRepository->create([
+                ...$payload,
+                'status' => ClientStatus::PENDING->value,
+            ]);
+
+            return $created;
+        }
+
+        if ($client->status === ClientStatus::PENDING) {
+            $this->clientRepository->update($client, $payload);
+        }
+
+        return $client;
+    }
+
+    private function pendingClientFromSession(Request $request, Contract $contract): ?Client
+    {
+        $pending = $request->session()->get('registration_pending_client');
+
+        if (! is_array($pending) || ! isset($pending['contract'], $pending['client_id'])) {
+            return null;
+        }
+
+        if ($pending['contract'] !== $contract->registration_token) {
+            return null;
+        }
+
+        return Client::query()->whereKey($pending['client_id'])->first();
+    }
+
+    private function activatePendingClient(Client $client): void
+    {
+        if ($client->status !== ClientStatus::PENDING) {
+            return;
+        }
+
+        $this->clientRepository->update($client, [
+            'status' => ClientStatus::ACTIVE->value,
+        ]);
     }
 
     public function store(PublicHiringLeadRequest $request): RedirectResponse
@@ -174,37 +308,21 @@ class PublicHiringLeadController extends Controller
         $document = preg_replace('/\D/', '', (string) $data['document']);
 
         try {
-            $client = DB::transaction(function () use ($data, $document, $request) {
-                $client = $this->clientRepository->findByDocument($document);
+            $client = DB::transaction(function () use ($data, $request) {
+                $client = $this->resolvePendingClient($data);
 
                 if ($client === null) {
-                    $client = $this->clientRepository->create([
-                        'name' => $data['name'],
-                        'email' => $data['email'],
-                        'phone' => $data['phone'],
-                        'document' => $document,
-                        'gender' => $data['gender'] ?? null,
-                        'birth_date' => $data['birth_date'] ?? null,
-                        'address' => $data['address'] ?? null,
-                        'address_number' => $data['address_number'] ?? null,
-                        'address_complement' => $data['address_complement'] ?? null,
-                        'address_district' => $data['address_district'] ?? null,
-                        'address_state' => $data['address_state'] ?? null,
-                        'address_city' => $data['address_city'] ?? null,
-                        'address_postal_code' => $data['address_postal_code'] ?? null,
-                        'audience_category' => $data['audience_category'] ?? null,
-                        'legal_representative_name' => $data['legal_representative_name'] ?? null,
-                        'legal_representative_document' => ! empty($data['legal_representative_document']) ? preg_replace('/\D/', '', (string) $data['legal_representative_document']) : null,
-                        'legal_representative_birth_date' => $data['legal_representative_birth_date'] ?? null,
-                        'status' => 'active',
-                        'client_source' => 'site',
-                    ]);
+                    return null;
                 }
 
                 $request->session()->put('registration_client_id', $client->id);
 
                 return $client;
             });
+
+            if ($client === null) {
+                return back()->withErrors([self::ACTIVE_CONTRACT_ERROR => 'Este cliente já possui um contrato ativo.'])->withInput();
+            }
 
             $gatewayAccount = GatewayAccount::query()->first();
 
@@ -254,7 +372,6 @@ class PublicHiringLeadController extends Controller
                 'legal_representative_birth_date' => $data['legal_representative_birth_date'] ?? null,
                 'visibility' => 'visible',
                 'accepted_at' => CarbonImmutable::now(),
-                'image_rights_accepted_at' => CarbonImmutable::now(),
                 'plan_id' => $plan?->getKey(),
                 'coupon_id' => $coupon?->getKey(),
                 'contract_id' => $contract->id,
@@ -271,7 +388,9 @@ class PublicHiringLeadController extends Controller
                 return back()->withErrors($applied->errors ?? ['contract' => $applied->message])->withInput();
             }
 
-            $request->session()->forget('registration_client_id');
+            $this->activatePendingClient($client);
+
+            $request->session()->forget(['registration_client_id', 'registration_pending_client']);
             $request->session()->put('hiring_lead_success', true);
 
             return redirect()->route('public.register');
@@ -337,14 +456,15 @@ class PublicHiringLeadController extends Controller
         }
 
         if ($contract->client_id !== null) {
-            $request->session()->forget('registration_client_id');
+            $request->session()->forget(['registration_client_id', 'registration_pending_client']);
             return back()->withErrors(['contract' => 'Este contrato já possui um cadastro vinculado.'])->withInput();
         }
 
+        /** @var Client|null $client */
         $client = Client::find($clientId);
 
         if ($client === null) {
-            $request->session()->forget('registration_client_id');
+            $request->session()->forget(['registration_client_id', 'registration_pending_client']);
             return back()->withErrors(['card_number' => 'Cliente não encontrado. Preencha os dados novamente.'])->withInput();
         }
 
@@ -401,7 +521,6 @@ class PublicHiringLeadController extends Controller
                 'legal_representative_birth_date' => $client->legal_representative_birth_date,
                 'visibility' => 'visible',
                 'accepted_at' => CarbonImmutable::now(),
-                'image_rights_accepted_at' => CarbonImmutable::now(),
                 'plan_id' => $plan?->getKey(),
                 'coupon_id' => $coupon?->getKey(),
                 'contract_id' => $contract->id,
@@ -418,7 +537,9 @@ class PublicHiringLeadController extends Controller
                 return back()->withErrors($applied->errors ?? ['contract' => $applied->message])->withInput();
             }
 
-            $request->session()->forget('registration_client_id');
+            $this->activatePendingClient($client);
+
+            $request->session()->forget(['registration_client_id', 'registration_pending_client']);
             $request->session()->put('hiring_lead_success', true);
 
             return redirect()->route('public.register');

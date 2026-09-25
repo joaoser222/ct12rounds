@@ -46,7 +46,6 @@ class PublicHiringLeadRequest extends FormRequest
                 'address_postal_code' => ['required', 'string', 'max:8'],
                 'contract' => ['required', 'string', 'max:64'],
                 'accepted' => ['required', 'accepted'],
-                'image_rights_accepted' => ['required', 'accepted'],
                 'audience_category' => ['nullable', Rule::enum(AudienceCategory::class)],
                 'legal_representative_name' => [$requiresLegalRep ? 'required' : 'nullable', 'string', 'max:255'],
                 'legal_representative_document' => [$requiresLegalRep ? 'required' : 'nullable', 'string', 'min:11', 'max:14'],

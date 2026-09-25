@@ -65,7 +65,11 @@ Route::middleware('guest')->group(function () {
 Route::middleware('throttle:30,1')->group(function () {
     Route::post('/', [HomeController::class, 'store'])->name('public.landing.store');
     Route::get('register', [PublicHiringLeadController::class, 'create'])->name('public.register');
+    Route::get('register/contracts/{contract}/preview', [PublicHiringLeadController::class, 'contractPreview'])
+        ->name('public.contract-preview');
     Route::post('register', [PublicHiringLeadController::class, 'store'])->name('public.register.store');
+    Route::post('register/prepare-client', [PublicHiringLeadController::class, 'prepareClient'])
+        ->name('public.register.prepare-client');
     Route::post('register/retry-payment', [PublicHiringLeadController::class, 'retryPayment'])->name('public.register.retry');
 });
 

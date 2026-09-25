@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\BillableStatus;
 use App\Models\Contract;
 use App\Repositories\Contracts\ContractRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
@@ -58,7 +59,7 @@ class EloquentContractRepository extends BaseEloquentRepository implements Contr
     {
         return $this->newQuery()
             ->where('client_id', $clientId)
-            ->whereIn('status', ['active', 'pending'])
+            ->where('status', BillableStatus::OPEN->value)
             ->orderBy('created_at', 'desc')
             ->first();
     }

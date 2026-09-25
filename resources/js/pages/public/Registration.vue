@@ -11,7 +11,7 @@ import {
     required,
 } from '@/plugins/validators';
 import { fillAddressFromCep, type AddressForm } from '@/plugins/viacep';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 defineOptions({ layout: null });
 
@@ -25,6 +25,7 @@ type ContractRegistration = {
     id: number;
     token: string;
     plan?: string | null;
+    preview_url?: string | null;
 };
 
 type PrefilledData = {
@@ -40,14 +41,10 @@ const props = defineProps<{
     couponWarning?: string | null;
     initial?: PrefilledData | null;
     contract?: ContractRegistration | null;
-    terms?: string | null;
-    imageRightsTerms?: string | null;
     success?: boolean;
     retryClientId?: number | null;
 }>();
 
-const showTerms = ref(false);
-const showImageRights = ref(false);
 const currentStep = ref<'clientData' | 'paymentData'>('clientData');
 const isLoadingAddress = ref(false);
 
@@ -72,7 +69,6 @@ const form = useForm({
     coupon: props.coupon ?? '',
     contract: props.contract?.token ?? '',
     accepted: false,
-    image_rights_accepted: false,
     audience_category: props.requiresLegalRepresentative ? 'child' : 'adult',
     legal_representative_name: '',
     legal_representative_document: '',
@@ -117,8 +113,6 @@ const clientDataValid = computed(() => {
             exactLength(2)(form.address_state) !== true
         )
             return false;
-        if (!form.accepted) return false;
-        if (!form.image_rights_accepted) return false;
     }
 
     if (
@@ -147,18 +141,52 @@ const paymentDataValid = computed(() => {
         return false;
     if (!form.card_cvv || form.card_cvv.length < 3) return false;
     if (!form.card_holder_name) return false;
+    if (!form.accepted) return false;
     return true;
 });
 
 const goToPaymentData = () => {
-    if (clientDataValid.value) {
-        currentStep.value = 'paymentData';
+    if (!clientDataValid.value) {
+        return;
     }
+
+    form.post('/register/prepare-client', {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            currentStep.value = 'paymentData';
+        },
+    });
 };
 
 const goToClientData = () => {
     currentStep.value = 'clientData';
 };
+
+watch(
+    () => form.errors.document,
+    (message) => {
+        if (message) {
+            currentStep.value = 'clientData';
+        }
+    },
+);
+
+function openContractPreview(): void {
+    if (!props.contract?.preview_url) {
+        return;
+    }
+
+    const preview = window.open(
+        props.contract.preview_url,
+        '_blank',
+        'noopener,noreferrer',
+    );
+
+    if (!preview) {
+        window.location.assign(props.contract.preview_url);
+    }
+}
 
 const submitPreRegistration = () => {
     if (!clientDataValid.value) return;
@@ -533,110 +561,14 @@ async function fillAddress(): Promise<void> {
                                     </v-row>
                                 </template>
 
-                                <template v-if="terms">
-                                    <v-card variant="tonal" class="mb-5">
-                                        <v-card-actions>
-                                            <span class="text-body-2"
-                                                >Termos e condições</span
-                                            >
-                                            <v-spacer />
-                                            <v-btn
-                                                variant="text"
-                                                size="small"
-                                                :prepend-icon="
-                                                    showTerms
-                                                        ? 'ti ti-chevron-up'
-                                                        : 'ti ti-chevron-down'
-                                                "
-                                                @click="showTerms = !showTerms"
-                                            >
-                                                {{
-                                                    showTerms
-                                                        ? 'Ocultar'
-                                                        : 'Ler termos'
-                                                }}
-                                            </v-btn>
-                                        </v-card-actions>
-                                        <v-expand-transition>
-                                            <v-card-text
-                                                v-show="showTerms"
-                                                class="text-body-2 text-pre-wrap"
-                                                style="
-                                                    max-height: 240px;
-                                                    overflow-y: auto;
-                                                "
-                                            >
-                                                {{ terms }}
-                                            </v-card-text>
-                                        </v-expand-transition>
-                                    </v-card>
-                                </template>
-
-                                <v-checkbox
-                                    v-model="form.accepted"
-                                    label="Li e aceito os termos do contrato."
-                                    :error-messages="form.errors.accepted"
-                                    color="primary"
-                                    class="mb-5"
-                                />
-
-                                <template v-if="imageRightsTerms">
-                                    <v-card variant="tonal" class="mb-5">
-                                        <v-card-actions>
-                                            <span class="text-body-2"
-                                                >Direitos de imagem</span
-                                            >
-                                            <v-spacer />
-                                            <v-btn
-                                                variant="text"
-                                                size="small"
-                                                :prepend-icon="
-                                                    showImageRights
-                                                        ? 'ti ti-chevron-up'
-                                                        : 'ti ti-chevron-down'
-                                                "
-                                                @click="
-                                                    showImageRights =
-                                                        !showImageRights
-                                                "
-                                            >
-                                                {{
-                                                    showImageRights
-                                                        ? 'Ocultar'
-                                                        : 'Ler cláusula'
-                                                }}
-                                            </v-btn>
-                                        </v-card-actions>
-                                        <v-expand-transition>
-                                            <v-card-text
-                                                v-show="showImageRights"
-                                                class="text-body-2 text-pre-wrap"
-                                                style="
-                                                    max-height: 240px;
-                                                    overflow-y: auto;
-                                                "
-                                            >
-                                                {{ imageRightsTerms }}
-                                            </v-card-text>
-                                        </v-expand-transition>
-                                    </v-card>
-                                </template>
-
-                                <v-checkbox
-                                    v-model="form.image_rights_accepted"
-                                    label="Li e aceito a cláusula de direitos de imagem."
-                                    :error-messages="
-                                        form.errors.image_rights_accepted
-                                    "
-                                    color="primary"
-                                    class="mb-5"
-                                />
-
                                 <v-btn
                                     color="primary"
                                     size="large"
                                     block
-                                    :disabled="!clientDataValid"
+                                    :loading="form.processing"
+                                    :disabled="
+                                        !clientDataValid || form.processing
+                                    "
                                     @click="goToPaymentData"
                                 >
                                     Avançar
@@ -683,6 +615,26 @@ async function fillAddress(): Promise<void> {
                                             : [],
                                     }"
                                 />
+
+                                <v-checkbox
+                                    v-model="form.accepted"
+                                    label="Li e aceito os termos do contrato."
+                                    :error-messages="form.errors.accepted"
+                                    color="primary"
+                                    class="mb-2"
+                                    @click="openContractPreview"
+                                />
+
+                                <v-btn
+                                    v-if="contract?.preview_url"
+                                    variant="text"
+                                    size="small"
+                                    prepend-icon="ti ti-file-document-outline"
+                                    class="mb-4"
+                                    @click="openContractPreview"
+                                >
+                                    Visualizar contrato
+                                </v-btn>
 
                                 <v-row class="mt-4">
                                     <v-col v-if="!isRetry" cols="6">
