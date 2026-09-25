@@ -85,6 +85,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Pessoas
     Route::module(ClientController::class);
+    Route::get('clients/{client}/image-rights', [ClientController::class, 'imageRights'])
+        ->name('clients.image-rights');
     Route::module(TrainerController::class);
     Route::module(SupplierController::class);
     Route::prefix('hiring-leads')->name('hiring-leads.')->group(function () {

@@ -6,6 +6,7 @@ use App\AccessControl\AccessAction;
 use App\AccessControl\AccessModule;
 use App\Actions\Clients\CreateClientAction;
 use App\Actions\Clients\UpdateClientAction;
+use App\DTOs\Clients\ClientImageRightsData;
 use App\DTOs\Clients\CreateClientDTO;
 use App\DTOs\Clients\UpdateClientDTO;
 use App\Enums\ClientStatus;
@@ -13,10 +14,13 @@ use App\Enums\GenderType;
 use App\Http\Requests\ClientRequest;
 use App\Models\Client;
 use App\Models\State;
+use App\Services\PrintableReportService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ClientController extends CrudModuleController
@@ -49,6 +53,20 @@ class ClientController extends CrudModuleController
     protected function modelClass(): string
     {
         return Client::class;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function getModuleRoutes(): array
+    {
+        $routes = parent::getModuleRoutes();
+        $imageRightsRoute = route('clients.image-rights', ['client' => '__id__']);
+
+        return [
+            ...$routes,
+            'imageRights' => str_replace('__id__', ':id', $imageRightsRoute),
+        ];
     }
 
     protected function storeRequestClass(): ?string
@@ -116,6 +134,29 @@ class ClientController extends CrudModuleController
         return redirect()->route($this->routePrefix().'.index');
     }
 
+    public function imageRights(Request $request, Client $client, PrintableReportService $reportService): Response
+    {
+        $this->authorizeAccess(AccessAction::VIEW);
+
+        $data = $request->validate([
+            'image_producer_name' => ['nullable', 'string', 'max:255'],
+            'image_usage_purpose' => ['nullable', 'string', 'max:1000'],
+            'image_description' => ['nullable', 'string', 'max:1000'],
+            'image_material_type' => ['nullable', 'string', 'max:255'],
+            'site_owner_name' => ['nullable', 'string', 'max:255'],
+            'site_name' => ['nullable', 'string', 'max:255'],
+            'site_domain' => ['nullable', 'string', 'max:255'],
+            'forum_city' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        return $reportService->pdf(
+            template: 'templates/image_rights.md',
+            values: ClientImageRightsData::from($client, $data)->toArray(),
+            filename: 'autorizacao-de-imagem-'.(Str::slug($client->name) ?: 'cliente').'.pdf',
+            title: 'Autorização de Uso e Cessão de Direitos de Imagem',
+        );
+    }
+
     /**
      * @param  array<string, mixed>|null  $errors
      */
@@ -142,6 +183,16 @@ class ClientController extends CrudModuleController
             'options' => [
                 'genderTypes' => $this->enumOptions(GenderType::class),
                 'states' => $this->modelOptions(State::class),
+            ],
+            'imageRightsDefaults' => [
+                'image_producer_name' => (string) config('app.name'),
+                'image_usage_purpose' => 'divulgação institucional e promocional',
+                'image_description' => 'imagem do cliente',
+                'image_material_type' => 'fotografia e/ou filmagem',
+                'site_owner_name' => (string) config('app.name'),
+                'site_name' => (string) config('app.name'),
+                'site_domain' => parse_url((string) config('app.url'), PHP_URL_HOST) ?: '',
+                'forum_city' => $model instanceof Client ? $model->address_city : '',
             ],
 
         ];

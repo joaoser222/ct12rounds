@@ -22,4 +22,5 @@ export type DetailsRoutes = {
     municipalOptions?: string;
     municipalServices?: string;
     municipalConfiguration?: string;
+    imageRights?: string;
 };
