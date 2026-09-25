@@ -61,6 +61,8 @@ use App\Services\Billing\BillingSourceResolver;
 use App\Services\Billing\DiscountCalculator;
 use App\Services\Billing\InstallmentSplitter;
 use App\Services\Billing\InvoiceGenerator;
+use App\Services\Email\Contracts\EmailSenderInterface;
+use App\Services\Email\EmailService;
 use App\Services\Gateway\FiscalInvoiceEmitter;
 use App\Services\Gateway\FiscalSyncOrchestrator;
 use App\Services\Gateway\GatewayAdapterResolver;
@@ -169,6 +171,9 @@ class AppServiceProvider extends ServiceProvider
 
         // InvoiceGenerator (uses repositories)
         $this->app->singleton(InvoiceGenerator::class);
+
+        // Email service (mail transport boundary)
+        $this->app->singleton(EmailSenderInterface::class, EmailService::class);
 
         // Gateway services
         $this->app->singleton(GatewayAdapterResolver::class);
