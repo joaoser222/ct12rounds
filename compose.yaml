@@ -36,6 +36,16 @@ services:
       db:
         condition: service_healthy
     profiles: ["worker"]
+  scheduler:
+    container_name: ct12rounds_scheduler
+    build:
+      context: .
+    image: ${APP_IMAGE:-ct12rounds:local}
+    command: php artisan schedule:work
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["worker"]
   loki:
     image: grafana/loki:2.9.0
     container_name: ct12rounds_loki
