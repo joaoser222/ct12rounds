@@ -168,6 +168,7 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
             'fine' => $options['fine'] ?? null,
             'interest' => $options['interest'] ?? null,
             'postalService' => $options['postal_service'] ?? false,
+            'creditCardToken' => $this->resolveCreditCardToken($billingType, $customer, $options),
         ]);
 
         $response = $this->client()->post('/payments', $payload)->throw();
@@ -175,6 +176,37 @@ class AsaasPaymentGatewayAdapter implements PaymentGatewayAdapter, PaymentGatewa
         $body = $response->json();
 
         return $this->storeGatewayPayment($body, $invoice, $customer);
+    }
+
+    /**
+     * Asaas charges the card on payment creation when a token is sent, so a credit card
+     * invoice for a customer with a stored card is paid right away instead of waiting
+     * for the payer. The token is only valid for the customer it was generated for.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    private function resolveCreditCardToken(
+        string $billingType,
+        GatewayCustomer $customer,
+        array $options,
+    ): ?string {
+        if ($billingType !== 'CREDIT_CARD') {
+            return null;
+        }
+
+        $token = $options['credit_card_token'] ?? null;
+
+        if (is_string($token) && $token !== '') {
+            return $token;
+        }
+
+        $storedToken = GatewayCreditCard::query()
+            ->where('gateway_customer_id', $customer->getKey())
+            ->whereNotNull('gateway_card_token')
+            ->latest('id')
+            ->value('gateway_card_token');
+
+        return is_string($storedToken) && $storedToken !== '' ? $storedToken : null;
     }
 
     public function findPayment(GatewayPayment $payment): ?array

@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Contract;
 use App\Models\HiringLead;
 use App\Models\Plan;
+use App\Services\CancellationFeeService;
 
 final class ContractPreviewData
 {
@@ -15,8 +16,12 @@ final class ContractPreviewData
      */
     private function __construct(private readonly array $values) {}
 
-    public static function from(Contract $contract, ?HiringLead $lead = null, ?Client $client = null): self
-    {
+    public static function from(
+        CancellationFeeService $cancellationFeeService,
+        Contract $contract,
+        ?HiringLead $lead = null,
+        ?Client $client = null,
+    ): self {
         $contract->loadMissing(['client', 'plan']);
 
         if ($lead === null) {
@@ -30,6 +35,10 @@ final class ContractPreviewData
         $isMinor = $plan?->audience === AudienceCategory::CHILD;
         $address = self::address($subject);
         $cityState = self::cityState($subject);
+        $total = (float) $contract->total;
+        $cancellationFeePercentage = $cancellationFeeService->effectivePercentage(
+            $plan?->cancellation_fee_percentage,
+        );
 
         return new self([
             'contractant_name' => self::string($subject?->name),
@@ -46,7 +55,7 @@ final class ContractPreviewData
             'contracted_address' => '',
             'contracted_city_state' => '',
             'plan_name' => self::string($contract->plan_name ?: $plan?->name),
-            'plan_price' => self::currency((float) $contract->total),
+            'plan_price' => self::currency($total),
             'plan_installments' => (string) ($contract->installments ?? 1),
             'plan_duration' => self::duration($plan),
             'first_due_date' => $contract->first_due_date?->format('d/m/Y') ?? '',
@@ -54,6 +63,10 @@ final class ContractPreviewData
             'opening_hours' => '',
             'scheduled_time' => '',
             'contract_duration' => self::duration($plan),
+            'cancellation_fee_percentage' => self::percentage($cancellationFeePercentage),
+            'cancellation_fee_value' => self::currency(
+                (float) $cancellationFeeService->feeValue($total, $plan?->cancellation_fee_percentage),
+            ),
             'forum_city' => self::string($subject?->address_city),
             'forum_state' => self::string($subject?->address_state),
             'is_minor' => $isMinor,
@@ -117,6 +130,13 @@ final class ContractPreviewData
     private static function currency(float $value): string
     {
         return 'R$ '.number_format($value, 2, ',', '.');
+    }
+
+    private static function percentage(float $value): string
+    {
+        return fmod($value, 1.0) === 0.0
+            ? number_format($value, 0, ',', '.')
+            : rtrim(rtrim(number_format($value, 2, ',', '.'), '0'), ',');
     }
 
     private static function string(mixed $value): string

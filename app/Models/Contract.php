@@ -48,7 +48,7 @@ class Contract extends Model implements BillingInvoiceSource
     protected $attributes = [
         'status' => BillableStatus::OPEN,
         'discount_value' => 0,
-        'payment_method' => PaymentMethod::CASH,
+        'payment_method' => PaymentMethod::CREDIT_CARD,
     ];
 
     public function client(): BelongsTo

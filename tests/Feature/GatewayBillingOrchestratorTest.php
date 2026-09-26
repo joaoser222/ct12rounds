@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Contracts\RevertContractAcceptanceAction;
 use App\Enums\BillableStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\OperationType;
 use App\Enums\PaymentMethod;
 use App\Models\Client;
+use App\Models\Contract;
 use App\Models\GatewayAccount;
 use App\Models\GatewayCustomer;
 use App\Models\Invoice;
@@ -64,12 +66,60 @@ class GatewayBillingOrchestratorTest extends TestCase
         ]);
     }
 
+    public function test_sync_invoice_returns_false_for_contract_without_accepted_terms(): void
+    {
+        $client = $this->makeClient();
+        $contract = Contract::query()->create([
+            'plan_name' => 'Mensal',
+            'gross_value' => 100,
+            'discount_value' => 0,
+            'total' => 100,
+            'payment_method' => PaymentMethod::CREDIT_CARD->value,
+            'first_due_date' => now()->toDateString(),
+            'installments' => 1,
+            'accepted_terms' => 'pending',
+            'status' => BillableStatus::OPEN,
+            'visibility' => 'visible',
+            'client_id' => $client->id,
+        ]);
+
+        $invoice = Invoice::query()->create([
+            'invoice_type' => 'standard',
+            'due_date' => now()->toDateString(),
+            'payment_method' => PaymentMethod::CREDIT_CARD,
+            'gross_value' => 100,
+            'discount_value' => 0,
+            'interest_value' => 0,
+            'fine_value' => 0,
+            'paid_value' => 0,
+            'installment_number' => 1,
+            'status' => InvoiceStatus::PENDING,
+            'operation_type' => OperationType::RECEIVABLE,
+            'visibility' => 'visible',
+            'holder_id' => $client->id,
+            'holder_type' => 'client',
+            'billable_id' => $contract->id,
+            'billable_type' => 'contract',
+        ]);
+
+        $gateway = $this->mock(PaymentGatewayAdapter::class);
+        $gateway->shouldNotReceive('createPayment');
+
+        $repo = $this->mock(GatewayPaymentRepositoryInterface::class);
+        $repo->shouldReceive('existsWhere')->andReturn(false);
+
+        $orchestrator = $this->makeOrchestrator($gateway, $repo);
+
+        $this->assertFalse($orchestrator->syncInvoice($invoice));
+    }
+
     private function makeOrchestrator(?PaymentGatewayAdapter $gateway = null, ?GatewayPaymentRepositoryInterface $repo = null): GatewayBillingOrchestrator
     {
         return new GatewayBillingOrchestrator(
             app(InvoiceGenerator::class),
             $gateway ?? $this->mock(PaymentGatewayAdapter::class),
             $repo ?? $this->mock(GatewayPaymentRepositoryInterface::class),
+            app(RevertContractAcceptanceAction::class),
         );
     }
 

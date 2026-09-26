@@ -6,6 +6,7 @@ use App\Actions\BaseAction;
 use App\DTOs\Contracts\ActionResultDTO;
 use App\DTOs\Contracts\ContractResultDTO;
 use App\DTOs\Contracts\CreateContractDTO;
+use App\Enums\PaymentMethod;
 use App\Models\Contract;
 use App\Models\HiringLead;
 use App\Repositories\Contracts\ContractRepositoryInterface;
@@ -93,7 +94,7 @@ class CreateContractAction extends BaseAction
             'gross_value' => $grossValue,
             'discount_value' => 0,
             'total' => $grossValue,
-            'payment_method' => 'cash',
+            'payment_method' => PaymentMethod::CREDIT_CARD->value,
             'first_due_date' => CarbonImmutable::today()->format('Y-m-d'),
             'installments' => $dto->installments,
             'accepted_terms' => 'pending',

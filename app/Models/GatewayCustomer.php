@@ -49,4 +49,9 @@ class GatewayCustomer extends Model
     {
         return $this->belongsTo(GatewayPostback::class);
     }
+
+    public function creditCards()
+    {
+        return $this->hasMany(GatewayCreditCard::class);
+    }
 }

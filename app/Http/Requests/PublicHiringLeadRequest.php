@@ -63,7 +63,7 @@ class PublicHiringLeadRequest extends FormRequest
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'min:10', 'max:14'],
             'document' => [
-                'nullable',
+                'required',
                 'string',
                 'min:11',
                 'max:14',

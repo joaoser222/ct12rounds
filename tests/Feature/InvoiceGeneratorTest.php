@@ -128,7 +128,7 @@ class InvoiceGeneratorTest extends TestCase
         $this->assertSame(180.0, $contract->billingTotalValue());
         $this->assertSame(6, $contract->billingInstallments());
         $this->assertSame('receivable', $contract->billingOperationType()->value);
-        $this->assertSame(PaymentMethod::CASH, $contract->billingPaymentMethod());
+        $this->assertSame(PaymentMethod::CREDIT_CARD, $contract->billingPaymentMethod());
     }
 
     public function test_it_applies_contract_coupon_discount_only_to_the_first_allowed_installments(): void

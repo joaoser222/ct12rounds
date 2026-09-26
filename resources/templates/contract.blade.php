@@ -215,7 +215,8 @@
     <strong>Parágrafo Único:</strong> No decorrer do período de 30 dias, as partes acertarão todas as
     eventuais pendências decorrentes do contrato, devendo o(a) CONTRATANTE pagar integralmente
     à CONTRATADA os serviços prestados durante esse período, bem como a multa pela rescisão
-    antecipada correspondente a 50% sobre o valor deste instrumento particular.
+    antecipada correspondente a {{ $cancellation_fee_percentage }}% sobre o valor deste
+    instrumento particular, hoje fixada em {{ $cancellation_fee_value }}.
 </p>
 
 <h2>DA CESSÃO CONTRATUAL</h2>

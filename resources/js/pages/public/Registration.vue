@@ -11,7 +11,7 @@ import {
     required,
 } from '@/plugins/validators';
 import { fillAddressFromCep, type AddressForm } from '@/plugins/viacep';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 defineOptions({ layout: null });
 
@@ -43,10 +43,17 @@ const props = defineProps<{
     contract?: ContractRegistration | null;
     success?: boolean;
     retryClientId?: number | null;
+    privacyNotice?: string | null;
 }>();
 
 const currentStep = ref<'clientData' | 'paymentData'>('clientData');
 const isLoadingAddress = ref(false);
+const contractPreviewDialog = ref(false);
+const contractPreviewContent = ref('');
+const contractPreviewError = ref('');
+const isLoadingContractPreview = ref(false);
+const privacyDialog = ref(false);
+const hasReadPrivacyNotice = ref(!props.privacyNotice);
 
 const isContractFlow = computed(() => !!props.contract);
 const isRetry = computed(() => !!props.retryClientId);
@@ -93,10 +100,10 @@ const clientDataValid = computed(() => {
         return false;
     if (required(form.phone) !== true || phone(form.phone) !== true)
         return false;
+    if (required(form.document) !== true || !isCpfValid(form.document))
+        return false;
 
     if (isContractFlow.value) {
-        if (required(form.document) !== true || !isCpfValid(form.document))
-            return false;
         if (required(form.gender) !== true) return false;
         if (required(form.birth_date) !== true) return false;
         if (
@@ -177,19 +184,45 @@ function openContractPreview(): void {
         return;
     }
 
-    const preview = window.open(
-        props.contract.preview_url,
-        '_blank',
-        'noopener,noreferrer',
-    );
+    contractPreviewDialog.value = true;
+    contractPreviewError.value = '';
 
-    if (!preview) {
-        window.location.assign(props.contract.preview_url);
+    if (contractPreviewContent.value !== '') {
+        return;
+    }
+
+    isLoadingContractPreview.value = true;
+
+    void loadContractPreview(props.contract.preview_url);
+}
+
+async function loadContractPreview(url: string): Promise<void> {
+    try {
+        const response = await fetch(url, {
+            headers: { Accept: 'application/json' },
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                'Não foi possível carregar as cláusulas do contrato.',
+            );
+        }
+
+        const body = await response.json();
+
+        contractPreviewContent.value = String(body?.content ?? '');
+    } catch (error) {
+        contractPreviewError.value =
+            error instanceof Error
+                ? error.message
+                : 'Não foi possível carregar as cláusulas do contrato.';
+    } finally {
+        isLoadingContractPreview.value = false;
     }
 }
 
 const submitPreRegistration = () => {
-    if (!clientDataValid.value) return;
+    if (!clientDataValid.value || !hasReadPrivacyNotice.value) return;
     form.post('/register');
 };
 
@@ -202,6 +235,21 @@ const submitRetryPayment = () => {
     if (!paymentDataValid.value) return;
     form.post('/register/retry-payment');
 };
+
+function openPrivacyNotice(): void {
+    privacyDialog.value = true;
+}
+
+function acknowledgePrivacyNotice(): void {
+    hasReadPrivacyNotice.value = true;
+    privacyDialog.value = false;
+}
+
+onMounted(() => {
+    if (props.privacyNotice) {
+        privacyDialog.value = true;
+    }
+});
 
 async function fillAddress(): Promise<void> {
     if (isLoadingAddress.value) {
@@ -317,7 +365,40 @@ async function fillAddress(): Promise<void> {
                                     class="mb-5"
                                 />
                             </v-col>
+                            <v-col cols="12" md="6">
+                                <MaskedTextField
+                                    v-model="form.document"
+                                    label="CPF"
+                                    :mask="masks.cpf"
+                                    :rules="[required, cpf]"
+                                    :error-messages="form.errors.document"
+                                    class="mb-5"
+                                />
+                            </v-col>
                         </v-row>
+
+                        <div
+                            v-if="privacyNotice"
+                            class="d-flex align-center flex-wrap ga-2 mb-5"
+                        >
+                            <v-btn
+                                variant="text"
+                                size="small"
+                                prepend-icon="ti ti-shield-lock-outline"
+                                class="pa-0"
+                                @click="openPrivacyNotice"
+                            >
+                                Aviso de privacidade
+                            </v-btn>
+                            <v-chip
+                                v-if="!hasReadPrivacyNotice"
+                                size="small"
+                                color="warning"
+                                variant="tonal"
+                            >
+                                Confirme a leitura para continuar
+                            </v-chip>
+                        </div>
 
                         <v-clipped-button
                             type="submit"
@@ -325,7 +406,11 @@ async function fillAddress(): Promise<void> {
                             block
                             class="cta-finalize"
                             :loading="form.processing"
-                            :disabled="form.processing || !clientDataValid"
+                            :disabled="
+                                form.processing ||
+                                !clientDataValid ||
+                                !hasReadPrivacyNotice
+                            "
                         >
                             Finalizar
                         </v-clipped-button>
@@ -673,6 +758,67 @@ async function fillAddress(): Promise<void> {
                 </v-card-text>
             </v-card>
         </v-container>
+
+        <v-dialog v-model="contractPreviewDialog" max-width="900" scrollable>
+            <v-card>
+                <v-card-title class="d-flex align-center ga-2">
+                    <v-icon icon="ti ti-file-document-outline" />
+                    Cláusulas do contrato
+                </v-card-title>
+                <v-card-text>
+                    <v-alert
+                        v-if="contractPreviewError"
+                        type="error"
+                        variant="tonal"
+                        density="compact"
+                        class="mb-4"
+                    >
+                        {{ contractPreviewError }}
+                    </v-alert>
+                    <v-skeleton-loader
+                        v-if="isLoadingContractPreview"
+                        type="paragraph"
+                    />
+                    <div
+                        v-else
+                        class="contract-preview"
+                        v-html="contractPreviewContent"
+                    />
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn
+                        variant="text"
+                        @click="contractPreviewDialog = false"
+                    >
+                        Fechar
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <v-dialog v-model="privacyDialog" max-width="640" scrollable>
+            <v-card>
+                <v-card-title class="d-flex align-center ga-2">
+                    <v-icon icon="ti ti-shield-lock-outline" />
+                    Aviso de privacidade
+                </v-card-title>
+                <v-card-text>
+                    <div class="privacy-notice">
+                        {{ privacyNotice }}
+                    </div>
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn variant="text" @click="privacyDialog = false">
+                        Fechar
+                    </v-btn>
+                    <v-spacer />
+                    <v-btn color="primary" @click="acknowledgePrivacyNotice">
+                        Li e concordo
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-main>
 </template>
 
@@ -706,5 +852,36 @@ async function fillAddress(): Promise<void> {
     background: #0057ff !important;
     color: #fff !important;
     opacity: 0.6;
+}
+/* Cláusulas renderizadas via v-html a partir de resources/templates/contract.blade.php. */
+.contract-preview {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+.contract-preview :deep(h1) {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+.contract-preview :deep(h2) {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 1.5rem 0 0.5rem;
+}
+.contract-preview :deep(p) {
+    margin-bottom: 0.75rem;
+    text-align: justify;
+}
+.contract-preview :deep(ul),
+.contract-preview :deep(ol) {
+    margin-bottom: 0.75rem;
+    padding-left: 1.25rem;
+}
+/* Texto do aviso de privacidade, preservando as quebras de linha do cadastro. */
+.privacy-notice {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    white-space: pre-line;
 }
 </style>

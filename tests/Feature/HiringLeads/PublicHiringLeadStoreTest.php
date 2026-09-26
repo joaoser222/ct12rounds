@@ -7,14 +7,18 @@ namespace Tests\Feature\HiringLeads;
 use App\Enums\ClientStatus;
 use App\Enums\HiringLeadSource;
 use App\Enums\Visibility;
+use App\Mail\TemplateEmail;
 use App\Models\Client;
 use App\Models\Contract;
 use App\Models\Coupon;
 use App\Models\GatewayAccount;
 use App\Models\HiringLead;
 use App\Models\Plan;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -31,21 +35,61 @@ class PublicHiringLeadStoreTest extends TestCase
         'card_holder_name' => 'MARIA SILVA',
     ];
 
-    public function test_pre_registration_does_not_collect_document(): void
+    public function test_registration_page_exposes_privacy_notice(): void
+    {
+        Setting::query()->create([
+            'name' => 'privacy_notice',
+            'label' => 'Aviso de Privacidade (LGPD)',
+            'content' => 'Seus dados são tratados conforme a LGPD.',
+            'object_type' => 'textarea',
+            'group' => 'peoples',
+        ]);
+
+        $this->get('/register')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/Registration')
+                ->where('privacyNotice', 'Seus dados são tratados conforme a LGPD.')
+            );
+    }
+
+    public function test_registration_page_omits_privacy_notice_when_not_configured(): void
+    {
+        $this->get('/register')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('public/Registration')
+                ->where('privacyNotice', null)
+            );
+    }
+
+    public function test_pre_registration_collects_the_document(): void
     {
         $this->post('/register', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
+            'document' => '99887766554',
             'accepted' => true,
         ])->assertRedirect('/register');
 
         $this->assertDatabaseHas('hiring_leads', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
-            'document' => null,
+            'document' => '99887766554',
             'source' => HiringLeadSource::SITE->value,
         ]);
+    }
+
+    public function test_pre_registration_requires_the_document(): void
+    {
+        $this->post('/register', [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '11999999999',
+        ])->assertSessionHasErrors('document');
+
+        $this->assertDatabaseCount('hiring_leads', 0);
     }
 
     public function test_pre_registration_does_not_require_terms_acceptance(): void
@@ -54,12 +98,13 @@ class PublicHiringLeadStoreTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
+            'document' => '99887766554',
         ])->assertRedirect('/register');
 
         $this->assertDatabaseHas('hiring_leads', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
-            'document' => null,
+            'document' => '99887766554',
             'source' => HiringLeadSource::SITE->value,
         ]);
     }
@@ -162,6 +207,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
+            'document' => '99887766554',
             'coupon' => 'PROMO10',
         ])->assertRedirect('/register');
 
@@ -180,6 +226,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
+            'document' => '99887766554',
             'coupon' => 'CUPOM-INEXISTENTE',
         ])->assertRedirect('/register');
 
@@ -242,6 +289,481 @@ class PublicHiringLeadStoreTest extends TestCase
             ->assertOk()
             ->assertSee('CONTRATO DE PRESTAÇÃO DE SERVIÇO')
             ->assertSee($plan->name);
+    }
+
+    public function test_contract_preview_returns_clauses_as_json(): void
+    {
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+
+        $response = $this->getJson(route('public.contract-preview', [
+            'contract' => $contract->registration_token,
+        ]));
+
+        $response->assertOk();
+
+        $this->assertStringContainsString(
+            'CONTRATO DE PRESTAÇÃO DE SERVIÇO',
+            (string) $response->json('content'),
+        );
+    }
+
+    public function test_contract_preview_applies_coupon_discount_keeping_terms_pending(): void
+    {
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+
+        $this->get(route('public.contract-preview', [
+            'contract' => $contract->registration_token,
+        ]))->assertOk()->assertSee('R$ 90,00');
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'gross_value' => 100,
+            'discount_value' => 10,
+            'total' => 90,
+            'accepted_terms' => 'pending',
+        ]);
+
+        $this->assertDatabaseCount('invoices', 0);
+        $this->assertNull($contract->fresh()->client_id);
+    }
+
+    public function test_contract_preview_discount_is_idempotent(): void
+    {
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+
+        $url = route('public.contract-preview', ['contract' => $contract->registration_token]);
+
+        $this->get($url)->assertOk();
+        $this->get($url)->assertOk();
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'discount_value' => 10,
+            'total' => 90,
+        ]);
+    }
+
+    public function test_contract_preview_keeps_values_after_terms_accepted(): void
+    {
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+        $contract->update([
+            'discount_value' => 25,
+            'total' => 75,
+            'accepted_terms' => 'accepted',
+        ]);
+
+        $this->get(route('public.contract-preview', [
+            'contract' => $contract->registration_token,
+        ]))->assertOk();
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'discount_value' => 25,
+            'total' => 75,
+            'accepted_terms' => 'accepted',
+        ]);
+    }
+
+    public function test_contract_preview_uses_plan_cancellation_fee_percentage(): void
+    {
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $plan->update(['cancellation_fee_percentage' => 30]);
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+
+        $this->get(route('public.contract-preview', [
+            'contract' => $contract->registration_token,
+        ]))
+            ->assertOk()
+            ->assertSee('correspondente a 30%')
+            ->assertSee('fixada em R$ 27,00');
+    }
+
+    public function test_contract_preview_falls_back_to_configured_cancellation_fee_percentage(): void
+    {
+        Setting::query()->create([
+            'name' => 'cancellation_fee_percentage',
+            'label' => 'Percentual da multa de cancelamento (%)',
+            'content' => '15',
+            'object_type' => 'number',
+            'group' => 'billing',
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+
+        $this->get(route('public.contract-preview', [
+            'contract' => $contract->registration_token,
+        ]))
+            ->assertOk()
+            ->assertSee('correspondente a 15%')
+            ->assertSee('fixada em R$ 13,50');
+    }
+
+    public function test_contract_preview_without_coupon_keeps_gross_total(): void
+    {
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+
+        $this->get(route('public.contract-preview', [
+            'contract' => $contract->registration_token,
+        ]))->assertOk();
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'discount_value' => 0,
+            'total' => 100,
+            'accepted_terms' => 'pending',
+        ]);
+    }
+
+    public function test_card_decline_keeps_contract_pending_and_notifies_company(): void
+    {
+        Mail::fake();
+        Queue::fake();
+
+        GatewayAccount::factory()->create([
+            'name' => 'Asaas',
+            'settings' => [
+                'api_key' => 'test-api-key',
+                'base_url' => 'https://sandbox.asaas.com/api/v3',
+            ],
+        ]);
+
+        Setting::query()->create([
+            'name' => 'billing_failure_notification_email',
+            'label' => 'E-mail para avisos de falha de cobrança',
+            'content' => 'financeiro@ct12rounds.test',
+            'object_type' => 'text',
+            'group' => 'billing',
+        ]);
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response(
+                ['message' => 'Cartão Recusado'],
+                422,
+            ),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+        $contract->update([
+            'first_due_date' => now()->toDateString(),
+            'payment_method' => 'credit_card',
+        ]);
+
+        $response = $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ]);
+
+        $response->assertSessionHasErrors('card_number');
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'accepted_terms' => 'pending',
+        ]);
+        $this->assertDatabaseCount('invoices', 0);
+        $this->assertNull($contract->fresh()->client_id);
+        $this->assertDatabaseHas('clients', ['document' => '99887766554', 'status' => ClientStatus::PENDING->value]);
+
+        Mail::assertQueued(TemplateEmail::class, function (TemplateEmail $email): bool {
+            return $email->hasTo('financeiro@ct12rounds.test');
+        });
+    }
+
+    public function test_billing_failure_notification_falls_back_to_mail_sender_address(): void
+    {
+        Mail::fake();
+
+        GatewayAccount::factory()->create([
+            'name' => 'Asaas',
+            'settings' => [
+                'api_key' => 'test-api-key',
+                'base_url' => 'https://sandbox.asaas.com/api/v3',
+            ],
+        ]);
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response(
+                ['message' => 'Cartão Recusado'],
+                422,
+            ),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ])->assertSessionHasErrors('card_number');
+
+        Mail::assertQueued(TemplateEmail::class, function (TemplateEmail $email): bool {
+            return $email->hasTo((string) config('mail.from.address'));
+        });
+    }
+
+    public function test_invoice_issuance_failure_notifies_company_and_keeps_contract_pending(): void
+    {
+        Mail::fake();
+        $this->fakeGateway();
+
+        Setting::query()->create([
+            'name' => 'billing_failure_notification_email',
+            'label' => 'E-mail para avisos de falha de cobrança',
+            'content' => 'financeiro@ct12rounds.test',
+            'object_type' => 'text',
+            'group' => 'billing',
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+
+        // Contrato sem first due date impede a geração das faturas.
+        $contract->update(['first_due_date' => null]);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ])->assertSessionHasErrors();
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'accepted_terms' => 'pending',
+        ]);
+        $this->assertDatabaseCount('invoices', 0);
+
+        Mail::assertQueued(TemplateEmail::class, function (TemplateEmail $email): bool {
+            return $email->hasTo('financeiro@ct12rounds.test');
+        });
+    }
+
+    public function test_gateway_refusal_during_sync_reverts_contract_and_shows_error(): void
+    {
+        Mail::fake();
+
+        $this->fakeGateway();
+
+        Setting::query()->create([
+            'name' => 'billing_failure_notification_email',
+            'label' => 'E-mail para avisos de falha de cobrança',
+            'content' => 'financeiro@ct12rounds.test',
+            'object_type' => 'text',
+            'group' => 'billing',
+        ]);
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response([
+                'creditCardToken' => 'tok_123',
+                'creditCardNumber' => '4111',
+                'creditCardBrand' => 'VISA',
+            ]),
+            'sandbox.asaas.com/api/v3/payments' => Http::response(
+                ['message' => 'Cartão Recusado'],
+                400,
+            ),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+        $contract->update([
+            'first_due_date' => now()->toDateString(),
+            'payment_method' => 'credit_card',
+        ]);
+
+        $response = $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ]);
+
+        $response->assertSessionHasErrors('card_number');
+        $response->assertSessionMissing('hiring_lead_success');
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'accepted_terms' => 'pending',
+        ]);
+        $this->assertDatabaseHas('clients', [
+            'document' => '99887766554',
+            'status' => ClientStatus::PENDING->value,
+        ]);
+
+        // A empresa recebe um unico aviso, enviado pela acao de reversao.
+        Mail::assertQueued(TemplateEmail::class, 1);
+    }
+
+    public function test_successful_registration_charges_the_gateway_synchronously(): void
+    {
+        Mail::fake();
+        Queue::fake();
+
+        $this->fakeGateway();
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response([
+                'creditCardToken' => 'tok_123',
+                'creditCardNumber' => '4111',
+                'creditCardBrand' => 'VISA',
+            ]),
+            'sandbox.asaas.com/api/v3/payments' => Http::response([
+                'id' => 'pay_sync_1',
+                'billingType' => 'CREDIT_CARD',
+                'status' => 'CONFIRMED',
+                'value' => 90.0,
+                'netValue' => 87.3,
+                'paymentDate' => '2026-09-26T12:00:00Z',
+            ]),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan, $this->createCoupon('PROMO10'));
+        $contract->update([
+            'first_due_date' => now()->toDateString(),
+            'payment_method' => 'credit_card',
+        ]);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('contracts', [
+            'id' => $contract->id,
+            'accepted_terms' => 'accepted',
+            'total' => 90,
+        ]);
+
+        // A cobranca ocorreu na requisicao, com o token do cartao.
+        Http::assertSent(function ($request): bool {
+            $body = $request->data();
+
+            return str_ends_with($request->url(), '/payments')
+                && ($body['billingType'] ?? null) === 'CREDIT_CARD'
+                && ($body['creditCardToken'] ?? null) === 'tok_123';
+        });
+
+        $this->assertDatabaseHas('gateway_payments', [
+            'gateway_reference_key' => 'pay_sync_1',
+        ]);
+    }
+
+    public function test_gateway_refusal_does_not_consume_coupon_use(): void
+    {
+        Mail::fake();
+
+        $this->fakeGateway();
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response([
+                'creditCardToken' => 'tok_123',
+                'creditCardNumber' => '4111',
+                'creditCardBrand' => 'VISA',
+            ]),
+            'sandbox.asaas.com/api/v3/payments' => Http::response(
+                ['message' => 'Cartão Recusado'],
+                400,
+            ),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $coupon = $this->createCoupon('PROMO10');
+        $contract = $this->createPendingContract($plan, $coupon);
+        $contract->update([
+            'first_due_date' => now()->toDateString(),
+            'payment_method' => 'credit_card',
+        ]);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ])->assertSessionHasErrors('card_number');
+
+        $this->assertSame(0, $coupon->fresh()->used_count);
+    }
+
+    public function test_card_decline_does_not_consume_coupon_use(): void
+    {
+        Mail::fake();
+
+        GatewayAccount::factory()->create([
+            'name' => 'Asaas',
+            'settings' => [
+                'api_key' => 'test-api-key',
+                'base_url' => 'https://sandbox.asaas.com/api/v3',
+            ],
+        ]);
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response(
+                ['message' => 'Cartão Recusado'],
+                422,
+            ),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $coupon = $this->createCoupon('PROMO10');
+        $contract = $this->createPendingContract($plan, $coupon);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ])->assertSessionHasErrors('card_number');
+
+        $this->assertSame(0, $coupon->fresh()->used_count);
+    }
+
+    public function test_retry_after_gateway_refusal_consumes_coupon_only_once(): void
+    {
+        Mail::fake();
+
+        $this->fakeGateway();
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response([
+                'creditCardToken' => 'tok_123',
+                'creditCardNumber' => '4111',
+                'creditCardBrand' => 'VISA',
+            ]),
+            'sandbox.asaas.com/api/v3/payments' => Http::sequence()
+                ->push(['message' => 'Cartão Recusado'], 400)
+                ->push([
+                    'id' => 'pay_retry_1',
+                    'billingType' => 'CREDIT_CARD',
+                    'status' => 'CONFIRMED',
+                    'value' => 90.0,
+                ]),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $coupon = $this->createCoupon('PROMO10');
+        $contract = $this->createPendingContract($plan, $coupon);
+        $contract->update([
+            'first_due_date' => now()->toDateString(),
+            'payment_method' => 'credit_card',
+        ]);
+
+        $payload = [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ];
+
+        $this->post('/register', $payload)->assertSessionHasErrors('card_number');
+        $this->assertSame(0, $coupon->fresh()->used_count);
+
+        $this->post('/register/retry-payment', $payload)->assertSessionHasNoErrors();
+
+        $this->assertSame(1, $coupon->fresh()->used_count);
     }
 
     public function test_contract_advance_creates_pending_client(): void

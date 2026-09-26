@@ -3,11 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Contracts\ApplyContractAction;
+use App\Actions\Contracts\NotifyContractBillingFailureAction;
+use App\Actions\Contracts\ApplyContractDiscountAction;
 use App\Actions\HiringLeads\CreateSiteLeadAction;
+use App\DTOs\Contracts\ApplyContractDTO;
 use App\DTOs\Contracts\ContractPreviewData;
+use App\DTOs\Emails\BillingFailureData;
 use App\Enums\ClientSource;
 use App\Enums\ClientStatus;
 use App\Enums\HiringLeadSource;
+use App\Enums\Gateway\GatewaySyncMode;
 use App\Enums\HiringLeadStatus;
 use App\Http\Requests\PreparePublicClientRequest;
 use App\Http\Requests\PublicHiringLeadRequest;
@@ -19,12 +24,15 @@ use App\Models\GatewayCreditCard;
 use App\Models\GatewayCustomer;
 use App\Models\HiringLead;
 use App\Models\Plan;
+use App\Models\Setting;
 use App\PaymentGateways\Contracts\PaymentGatewayAdapter;
 use App\Repositories\Contracts\ClientRepositoryInterface;
 use App\Repositories\Contracts\ContractRepositoryInterface;
+use App\Services\CancellationFeeService;
 use App\Services\Gateway\GatewayAdapterResolver;
 use App\Services\PrintableReportService;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -36,12 +44,16 @@ class PublicHiringLeadController extends Controller
 {
     private const string ACTIVE_CONTRACT_ERROR = 'document';
 
+    private const string BILLING_FAILURE_NOTIFICATION_SETTING = 'billing_failure_notification_email';
+
     public function __construct(
         private readonly ClientRepositoryInterface $clientRepository,
         private readonly ContractRepositoryInterface $contractRepository,
         private readonly GatewayAdapterResolver $gatewayResolver,
         private readonly CreateSiteLeadAction $createLead,
         private readonly ApplyContractAction $applyContract,
+        private readonly CancellationFeeService $cancellationFeeService,
+        private readonly NotifyContractBillingFailureAction $notifyContractBillingFailure,
     ) {}
 
     public function create(Request $request): Response
@@ -118,19 +130,27 @@ class PublicHiringLeadController extends Controller
             ] : null,
             'success' => $request->session()->pull('hiring_lead_success'),
             'retryClientId' => $request->session()->get('registration_client_id'),
+            'privacyNotice' => $this->settingContent('privacy_notice'),
         ]);
     }
 
-    public function contractPreview(string $contract, PrintableReportService $printableReport, Request $request): HttpResponse
+    public function contractPreview(string $contract, PrintableReportService $printableReport, ApplyContractDiscountAction $applyContractDiscount, Request $request): HttpResponse|JsonResponse
     {
         $model = Contract::query()
             ->where('registration_token', $contract)
             ->firstOrFail();
 
+        // Materializa o desconto do cupom antes de exibir as cláusulas, sem aceitar os termos.
+        $applyContractDiscount->execute($model->getKey());
+
         $html = $printableReport->render(
             'templates/contract.blade.php',
-            ContractPreviewData::from($model, null, $this->pendingClientFromSession($request, $model))->toArray(),
+            ContractPreviewData::from($this->cancellationFeeService, $model->refresh(), null, $this->pendingClientFromSession($request, $model))->toArray(),
         );
+
+        if ($request->expectsJson()) {
+            return response()->json(['content' => $html]);
+        }
 
         return response(view('public.contract-preview', [
             'content' => $html,
@@ -250,6 +270,58 @@ class PublicHiringLeadController extends Controller
         ]);
     }
 
+    /**
+     * Best effort notice to the company so the pending contract can be finished manually.
+     * A notification failure must never break the registration response.
+     */
+    private function notifyBillingFailure(
+        string $reason,
+        Contract $contract,
+        ?Client $client,
+        ?string $detail,
+    ): void {
+        try {
+            $this->notifyContractBillingFailure->execute(
+                BillingFailureData::fromFailure(
+                    recipient: $this->billingFailureRecipient(),
+                    reason: $reason,
+                    contract: $contract,
+                    client: $client,
+                    detail: $detail,
+                    actionUrl: route('contracts.show', $contract->getKey()),
+                ),
+            );
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    private function settingContent(string $name): ?string
+    {
+        $content = Setting::query()
+            ->where('name', $name)
+            ->value('content');
+
+        return is_string($content) && trim($content) !== '' ? $content : null;
+    }
+
+    /**
+     * Uses the configured notification address, falling back to the mail sender address.
+     */
+    private function billingFailureRecipient(): string    {
+        $configured = Setting::query()
+            ->where('name', self::BILLING_FAILURE_NOTIFICATION_SETTING)
+            ->value('content');
+
+        if (is_string($configured) && filter_var(trim($configured), FILTER_VALIDATE_EMAIL) !== false) {
+            return trim($configured);
+        }
+
+        $fallback = (string) config('mail.from.address');
+
+        return filter_var($fallback, FILTER_VALIDATE_EMAIL) !== false ? $fallback : '';
+    }
+
     public function store(PublicHiringLeadRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -306,6 +378,9 @@ class PublicHiringLeadController extends Controller
         $coupon = $contract->coupon;
 
         $document = preg_replace('/\D/', '', (string) $data['document']);
+
+        $client = null;
+        $failureReason = BillingFailureData::REASON_CARD_TOKENIZATION;
 
         try {
             $client = DB::transaction(function () use ($data, $request) {
@@ -378,16 +453,28 @@ class PublicHiringLeadController extends Controller
                 'client_id' => $client->id,
             ]);
 
-            if ($coupon !== null && $this->shouldCountCouponUse($contract, $coupon)) {
-                $coupon->increment('used_count');
-            }
+            $failureReason = BillingFailureData::REASON_INVOICE_ISSUANCE;
 
-            $applied = $this->applyContract->execute($contract->getKey());
+            $applied = $this->applyContract->execute(new ApplyContractDTO(
+                contractId: $contract->getKey(),
+                syncMode: GatewaySyncMode::SYNC,
+            ));
 
             if (! $applied->success) {
+                // A recusa do gateway ja revertou o aceite e avisou a empresa.
+                if (! is_array($applied->data) || ($applied->data['gateway_refused'] ?? false) !== true) {
+                    $this->notifyBillingFailure(
+                        BillingFailureData::REASON_INVOICE_ISSUANCE,
+                        $contract,
+                        $client,
+                        $applied->message,
+                    );
+                }
+
                 return back()->withErrors($applied->errors ?? ['contract' => $applied->message])->withInput();
             }
 
+            $this->consumeCouponUse($contract, $coupon);
             $this->activatePendingClient($client);
 
             $request->session()->forget(['registration_client_id', 'registration_pending_client']);
@@ -395,8 +482,10 @@ class PublicHiringLeadController extends Controller
 
             return redirect()->route('public.register');
         } catch (\Exception $e) {
+            $this->notifyBillingFailure($failureReason, $contract, $client, $e->getMessage());
+
             return back()->withErrors([
-                'card_number' => 'Erro ao processar pagamento: '.$e->getMessage().'. Os dados do cartão podem estar incorretos.',
+                'card_number' => 'Não foi possível concluir a cobrança com os dados do cartão informados. O contrato continua pendente e nossa equipe entrará em contato.',
             ])->withInput();
         }
     }
@@ -472,6 +561,8 @@ class PublicHiringLeadController extends Controller
         $coupon = $contract->coupon;
         $document = $client->document;
 
+        $failureReason = BillingFailureData::REASON_CARD_TOKENIZATION;
+
         try {
             $gatewayAccount = GatewayAccount::query()->first();
 
@@ -527,16 +618,28 @@ class PublicHiringLeadController extends Controller
                 'client_id' => $client->id,
             ]);
 
-            if ($coupon !== null && $this->shouldCountCouponUse($contract, $coupon)) {
-                $coupon->increment('used_count');
-            }
+            $failureReason = BillingFailureData::REASON_INVOICE_ISSUANCE;
 
-            $applied = $this->applyContract->execute($contract->getKey());
+            $applied = $this->applyContract->execute(new ApplyContractDTO(
+                contractId: $contract->getKey(),
+                syncMode: GatewaySyncMode::SYNC,
+            ));
 
             if (! $applied->success) {
+                // A recusa do gateway ja revertou o aceite e avisou a empresa.
+                if (! is_array($applied->data) || ($applied->data['gateway_refused'] ?? false) !== true) {
+                    $this->notifyBillingFailure(
+                        BillingFailureData::REASON_INVOICE_ISSUANCE,
+                        $contract,
+                        $client,
+                        $applied->message,
+                    );
+                }
+
                 return back()->withErrors($applied->errors ?? ['contract' => $applied->message])->withInput();
             }
 
+            $this->consumeCouponUse($contract, $coupon);
             $this->activatePendingClient($client);
 
             $request->session()->forget(['registration_client_id', 'registration_pending_client']);
@@ -544,10 +647,25 @@ class PublicHiringLeadController extends Controller
 
             return redirect()->route('public.register');
         } catch (\Exception $e) {
+            $this->notifyBillingFailure($failureReason, $contract, $client, $e->getMessage());
+
             return back()->withErrors([
-                'card_number' => 'Erro ao processar pagamento: '.$e->getMessage().'. Os dados do cartão podem estar incorretos.',
+                'card_number' => 'Não foi possível concluir a cobrança com os dados do cartão informados. O contrato continua pendente e nossa equipe entrará em contato.',
             ])->withInput();
         }
+    }
+
+    /**
+     * Counts the coupon use only after the contract is applied and charged, so a
+     * declined card does not consume a coupon redemption.
+     */
+    private function consumeCouponUse(Contract $contract, ?Coupon $coupon): void
+    {
+        if ($coupon === null || ! $this->shouldCountCouponUse($contract, $coupon)) {
+            return;
+        }
+
+        $coupon->increment('used_count');
     }
 
     private function shouldCountCouponUse(Contract $contract, Coupon $coupon): bool

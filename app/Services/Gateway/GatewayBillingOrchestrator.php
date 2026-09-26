@@ -3,9 +3,11 @@
 namespace App\Services\Gateway;
 
 use App\Contracts\BillingInvoiceSource;
+use App\Actions\Contracts\RevertContractAcceptanceAction;
 use App\Enums\InvoiceStatus;
 use App\Enums\OperationType;
 use App\Enums\PaymentMethod;
+use App\Models\Contract;
 use App\Models\Invoice;
 use App\PaymentGateways\Contracts\PaymentGatewayAdapter;
 use App\Repositories\Contracts\GatewayPaymentRepositoryInterface;
@@ -19,6 +21,7 @@ class GatewayBillingOrchestrator
         private readonly InvoiceGenerator $invoiceGenerator,
         private readonly PaymentGatewayAdapter $gateway,
         private readonly GatewayPaymentRepositoryInterface $gatewayPaymentRepository,
+        private readonly RevertContractAcceptanceAction $revertContract,
     ) {}
 
     /**
@@ -100,21 +103,56 @@ class GatewayBillingOrchestrator
             return false;
         }
 
+        if ($this->contractIsNotAccepted($source)) {
+            return false;
+        }
+
         $customer = $this->gateway->createCustomer(
             $source instanceof BillingInvoiceSource && $source instanceof Model
                 ? $source->billingHolder()
                 : $invoice->holder,
         );
 
-        $this->gateway->createPayment($invoice, $customer, [
-            'description' => $this->buildDescription($source, $invoice),
-        ]);
+        try {
+            $this->gateway->createPayment($invoice, $customer, [
+                'description' => $this->buildDescription($source, $invoice),
+            ]);
+        } catch (\Throwable $e) {
+            $this->revertContractAcceptance($invoice, $e);
+
+            throw $e;
+        }
 
         $invoice->update([
             'status' => InvoiceStatus::WAITING,
         ]);
 
         return true;
+    }
+
+    /**
+     * A contract whose acceptance was reverted must never be charged, otherwise a
+     * queued sync would collect a payment the customer refused.
+     */
+    private function contractIsNotAccepted(mixed $source): bool
+    {
+        return $source instanceof Contract && $source->accepted_terms !== 'accepted';
+    }
+
+    /**
+     * A gateway refusal leaves the contract accepted without any payment, so the
+     * acceptance is reverted and the company is notified. Failures while reverting
+     * never mask the original gateway error.
+     */
+    private function revertContractAcceptance(Invoice $invoice, \Throwable $gatewayError): void
+    {
+        try {
+            $this->revertContract->execute($invoice);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        report($gatewayError);
     }
 
     private function buildDescription(?Model $source, Invoice $invoice): string
