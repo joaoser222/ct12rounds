@@ -358,7 +358,7 @@ class PurchaseItemPersistenceTest extends TestCase
         return Supplier::query()->create([
             'name' => 'Fornecedor Teste',
             'email' => 'fornecedor@example.com',
-            'document' => '12345678901234',
+            'document' => '12345678909234',
             'phone' => '11999999999',
             'visibility' => 'visible',
         ]);

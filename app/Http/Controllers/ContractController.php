@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\AccessControl\AccessAction;
 use App\AccessControl\AccessModule;
 use App\Actions\Contracts\ApplyContractAction;
+use App\Actions\Contracts\ApplyContractDiscountAction;
 use App\Actions\Contracts\CancelContractAction;
 use App\Actions\Contracts\CreateContractAction;
 use App\Actions\Contracts\UpdateContractAction;
@@ -12,6 +13,7 @@ use App\DTOs\Contracts\CancelContractDTO;
 use App\DTOs\Contracts\CreateContractDTO;
 use App\DTOs\Contracts\UpdateContractDTO;
 use App\Enums\BillableStatus;
+use App\Enums\HiringLeadStatus;
 use App\Enums\PaymentMethod;
 use App\Http\Requests\ContractWizardRequest;
 use App\Models\Contract;
@@ -34,6 +36,7 @@ class ContractController extends CrudModuleController
         private readonly UpdateContractAction $updateContract,
         private readonly CancelContractAction $cancelContract,
         private readonly ApplyContractAction $applyContract,
+        private readonly ApplyContractDiscountAction $applyContractDiscount,
         private readonly QrCodeService $qrCodeService,
     ) {}
 
@@ -95,8 +98,9 @@ class ContractController extends CrudModuleController
             ],
             'options' => [
                 'plans' => $this->planOptions(),
-                'coupons' => $this->couponOptions(),
+                'coupons' => $this->couponsOptions(),
                 'leads' => $this->leadOptions(),
+                'pendingLeads' => $this->pendingLeadCount(),
             ],
         ]);
     }
@@ -114,6 +118,10 @@ class ContractController extends CrudModuleController
         if (! $result->success) {
             return back()->withErrors($result->errors ?? ['contract' => $result->message])->withInput();
         }
+
+        // Resolve the discount before the QR Code is shared, so the amount the
+        // team reads here is the amount the client will be charged.
+        $this->applyContractDiscount->execute($result->data->id);
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -322,7 +330,7 @@ class ContractController extends CrudModuleController
                 'billableStatus' => $this->enumOptions(BillableStatus::class),
                 'paymentMethods' => $this->enumOptions(PaymentMethod::class),
                 'plans' => $this->planOptions(),
-                'coupons' => $this->couponOptions(),
+                'coupons' => $this->couponsOptions(),
                 'leads' => $this->leadOptions(),
             ],
         ];
@@ -359,16 +367,25 @@ class ContractController extends CrudModuleController
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function couponOptions(): array
+    private function couponsOptions(): array
     {
         return Coupon::query()
             ->where('visibility', 'visible')
+            ->with('plans:id,name')
             ->orderBy('code')
             ->get()
             ->map(function (Coupon $coupon): array {
+                $planIds = $coupon->plans->pluck('id')->all();
+                $planNames = $coupon->plans->pluck('name')->all();
+
                 return [
                     'value' => $coupon->id,
-                    'title' => $coupon->code,
+                    // An empty scope means "every plan", which is worth saying
+                    // out loud so nobody assumes a code is restricted.
+                    'title' => $planNames === []
+                        ? $coupon->code
+                        : $coupon->code.' — '.implode(', ', $planNames),
+                    'plan_ids' => $planIds,
                     'code' => $coupon->code,
                     'percent' => (float) $coupon->percent,
                     'discount_limit' => (float) ($coupon->discount_limit ?? 0),
@@ -382,6 +399,18 @@ class ContractController extends CrudModuleController
     /**
      * @return array<int, array<string, mixed>>
      */
+    /**
+     * Pre-registrations still waiting for a contract, used to warn the team
+     * before it starts a contract that ignores an existing pending record.
+     */
+    private function pendingLeadCount(): int
+    {
+        return HiringLead::query()
+            ->whereNull('contract_id')
+            ->where('status', '!=', HiringLeadStatus::CONVERTED->value)
+            ->count();
+    }
+
     private function leadOptions(): array
     {
         return HiringLead::query()

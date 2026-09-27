@@ -6,6 +6,8 @@ use App\Enums\GenderType;
 use App\Enums\HiringLeadSource;
 use App\Enums\HiringLeadStatus;
 use App\Models\HiringLead;
+use App\Rules\Cpf;
+use App\Rules\Phone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\RequiredIf;
@@ -30,12 +32,11 @@ class HiringLeadRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'phone' => ['required', 'string', 'min:10', 'max:14'],
+            'phone' => ['required', 'string', new Phone],
             'document' => [
                 'required',
                 'string',
-                'min:11',
-                'max:14',
+                new Cpf,
                 Rule::unique('hiring_leads', 'document')->ignore($lead?->id),
             ],
             'source' => ['required', Rule::enum(HiringLeadSource::class)],

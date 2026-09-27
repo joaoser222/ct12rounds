@@ -23,7 +23,7 @@ class SettingSeederTest extends TestCase
         $this->seed(SettingSeeder::class);
         $this->seed(SettingSeeder::class);
 
-        $this->assertDatabaseCount('settings', 19);
+        $this->assertDatabaseCount('settings', 20);
 
         $this->assertSame('', Setting::query()->where('name', 'contract_default_category')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'purchase_default_category')->value('content'));
@@ -31,6 +31,7 @@ class SettingSeederTest extends TestCase
         $this->assertSame('', Setting::query()->where('name', 'direct_lesson_default_category')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'default_financial_account')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'hiring_terms')->value('content'));
+        $this->assertSame('55', Setting::query()->where('name', 'default_country_code')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'privacy_notice')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'image_rights_terms')->value('content'));
         $this->assertSame('25', Setting::query()->where('name', 'cancellation_fee_percentage')->value('content'));

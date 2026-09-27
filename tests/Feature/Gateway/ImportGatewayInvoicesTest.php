@@ -76,14 +76,14 @@ class ImportGatewayInvoicesTest extends TestCase
                 'name' => 'Joao Silva',
                 'email' => 'joao@example.com',
                 'phone' => '11999999999',
-                'cpfCnpj' => '12345678901',
+                'cpfCnpj' => '12345678909',
                 'externalReference' => null,
             ],
         ]);
 
         $this->artisan('gateway:import-customers')->assertSuccessful();
 
-        $this->assertDatabaseHas('clients', ['document' => '12345678901', 'name' => 'Joao Silva']);
+        $this->assertDatabaseHas('clients', ['document' => '12345678909', 'name' => 'Joao Silva']);
         $this->assertDatabaseHas('gateway_customers', [
             'gateway_reference_key' => 'cus_1',
             'gateway_account_id' => GatewayAccount::where('name', 'Asaas')->first()->id,
@@ -98,7 +98,7 @@ class ImportGatewayInvoicesTest extends TestCase
     {
         $account = $this->asaasAccount();
         $client = Client::factory()->create([
-            'document' => '12345678901',
+            'document' => '12345678909',
             'name' => 'Nome Anterior',
             'email' => 'antigo@example.com',
             'phone' => '11988888888',
@@ -123,7 +123,7 @@ class ImportGatewayInvoicesTest extends TestCase
                 'name' => '  JOÃO   DA  SILVA  ',
                 'email' => ' JOAO@EXAMPLE.COM ',
                 'mobilePhone' => '(11) 99999-9999',
-                'cpfCnpj' => '123.456.789-01',
+                'cpfCnpj' => '123.456.789-09',
                 'address' => ' RUA   DAS FLORES ',
                 'addressNumber' => ' s/n ',
                 'complement' => ' APTO   101 ',
@@ -167,7 +167,7 @@ class ImportGatewayInvoicesTest extends TestCase
         $account = $this->asaasAccount();
         $client = Client::factory()->create([
             'name' => '  JOÃO   DA  SILVA  ',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'email' => ' JOAO@EXAMPLE.COM ',
             'phone' => '11999999999',
             'address' => ' RUA   DAS FLORES ',
@@ -190,7 +190,7 @@ class ImportGatewayInvoicesTest extends TestCase
         Http::assertSent(fn (HttpRequest $request): bool => $request->method() === 'POST'
             && $request->url() === 'https://sandbox.asaas.com/api/v3/customers'
             && $request['name'] === 'João da Silva'
-            && $request['cpfCnpj'] === '12345678901'
+            && $request['cpfCnpj'] === '12345678909'
             && $request['email'] === 'joao@example.com'
             && $request['phone'] === '11999999999'
             && $request['address'] === 'Rua das Flores'
@@ -213,7 +213,7 @@ class ImportGatewayInvoicesTest extends TestCase
                     'name' => 'Joao Silva',
                     'email' => 'joao@example.com',
                     'phone' => '11999999999',
-                    'cpfCnpj' => '12345678901',
+                    'cpfCnpj' => '12345678909',
                     'externalReference' => null,
                 ],
             ],
@@ -285,7 +285,7 @@ class ImportGatewayInvoicesTest extends TestCase
                     'name' => 'Joao Silva',
                     'email' => 'joao@example.com',
                     'phone' => '11999999999',
-                    'cpfCnpj' => '12345678901',
+                    'cpfCnpj' => '12345678909',
                     'externalReference' => null,
                 ],
             ],
@@ -320,7 +320,7 @@ class ImportGatewayInvoicesTest extends TestCase
         $this->artisan('gateway:import-invoices')->assertSuccessful();
         $this->artisan('gateway:import-transfers')->assertSuccessful();
 
-        $this->assertSame(1, Client::where('document', '12345678901')->count());
+        $this->assertSame(1, Client::where('document', '12345678909')->count());
         $this->assertSame(1, Invoice::where('external_reference', 'pay_1')->count());
         $this->assertSame(1, GatewayPayment::where('gateway_reference_key', 'pay_1')->count());
         $this->assertSame(1, GatewayTransfer::where('gateway_reference_key', 'tr_1')->count());

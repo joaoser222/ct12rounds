@@ -29,7 +29,7 @@ class ImageRightsReportTest extends TestCase
         $this->grantPermission($user, 'clients.view');
         $client = Client::factory()->create([
             'name' => 'Maria da Silva',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'email' => 'maria@example.com',
             'address' => 'Rua das Palmeiras',
             'address_number' => '100',
@@ -58,7 +58,7 @@ class ImageRightsReportTest extends TestCase
     {
         $client = Client::factory()->create([
             'name' => 'Maria da Silva',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'email' => 'maria@example.com',
             'address' => 'Rua das Palmeiras',
             'address_number' => '100',
@@ -85,7 +85,7 @@ class ImageRightsReportTest extends TestCase
             'audience_category' => AudienceCategory::CHILD->value,
             'birth_date' => '2015-05-10',
             'legal_representative_name' => 'Responsável Legal',
-            'legal_representative_document' => '12345678901',
+            'legal_representative_document' => '12345678909',
         ]);
 
         $html = app(PrintableReportService::class)->render(
@@ -96,7 +96,7 @@ class ImageRightsReportTest extends TestCase
         $this->assertStringContainsString('7. Autorização do Menor de Idade', $html);
         $this->assertStringContainsString('Responsável legal', $html);
         $this->assertStringContainsString('Responsável Legal', $html);
-        $this->assertStringContainsString('12345678901', $html);
+        $this->assertStringContainsString('12345678909', $html);
         $this->assertStringNotContainsString('Assinaturas', $html);
         $this->assertStringNotContainsString('________________________________', $html);
     }

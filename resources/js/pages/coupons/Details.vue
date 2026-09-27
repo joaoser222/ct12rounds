@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { DetailsRoutes } from '@/shared/page';
+import { useSharedOptions } from '@/shared/options';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import { masks } from '@/plugins/masks';
 import { required } from '@/plugins/validators';
+import { usePage } from '@inertiajs/vue3';
 
 defineOptions({ layout: AuthenticatedLayout });
 
@@ -13,6 +15,7 @@ type Coupon = {
     discount_limit?: number;
     duration?: number;
     expiration_date?: string;
+    plan_ids?: number[];
 };
 
 defineProps<{
@@ -20,12 +23,15 @@ defineProps<{
     routes: DetailsRoutes;
 }>();
 
+const { plans } = useSharedOptions(usePage().props.options ?? {});
+
 const defaults = {
     code: '',
     percent: 0,
     discount_limit: 0,
     duration: 1,
     expiration_date: '',
+    plan_ids: [] as number[],
 };
 </script>
 

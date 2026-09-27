@@ -6,6 +6,8 @@ use App\Enums\AudienceCategory;
 use App\Enums\GenderType;
 use App\Models\Contract;
 use App\Models\Plan;
+use App\Rules\Cpf;
+use App\Rules\Phone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -33,8 +35,8 @@ class PreparePublicClientRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'phone' => ['required', 'string', 'min:10', 'max:14'],
-            'document' => ['required', 'string', 'min:11', 'max:14'],
+            'phone' => ['required', 'string', new Phone],
+            'document' => ['required', 'string', new Cpf],
             'gender' => ['required', 'string', Rule::enum(GenderType::class)],
             'birth_date' => ['required', 'date'],
             'address' => ['required', 'string', 'max:200'],

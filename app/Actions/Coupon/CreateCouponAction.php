@@ -34,8 +34,10 @@ class CreateCouponAction extends BaseAction
             'expiration_date' => $dto->expiration_date,
         ]);
 
+        $coupon->plans()->sync($dto->plan_ids);
+
         return ActionResultDTO::success(
-            $coupon,
+            $coupon->refresh()->load('plans'),
             'Cupom criado com sucesso.'
         );
     }

@@ -61,14 +61,14 @@ class PublicHiringLandingTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'accepted' => true,
         ])->assertRedirect(route('home'));
 
         $this->assertDatabaseHas('hiring_leads', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'source' => HiringLeadSource::SITE->value,
         ]);
     }
@@ -119,7 +119,7 @@ class PublicHiringLandingTest extends TestCase
 
         $ana = Trainer::query()->create([
             'name' => 'Ana Silva',
-            'document' => '11111111111',
+            'document' => '32198765446',
             'phone' => '11999999999',
             'gender' => 'female',
             'profile_image' => 'https://example.com/ana.jpg',
@@ -135,13 +135,13 @@ class PublicHiringLandingTest extends TestCase
 
         Trainer::query()->create([
             'name' => 'Bruno Souza',
-            'document' => '22222222222',
+            'document' => '55566677720',
             'phone' => '11888888888',
             'gender' => 'male',
         ]);
         Trainer::query()->create([
             'name' => 'Carlos Lima',
-            'document' => '33333333333',
+            'document' => '44455566619',
             'phone' => '11777777777',
             'gender' => 'male',
             'visibility' => Visibility::HIDDEN->value,

@@ -24,7 +24,7 @@ class GatewayTransferRecipientModuleTest extends TestCase
                 'gateway_account_id' => $gatewayAccount->id,
                 'label' => 'Personal trainer',
                 'holder_name' => '  MARIA   DA   SILVA  ',
-                'holder_document' => '12345678901',
+                'holder_document' => '12345678909',
                 'pix_key' => 'maria@example.com',
                 'pix_key_type' => 'EMAIL',
             ])

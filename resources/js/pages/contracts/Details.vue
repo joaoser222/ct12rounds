@@ -30,6 +30,7 @@ type CouponOption = {
     value: number;
     title: string;
     code: string;
+    plan_ids?: number[];
     percent?: number | string | null;
     discount_limit?: number | string | null;
     duration?: number | string | null;
@@ -111,6 +112,7 @@ const props = defineProps<{
         plans: PlanOption[];
         coupons: CouponOption[];
         leads?: LeadOption[];
+        pendingLeads?: number;
         genderTypes?: LabeledOption<string>[];
         states?: LabeledOption<string>[];
         billableStatus?: Option[];
@@ -150,6 +152,25 @@ const formRef = ref<VForm | null>(null);
 const selectedCoupon = ref<CouponOption | null>(null);
 const selectedLead = ref<LeadOption | null>(null);
 const copied = ref(false);
+const pendingLeadWarning = ref(false);
+
+// A coupon restricted to other plans is not offered: by the time the team sees
+// the list, the mistake is no longer possible.
+const availableCoupons = computed<CouponOption[]>(() => {
+    const all = props.options.coupons ?? [];
+    const planId = form.plan_id;
+
+    if (planId === null) {
+        return all;
+    }
+
+    return all.filter(
+        (coupon) =>
+            !coupon.plan_ids ||
+            coupon.plan_ids.length === 0 ||
+            coupon.plan_ids.includes(planId),
+    );
+});
 
 const form = useForm(
     isCreating
@@ -281,11 +302,27 @@ function onPlanChange(): void {
     }
 
     form.installments = selectedPlan.value.duration_months;
+    clearCouponIfOutOfScope();
+}
+
+function clearCouponIfOutOfScope(): void {
+    if (form.coupon_id === null) {
+        return;
+    }
+
+    if (
+        !availableCoupons.value.some(
+            (coupon) => coupon.value === form.coupon_id,
+        )
+    ) {
+        form.coupon_id = null;
+        onCouponChange(null);
+    }
 }
 
 function onCouponChange(value: number | null): void {
     selectedCoupon.value =
-        props.options.coupons.find((coupon) => coupon.value === value) ?? null;
+        availableCoupons.value.find((coupon) => coupon.value === value) ?? null;
 }
 
 function onLeadChange(value: number | null): void {
@@ -310,11 +347,27 @@ const linkedLeadCouponMessage = computed(() => {
     return null;
 });
 
+function hasPendingPreRegistrations(): boolean {
+    return isCreating && !form.lead_id && (props.options.pendingLeads ?? 0) > 0;
+}
+
+function confirmDiscardPendingWarning(): void {
+    pendingLeadWarning.value = false;
+
+    void submit();
+}
+
 async function submit(): Promise<void> {
     if (isCreating) {
         const result = await formRef.value?.validate();
 
         if (!result?.valid) {
+            return;
+        }
+
+        if (hasPendingPreRegistrations()) {
+            pendingLeadWarning.value = true;
+
             return;
         }
 
@@ -654,7 +707,7 @@ watchEffect(() => {
                                         <v-select
                                             v-model="form.coupon_id"
                                             label="Cupom (opcional)"
-                                            :items="props.options.coupons"
+                                            :items="availableCoupons"
                                             item-title="title"
                                             item-value="value"
                                             clearable
@@ -1017,4 +1070,31 @@ watchEffect(() => {
             </v-col>
         </v-row>
     </div>
+    <v-dialog v-model="pendingLeadWarning" max-width="520">
+        <v-card>
+            <v-card-title class="d-flex align-center ga-2">
+                <v-icon icon="ti ti-alert-triangle" color="warning" />
+                Pré-cadastros pendentes
+            </v-card-title>
+            <v-card-text>
+                <p class="mb-2">
+                    Existem pré cadastros pendentes de confirmação. Deseja
+                    prosseguir mesmo assim?
+                </p>
+                <v-alert type="info" variant="tonal" density="compact">
+                    Verifique se já existe um pré cadastro para o tal cliente
+                    antes de gerar o link.
+                </v-alert>
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer />
+                <v-btn variant="text" @click="pendingLeadWarning = false">
+                    Voltar
+                </v-btn>
+                <v-btn color="primary" @click="confirmDiscardPendingWarning">
+                    Prosseguir mesmo assim
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>

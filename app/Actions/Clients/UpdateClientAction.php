@@ -8,6 +8,7 @@ use App\DTOs\Clients\ClientResultDTO;
 use App\DTOs\Clients\UpdateClientDTO;
 use App\Models\Client;
 use App\Repositories\Contracts\ClientRepositoryInterface;
+use App\Services\ContactNormalizer;
 
 class UpdateClientAction extends BaseAction
 {
@@ -18,6 +19,7 @@ class UpdateClientAction extends BaseAction
 
     public function __construct(
         private readonly ClientRepositoryInterface $clientRepository,
+        private readonly ContactNormalizer $contactNormalizer,
     ) {}
 
     protected function handle(mixed $input): ActionResultDTO
@@ -33,13 +35,13 @@ class UpdateClientAction extends BaseAction
         $updateData = array_filter([
             'name' => $dto->name,
             'email' => $dto->email,
-            'phone' => $dto->phone,
-            'document' => $dto->document,
+            'phone' => $this->contactNormalizer->phone($dto->phone),
+            'document' => $this->contactNormalizer->document($dto->document),
             'gender' => $dto->gender,
             'birth_date' => $dto->birth_date,
             'audience_category' => $dto->audience_category?->value,
             'legal_representative_name' => $dto->legal_representative_name,
-            'legal_representative_document' => $dto->legal_representative_document,
+            'legal_representative_document' => $this->contactNormalizer->document($dto->legal_representative_document),
             'legal_representative_birth_date' => $dto->legal_representative_birth_date,
             'address_postal_code' => $dto->address_postal_code,
             'address' => $dto->address,

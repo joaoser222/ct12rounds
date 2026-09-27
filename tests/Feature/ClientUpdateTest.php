@@ -31,7 +31,7 @@ class ClientUpdateTest extends TestCase
             'name' => 'Cliente Atualizado',
             'email' => 'atualizado@teste.com',
             'phone' => '11988887777',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'gender' => 'F',
             'birth_date' => '1990-01-01',
             'legal_representative' => false,
@@ -50,7 +50,7 @@ class ClientUpdateTest extends TestCase
         $user = User::factory()->create();
         $this->grantPermission($user, 'clients.update');
         $client = Client::factory()->create([
-            'document' => '12345678901',
+            'document' => '12345678909',
         ]);
 
         $response = $this->actingAs($user)->put(route('clients.update', $client), $this->validPayload());
@@ -81,7 +81,7 @@ class ClientUpdateTest extends TestCase
         $user = User::factory()->create();
         $this->grantPermission($user, 'clients.update');
         $client = Client::factory()->create([
-            'document' => '12345678901',
+            'document' => '12345678909',
         ]);
 
         $this->actingAs($user)

@@ -83,7 +83,15 @@ class CreateContractAction extends BaseAction
                     ['coupon_id' => 'O cupom informado está expirado.']
                 );
             }
-        } elseif ($lead?->coupon !== null && ! $lead->coupon->expiration_date?->isPast()) {
+
+            if (! $coupon->appliesToPlan($plan->getKey())) {
+                return ActionResultDTO::failure(
+                    'Este cupom não vale para o plano selecionado.',
+                    ['coupon_id' => 'Este cupom não vale para o plano selecionado.']
+                );
+            }
+        } elseif ($lead !== null && $lead->coupon !== null && ! $lead->coupon->expiration_date?->isPast()
+            && $lead->coupon->appliesToPlan($plan->getKey())) {
             $coupon = $lead->coupon;
         }
 

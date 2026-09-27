@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CreditCardField from '@/components/CreditCardField.vue';
 import { useForm } from '@inertiajs/vue3';
+import { formatCurrency } from '@/plugins/formatters';
 import { masks, phoneMask } from '@/plugins/masks';
 import {
     cep,
@@ -14,6 +15,12 @@ import { fillAddressFromCep, type AddressForm } from '@/plugins/viacep';
 import { computed, onMounted, ref, watch } from 'vue';
 
 defineOptions({ layout: null });
+
+type PlanOption = {
+    id: number;
+    name: string;
+    price: number;
+};
 
 type PlanSummary = {
     id: number;
@@ -36,6 +43,7 @@ type PrefilledData = {
 
 const props = defineProps<{
     plan?: PlanSummary | null;
+    plans?: PlanOption[];
     requiresLegalRepresentative?: boolean;
     coupon?: string | null;
     couponWarning?: string | null;
@@ -55,6 +63,8 @@ const isLoadingContractPreview = ref(false);
 const privacyDialog = ref(false);
 const hasReadPrivacyNotice = ref(!props.privacyNotice);
 
+const plans = computed<PlanOption[]>(() => props.plans ?? []);
+
 const isContractFlow = computed(() => !!props.contract);
 const isRetry = computed(() => !!props.retryClientId);
 
@@ -73,7 +83,7 @@ const form = useForm({
     address_city: '',
     address_postal_code: '',
     plan: props.plan?.public_slug ?? '',
-    coupon: props.coupon ?? '',
+    plan_id: props.plan?.id ?? null,
     contract: props.contract?.token ?? '',
     accepted: false,
     audience_category: props.requiresLegalRepresentative ? 'child' : 'adult',
@@ -336,6 +346,33 @@ async function fillAddress(): Promise<void> {
                         v-if="!isContractFlow"
                         @submit.prevent="submitPreRegistration"
                     >
+                        <v-select
+                            v-if="plans.length > 0"
+                            v-model="form.plan_id"
+                            :items="plans"
+                            item-title="name"
+                            item-value="id"
+                            label="Plano de interesse"
+                            clearable
+                            hint="Opcional. Nossa equipe confirma os planos disponíveis."
+                            persistent-hint
+                            class="mb-5"
+                        >
+                            <template #item="{ props: itemProps, item }">
+                                <v-list-item
+                                    v-bind="itemProps"
+                                    :title="item.raw.name"
+                                >
+                                    <template #append>
+                                        <span
+                                            class="text-caption text-medium-emphasis"
+                                        >
+                                            {{ formatCurrency(item.raw.price) }}
+                                        </span>
+                                    </template>
+                                </v-list-item>
+                            </template>
+                        </v-select>
                         <v-text-field
                             v-model="form.name"
                             v-text-case="'capitalize-exclusive'"

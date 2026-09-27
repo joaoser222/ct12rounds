@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\AudienceCategory;
 use App\Enums\GenderType;
+use App\Rules\Cpf;
+use App\Rules\Phone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\RequiredIf;
@@ -28,13 +30,8 @@ class PublicHiringLeadRequest extends FormRequest
             return [
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'email', 'max:255'],
-                'phone' => ['required', 'string', 'min:10', 'max:14'],
-                'document' => [
-                    'required',
-                    'string',
-                    'min:11',
-                    'max:14',
-                ],
+                'phone' => ['required', 'string', new Phone],
+                'document' => ['required', 'string', new Cpf],
                 'gender' => ['required', 'string', Rule::enum(GenderType::class)],
                 'birth_date' => ['required', 'date'],
                 'address' => ['required', 'string', 'max:200'],
@@ -61,14 +58,10 @@ class PublicHiringLeadRequest extends FormRequest
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'phone' => ['required', 'string', 'min:10', 'max:14'],
-            'document' => [
-                'required',
-                'string',
-                'min:11',
-                'max:14',
-            ],
+            'phone' => ['required', 'string', new Phone],
+            'document' => ['required', 'string', new Cpf],
             'coupon' => ['nullable', 'string', 'max:64'],
+            'plan_id' => ['nullable', 'integer', 'exists:plans,id'],
         ];
 
         if ($isLandingStore) {

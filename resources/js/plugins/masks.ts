@@ -43,10 +43,22 @@ export const masks = {
     cpf: '###.###.###-##',
     landlinePhone: '(##) ####-####',
     phone: '(##) #####-####',
+    internationalLandlinePhone: '+## (##) ####-####',
+    internationalPhone: '+## (##) #####-####',
 } as const;
 
 export function phoneMask(value?: string | number | null): string {
-    return onlyDigits(value).length > 10 ? masks.phone : masks.landlinePhone;
+    const length = onlyDigits(value).length;
+
+    if (length > 13) {
+        return masks.internationalPhone;
+    }
+
+    if (length > 11) {
+        return masks.internationalLandlinePhone;
+    }
+
+    return length > 10 ? masks.phone : masks.landlinePhone;
 }
 
 export function documentMask(value?: string | number | null): string {
@@ -71,7 +83,11 @@ export function unmaskValue(
     }
 
     if (mode === 'alphanumeric') {
-        return limitValue(onlyAlphanumeric(stringValue), maskLength, limitToMask);
+        return limitValue(
+            onlyAlphanumeric(stringValue),
+            maskLength,
+            limitToMask,
+        );
     }
 
     return limitValue(unmaskByMask(stringValue, mask), maskLength, limitToMask);
@@ -148,7 +164,10 @@ function unmaskByMask(value: string, mask: string): string {
     // Filters only characters compatible with the tokens declared in the mask.
     const availableTokens = new Set(
         parseMask(mask)
-            .filter((part): part is Extract<ParsedMaskPart, { type: 'token' }> => part.type === 'token')
+            .filter(
+                (part): part is Extract<ParsedMaskPart, { type: 'token' }> =>
+                    part.type === 'token',
+            )
             .map((part) => part.symbol),
     );
 
@@ -263,7 +282,12 @@ function parseQuantifier(
     const min = Number(minText);
     const max = maxText === undefined || maxText === '' ? min : Number(maxText);
 
-    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max < min) {
+    if (
+        !Number.isInteger(min) ||
+        !Number.isInteger(max) ||
+        min < 0 ||
+        max < min
+    ) {
         return null;
     }
 

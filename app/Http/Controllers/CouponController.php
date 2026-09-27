@@ -9,9 +9,12 @@ use App\Actions\Coupon\UpdateCouponAction;
 use App\DTOs\Coupon\CreateCouponDTO;
 use App\DTOs\Coupon\UpdateCouponDTO;
 use App\Models\Coupon;
+use App\Models\Plan;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Response;
 
 class CouponController extends CrudModuleController
 {
@@ -45,6 +48,45 @@ class CouponController extends CrudModuleController
         return Coupon::class;
     }
 
+    protected function moduleDetailsProps(?Model $model = null): array
+    {
+        return [
+            'options' => [
+                'plans' => Plan::query()
+                    ->select(['id', 'name'])
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (Plan $plan): array => [
+                        'value' => $plan->id,
+                        'label' => $plan->name,
+                    ])
+                    ->all(),
+            ],
+        ];
+    }
+
+    public function show(Request $request): Response|JsonResponse
+    {
+        $this->authorizeAccess(AccessAction::VIEW);
+
+        /** @var Coupon $coupon */
+        $coupon = $this->modelFromRoute($request)->load('plans');
+        $coupon->setAttribute('plan_ids', $coupon->plans->pluck('id')->all());
+
+        if ($request->expectsJson()) {
+            return response()->json($coupon);
+        }
+
+        $this->shareModuleRoutes();
+
+        return Inertia::render($this->detailsComponent(), [
+            $this->itemPropName() => $coupon,
+            'id' => $coupon->getKey(),
+            'routes' => $this->getModuleRoutes(),
+            ...$this->moduleDetailsProps($coupon),
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
@@ -56,6 +98,8 @@ class CouponController extends CrudModuleController
                 'discount_limit' => ['nullable', 'numeric', 'min:0'],
                 'duration' => ['nullable', 'string', 'max:50'],
                 'expiration_date' => ['nullable', 'date'],
+                'plan_ids' => ['nullable', 'array'],
+                'plan_ids.*' => ['integer', 'exists:plans,id'],
             ]))
         );
 
@@ -85,6 +129,8 @@ class CouponController extends CrudModuleController
                     'discount_limit' => ['nullable', 'numeric', 'min:0'],
                     'duration' => ['nullable', 'string', 'max:50'],
                     'expiration_date' => ['nullable', 'date'],
+                    'plan_ids' => ['nullable', 'array'],
+                    'plan_ids.*' => ['integer', 'exists:plans,id'],
                 ]),
                 'id' => $coupon->getKey(),
             ])

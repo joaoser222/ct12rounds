@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Rules\Cpf;
+use App\Rules\Phone;
 use App\Actions\Clients\CreateClientAction;
 use App\DTOs\Clients\CreateClientDTO;
 use App\Mcp\Tools\Concerns\HasMcpToolName;
@@ -30,13 +32,13 @@ class CreateClientTool extends Tool
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'phone' => 'required|string|min:10|max:11',
-            'document' => 'required|string|size:11',
+            'phone' => ['required', 'string', new Phone],
+            'document' => ['required', 'string', new Cpf],
             'gender' => 'required|in:male,female,other',
             'birth_date' => 'required|date',
             'audience_category' => 'nullable|in:adult,child',
             'legal_representative_name' => 'nullable|string|max:255',
-            'legal_representative_document' => 'nullable|string|size:11',
+            'legal_representative_document' => ['nullable', 'string', 'min:11', 'max:14'],
             'legal_representative_birth_date' => 'nullable|date',
             'address_postal_code' => 'nullable|string|max:8',
             'address' => 'nullable|string|max:200',

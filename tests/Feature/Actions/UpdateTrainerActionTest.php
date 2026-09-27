@@ -17,7 +17,7 @@ class UpdateTrainerActionTest extends TestCase
     {
         $trainer = Trainer::query()->create([
             'name' => 'Nome Antigo',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'phone' => '11988887777',
             'gender' => 'male',
         ]);
@@ -41,7 +41,7 @@ class UpdateTrainerActionTest extends TestCase
     {
         $trainer = Trainer::query()->create([
             'name' => 'Atualizar',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'phone' => '11988887777',
             'gender' => 'male',
         ]);

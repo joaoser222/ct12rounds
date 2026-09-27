@@ -490,7 +490,7 @@ class SaleItemPersistenceTest extends TestCase
         return Client::query()->create([
             'name' => 'Cliente Teste',
             'email' => 'cliente@example.com',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'birth_date' => '1990-01-01',
             'phone' => '11999999999',
             'gender' => GenderType::MALE->value,

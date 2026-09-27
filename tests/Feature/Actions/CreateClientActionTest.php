@@ -21,7 +21,7 @@ class CreateClientActionTest extends TestCase
             'name' => 'Cliente Teste',
             'email' => 'cliente@teste.com',
             'phone' => '11999999999',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'gender' => 'M',
             'birth_date' => '1990-01-01',
             'legal_representative' => false,
@@ -38,7 +38,7 @@ class CreateClientActionTest extends TestCase
         $this->assertTrue($result->success);
         $this->assertDatabaseHas('clients', [
             'email' => 'cliente@teste.com',
-            'document' => '12345678901',
+            'document' => '12345678909',
         ]);
     }
 

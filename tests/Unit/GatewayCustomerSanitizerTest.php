@@ -15,7 +15,7 @@ class GatewayCustomerSanitizerTest extends TestCase
             'name' => '  JOÃO   DA  SILVA  ',
             'email' => ' JOAO@EXAMPLE.COM ',
             'mobilePhone' => '(11) 99999-9999',
-            'cpfCnpj' => '123.456.789-01',
+            'cpfCnpj' => '123.456.789-09',
             'address' => ' RUA   DAS FLORES ',
             'addressNumber' => ' s/n ',
             'complement' => ' APTO   101 ',
@@ -28,7 +28,7 @@ class GatewayCustomerSanitizerTest extends TestCase
         $this->assertSame('João da Silva', $attributes['name']);
         $this->assertSame('joao@example.com', $attributes['email']);
         $this->assertSame('11999999999', $attributes['phone']);
-        $this->assertSame('12345678901', $attributes['document']);
+        $this->assertSame('12345678909', $attributes['document']);
         $this->assertSame('Rua das Flores', $attributes['address']);
         $this->assertSame('S/N', $attributes['address_number']);
         $this->assertSame('Apto 101', $attributes['address_complement']);

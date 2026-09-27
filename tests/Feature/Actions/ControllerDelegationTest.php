@@ -37,7 +37,7 @@ class ControllerDelegationTest extends TestCase
             'name' => 'Delegation Client',
             'email' => 'delegation@test.com',
             'phone' => '11999999999',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'gender' => 'M',
             'birth_date' => '1990-01-01',
             'legal_representative' => false,
@@ -55,13 +55,13 @@ class ControllerDelegationTest extends TestCase
     {
         $user = User::factory()->create();
         $this->grantPermission($user, 'clients.update');
-        $client = Client::factory()->create(['document' => '12345678901']);
+        $client = Client::factory()->create(['document' => '12345678909']);
 
         $this->actingAs($user)->put(route('clients.update', $client), [
             'name' => 'Updated via Action',
             'email' => 'updated@test.com',
             'phone' => '11988887777',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'gender' => 'F',
             'birth_date' => '1995-05-15',
             'legal_representative' => false,

@@ -8,7 +8,8 @@ import { onlyDigits } from './formatters.ts';
  */
 
 export const required = (value: unknown) => !!value || 'É obrigatório';
-export const email = (value: string) => /.+@.+\..+/.test(value) || 'E-mail inválido';
+export const email = (value: string) =>
+    /.+@.+\..+/.test(value) || 'E-mail inválido';
 
 export const cpf = (value: string) => {
     const d = onlyDigits(value);
@@ -71,10 +72,12 @@ export const phone = (value: string) => {
     const d = onlyDigits(value);
     const invalid = 'Telefone inválido';
 
-    if (d.length < 10 || d.length > 11) {
+    if (d.length < 10 || d.length > 13) {
         return invalid;
     }
 
+    // National mobile numbers carry the extra 9 right after the area code.
+    // Stored values already include the country code, so the check is skipped.
     if (d.length === 11 && d[2] !== '9') {
         return invalid;
     }
@@ -91,8 +94,12 @@ export const cep = (value: string) => {
 export const same = (confirmationValue: string) => (value: string) =>
     value === confirmationValue ? true : 'Os valores não conferem';
 export const minLength = (length: number) => (value: string) =>
-    !value || value.length >= length || `Deve ter no mínimo ${length} caracteres`;
+    !value ||
+    value.length >= length ||
+    `Deve ter no mínimo ${length} caracteres`;
 export const maxLength = (length: number) => (value: string) =>
-    !value || value.length <= length || `Deve ter no máximo ${length} caracteres`;
+    !value ||
+    value.length <= length ||
+    `Deve ter no máximo ${length} caracteres`;
 export const exactLength = (length: number) => (value: string) =>
     !value || value.length === length || `Deve ter ${length} caracteres`;

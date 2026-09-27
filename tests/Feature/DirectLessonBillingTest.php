@@ -104,7 +104,7 @@ class DirectLessonBillingTest extends TestCase
         return Trainer::query()->create([
             'name' => 'Treinador Teste',
             'email' => 'treinador@example.com',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'birth_date' => '1990-01-01',
             'phone' => '11999999999',
             'gender' => GenderType::MALE->value,

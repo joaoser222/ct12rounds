@@ -28,7 +28,7 @@ class SupplierStoreTest extends TestCase
     {
         return [
             'name' => 'Fornecedor Teste',
-            'document' => '12345678901234',
+            'document' => '12345678909234',
             'phone' => '11999999999',
             'address_postal_code' => '01001000',
             'address_number' => '100',
@@ -66,6 +66,6 @@ class SupplierStoreTest extends TestCase
         $response = $this->actingAs($user)->post(route('suppliers.store'), $payload);
 
         $response->assertRedirect(route('suppliers.index'));
-        $this->assertDatabaseHas('suppliers', ['document' => '12345678901234']);
+        $this->assertDatabaseHas('suppliers', ['document' => '12345678909234']);
     }
 }

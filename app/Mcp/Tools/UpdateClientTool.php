@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Rules\Cpf;
+use App\Rules\Phone;
 use App\Actions\Clients\UpdateClientAction;
 use App\DTOs\Clients\UpdateClientDTO;
 use App\Mcp\Tools\Concerns\HasMcpToolName;
@@ -32,13 +34,13 @@ class UpdateClientTool extends Tool
             'id' => 'required|integer|min:1',
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|min:10|max:11',
-            'document' => 'nullable|string|size:11',
+            'phone' => ['nullable', 'string', new Phone],
+            'document' => ['nullable', 'string', new Cpf],
             'gender' => 'nullable|in:male,female,other',
             'birth_date' => 'nullable|date',
             'audience_category' => 'nullable|in:adult,child',
             'legal_representative_name' => 'nullable|string|max:255',
-            'legal_representative_document' => 'nullable|string|size:11',
+            'legal_representative_document' => ['nullable', 'string', 'min:11', 'max:14'],
             'legal_representative_birth_date' => 'nullable|date',
             'address_postal_code' => 'nullable|string|max:8',
             'address' => 'nullable|string|max:200',

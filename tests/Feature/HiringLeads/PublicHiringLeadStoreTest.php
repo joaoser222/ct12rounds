@@ -6,6 +6,7 @@ namespace Tests\Feature\HiringLeads;
 
 use App\Enums\ClientStatus;
 use App\Enums\HiringLeadSource;
+use App\Enums\HiringLeadStatus;
 use App\Enums\Visibility;
 use App\Mail\TemplateEmail;
 use App\Models\Client;
@@ -28,7 +29,7 @@ class PublicHiringLeadStoreTest extends TestCase
     use RefreshDatabase;
 
     private array $validCardData = [
-        'card_number' => '4111111111111111',
+        'card_number' => '4321987654461111',
         'card_expiry_month' => '12',
         'card_expiry_year' => '2030',
         'card_cvv' => '123',
@@ -69,14 +70,14 @@ class PublicHiringLeadStoreTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'accepted' => true,
         ])->assertRedirect('/register');
 
         $this->assertDatabaseHas('hiring_leads', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'source' => HiringLeadSource::SITE->value,
         ]);
     }
@@ -92,19 +93,101 @@ class PublicHiringLeadStoreTest extends TestCase
         $this->assertDatabaseCount('hiring_leads', 0);
     }
 
+    public function test_pre_registration_rejects_a_document_that_is_not_a_cpf(): void
+    {
+        $this->post('/register', [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '11999999999',
+            'document' => '11144477730',
+        ])->assertSessionHasErrors('document');
+
+        $this->assertDatabaseCount('hiring_leads', 0);
+    }
+
+    public function test_pre_registration_rejects_a_document_with_a_wrong_check_digit(): void
+    {
+        $this->post('/register', [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '11999999999',
+            'document' => '111.444.777-25',
+        ])->assertSessionHasErrors('document');
+
+        $this->assertDatabaseCount('hiring_leads', 0);
+    }
+
+    public function test_pre_registration_stores_the_phone_with_the_country_code(): void
+    {
+        $this->post('/register', [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '(11) 99999-9999',
+            'document' => '11144477735',
+        ])->assertRedirect('/register');
+
+        $this->assertDatabaseHas('hiring_leads', [
+            'email' => 'maria@example.com',
+            'phone' => '5511999999999',
+            'document' => '11144477735',
+        ]);
+    }
+
+    public function test_pre_registration_stores_a_landline_with_the_country_code(): void
+    {
+        $this->post('/register', [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '(62) 3333-4444',
+            'document' => '11144477735',
+        ])->assertRedirect('/register');
+
+        $this->assertDatabaseHas('hiring_leads', [
+            'email' => 'maria@example.com',
+            'phone' => '556233334444',
+        ]);
+    }
+
+    public function test_pre_registration_rejects_a_phone_without_an_area_code(): void
+    {
+        $this->post('/register', [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '3333-4444',
+            'document' => '11144477735',
+        ])->assertSessionHasErrors('phone');
+
+        $this->assertDatabaseCount('hiring_leads', 0);
+    }
+
+    public function test_pre_registration_accepts_a_phone_that_already_has_the_country_code(): void
+    {
+        $this->post('/register', [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '+55 (11) 99999-9999',
+            'document' => '11144477735',
+        ])->assertRedirect('/register');
+
+        $this->assertDatabaseHas('hiring_leads', [
+            'email' => 'maria@example.com',
+            'phone' => '5511999999999',
+        ]);
+    }
+
     public function test_pre_registration_does_not_require_terms_acceptance(): void
     {
         $this->post('/register', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
-            'document' => '99887766554',
+            'document' => '11144477735',
         ])->assertRedirect('/register');
 
         $this->assertDatabaseHas('hiring_leads', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'source' => HiringLeadSource::SITE->value,
         ]);
     }
@@ -138,7 +221,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'name' => 'Joao Souza',
             'email' => 'joao@example.com',
             'phone' => '11988888888',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'gender' => 'M',
             'birth_date' => '1990-01-01',
             'accepted' => true,
@@ -154,7 +237,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'name' => 'Joao QR',
             'email' => 'joaoqr@example.com',
             'phone' => '11977776666',
-            'document' => '33344455566',
+            'document' => '33344455508',
             'gender' => 'M',
             'birth_date' => '1990-01-01',
             'address' => 'Rua das Flores',
@@ -207,7 +290,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'coupon' => 'PROMO10',
         ])->assertRedirect('/register');
 
@@ -222,17 +305,39 @@ class PublicHiringLeadStoreTest extends TestCase
 
     public function test_pre_registration_with_unavailable_coupon_does_not_reserve(): void
     {
+        $coupon = $this->createCoupon('PROMO10');
+
         $this->post('/register', [
             'name' => 'Maria Silva',
             'email' => 'maria@example.com',
             'phone' => '11999999999',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'coupon' => 'CUPOM-INEXISTENTE',
         ])->assertRedirect('/register');
 
         $this->assertDatabaseHas('hiring_leads', [
             'email' => 'maria@example.com',
             'coupon_id' => null,
+        ]);
+
+        $this->assertSame(0, $coupon->fresh()->used_count);
+    }
+
+    public function test_pre_registration_records_the_selected_plan(): void
+    {
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+
+        $this->post('/register', [
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '11999999999',
+            'document' => '11144477735',
+            'plan_id' => $plan->id,
+        ])->assertRedirect('/register');
+
+        $this->assertDatabaseHas('hiring_leads', [
+            'email' => 'maria@example.com',
+            'plan_id' => $plan->id,
             'source' => HiringLeadSource::SITE->value,
         ]);
     }
@@ -469,7 +574,7 @@ class PublicHiringLeadStoreTest extends TestCase
         ]);
         $this->assertDatabaseCount('invoices', 0);
         $this->assertNull($contract->fresh()->client_id);
-        $this->assertDatabaseHas('clients', ['document' => '99887766554', 'status' => ClientStatus::PENDING->value]);
+        $this->assertDatabaseHas('clients', ['document' => '11144477735', 'status' => ClientStatus::PENDING->value]);
 
         Mail::assertQueued(TemplateEmail::class, function (TemplateEmail $email): bool {
             return $email->hasTo('financeiro@ct12rounds.test');
@@ -591,7 +696,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'accepted_terms' => 'pending',
         ]);
         $this->assertDatabaseHas('clients', [
-            'document' => '99887766554',
+            'document' => '11144477735',
             'status' => ClientStatus::PENDING->value,
         ]);
 
@@ -766,6 +871,116 @@ class PublicHiringLeadStoreTest extends TestCase
         $this->assertSame(1, $coupon->fresh()->used_count);
     }
 
+    public function test_retry_reuses_the_lead_instead_of_creating_a_duplicate(): void
+    {
+        Mail::fake();
+
+        $this->fakeGateway();
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response([
+                'creditCardToken' => 'tok_123',
+                'creditCardNumber' => '4111',
+                'creditCardBrand' => 'VISA',
+            ]),
+            'sandbox.asaas.com/api/v3/payments' => Http::sequence()
+                ->push(['message' => 'Cartão Recusado'], 400)
+                ->push([
+                    'id' => 'pay_retry_1',
+                    'billingType' => 'CREDIT_CARD',
+                    'status' => 'CONFIRMED',
+                    'value' => 90.0,
+                ]),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+        $contract->update([
+            'first_due_date' => now()->toDateString(),
+            'payment_method' => 'credit_card',
+        ]);
+
+        $payload = [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ];
+
+        $this->post('/register', $payload)->assertSessionHasErrors('card_number');
+
+        $this->assertSame(1, HiringLead::query()->where('contract_id', $contract->id)->count());
+        $firstLeadId = HiringLead::query()->where('contract_id', $contract->id)->value('id');
+
+        $this->post('/register/retry-payment', $payload)->assertSessionHasNoErrors();
+
+        $leads = HiringLead::query()->where('contract_id', $contract->id)->get();
+
+        $this->assertCount(1, $leads);
+        $this->assertSame($firstLeadId, $leads->first()->id);
+        $this->assertSame(HiringLeadSource::CONTRACT->value, $leads->first()->source->value);
+    }
+
+    public function test_retry_keeps_the_pre_registration_linked_to_the_contract_untouched(): void
+    {
+        Mail::fake();
+
+        $this->fakeGateway();
+
+        Http::fake([
+            'sandbox.asaas.com/api/v3/customers*' => Http::response(['id' => 'cus_123']),
+            'sandbox.asaas.com/api/v3/creditCard/tokenize*' => Http::response([
+                'creditCardToken' => 'tok_123',
+                'creditCardNumber' => '4111',
+                'creditCardBrand' => 'VISA',
+            ]),
+            'sandbox.asaas.com/api/v3/payments' => Http::sequence()
+                ->push(['message' => 'Cartão Recusado'], 400)
+                ->push([
+                    'id' => 'pay_retry_1',
+                    'billingType' => 'CREDIT_CARD',
+                    'status' => 'CONFIRMED',
+                    'value' => 90.0,
+                ]),
+        ]);
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $contract = $this->createPendingContract($plan);
+        $contract->update([
+            'first_due_date' => now()->toDateString(),
+            'payment_method' => 'credit_card',
+        ]);
+
+        $preRegistration = HiringLead::query()->create([
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '5511888888888',
+            'status' => HiringLeadStatus::NEW->value,
+            'source' => HiringLeadSource::SITE->value,
+            'visibility' => Visibility::VISIBLE->value,
+            'contract_id' => $contract->id,
+        ]);
+
+        $payload = [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ];
+
+        $this->post('/register', $payload)->assertSessionHasErrors('card_number');
+        $this->post('/register/retry-payment', $payload)->assertSessionHasNoErrors();
+
+        $preRegistration->refresh();
+
+        $this->assertNull($preRegistration->client_id);
+        $this->assertNull($preRegistration->converted_at);
+        $this->assertSame(HiringLeadStatus::NEW, $preRegistration->status);
+        $this->assertSame('Maria Silva', $preRegistration->name);
+
+        $this->assertSame(1, HiringLead::query()
+            ->where('contract_id', $contract->id)
+            ->where('source', HiringLeadSource::CONTRACT->value)
+            ->count());
+    }
+
     public function test_contract_advance_creates_pending_client(): void
     {
         $plan = $this->createPlanWithContract('Mensal', 'mensal');
@@ -779,12 +994,12 @@ class PublicHiringLeadStoreTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertSessionHas('registration_pending_client', [
             'contract' => $contract->registration_token,
-            'client_id' => Client::query()->where('document', '99887766554')->value('id'),
+            'client_id' => Client::query()->where('document', '11144477735')->value('id'),
         ]);
 
         $this->assertDatabaseHas('clients', [
             'name' => 'Joao Souza',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'status' => ClientStatus::PENDING->value,
         ]);
 
@@ -797,7 +1012,7 @@ class PublicHiringLeadStoreTest extends TestCase
         $contract = $this->createPendingContract($plan);
 
         $client = Client::factory()->create([
-            'document' => '99887766554',
+            'document' => '11144477735',
             'status' => ClientStatus::ACTIVE->value,
         ]);
 
@@ -819,7 +1034,7 @@ class PublicHiringLeadStoreTest extends TestCase
         $contract = $this->createPendingContract($plan);
 
         $client = Client::factory()->create([
-            'document' => '99887766554',
+            'document' => '11144477735',
             'status' => ClientStatus::PENDING->value,
             'address_city' => 'Cidade Antiga',
         ]);
@@ -852,7 +1067,7 @@ class PublicHiringLeadStoreTest extends TestCase
         $contract = $this->createPendingContract($plan);
 
         $client = Client::factory()->create([
-            'document' => '99887766554',
+            'document' => '11144477735',
             'status' => ClientStatus::ACTIVE->value,
         ]);
 
@@ -875,7 +1090,7 @@ class PublicHiringLeadStoreTest extends TestCase
         $contract = $this->createPendingContract($plan);
 
         $client = Client::factory()->create([
-            'document' => '99887766554',
+            'document' => '11144477735',
             'status' => ClientStatus::ACTIVE->value,
         ]);
 
@@ -897,7 +1112,7 @@ class PublicHiringLeadStoreTest extends TestCase
         $contract = $this->createPendingContract($plan);
 
         $client = Client::factory()->create([
-            'document' => '99887766554',
+            'document' => '11144477735',
             'status' => ClientStatus::ACTIVE->value,
         ]);
 
@@ -933,7 +1148,7 @@ class PublicHiringLeadStoreTest extends TestCase
         $contract = $this->createPendingContract($plan);
 
         $client = Client::factory()->create([
-            'document' => '11122233344',
+            'document' => '98765432100',
             'status' => ClientStatus::PENDING->value,
         ]);
 
@@ -965,7 +1180,7 @@ class PublicHiringLeadStoreTest extends TestCase
         ]))
             ->assertOk()
             ->assertSee('Joao Souza')
-            ->assertSee('99887766554')
+            ->assertSee('11144477735')
             ->assertSee('Rua das Flores, 100, Centro, Sao Paulo, SP, 01001000');
     }
 
@@ -990,7 +1205,7 @@ class PublicHiringLeadStoreTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertSessionMissing('registration_pending_client');
 
-        $client = Client::query()->where('document', '99887766554')->first();
+        $client = Client::query()->where('document', '11144477735')->first();
 
         $this->assertNotNull($client);
         $this->assertSame(ClientStatus::ACTIVE, $client->status);
@@ -1010,7 +1225,7 @@ class PublicHiringLeadStoreTest extends TestCase
             ...$this->contractPayload(),
         ])->assertSessionHasNoErrors();
 
-        $client = Client::query()->where('document', '99887766554')->first();
+        $client = Client::query()->where('document', '11144477735')->first();
 
         $this->assertNotNull($client);
         $this->assertSame(ClientStatus::ACTIVE, $client->status);
@@ -1109,6 +1324,41 @@ class PublicHiringLeadStoreTest extends TestCase
         ]);
     }
 
+    public function test_negotiated_coupon_replaces_the_reserved_one_and_counts_once(): void
+    {
+        $this->fakeGateway();
+
+        $plan = $this->createPlanWithContract('Mensal', 'mensal');
+        $reserved = $this->createCoupon('PROMO10');
+        $negotiated = $this->createCoupon('NEGOCIO30');
+        $negotiated->update(['percent' => 30]);
+
+        $reserved->update(['used_count' => 1]);
+        $contract = $this->createPendingContract($plan, $negotiated);
+
+        // The pre-registration reserved PROMO10, but the team applies a better
+        // coupon after negotiating with the client.
+        HiringLead::query()->create([
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '5511888888888',
+            'source' => HiringLeadSource::SITE->value,
+            'status' => 'new',
+            'visibility' => Visibility::VISIBLE->value,
+            'coupon_id' => $reserved->id,
+            'contract_id' => $contract->id,
+        ]);
+
+        $this->post('/register', [
+            'contract' => $contract->registration_token,
+            ...$this->contractPayload(),
+        ])->assertSessionHasNoErrors();
+
+        // Only the negotiated coupon is counted: PROMO10 was already reserved.
+        $this->assertSame(1, $negotiated->fresh()->used_count);
+        $this->assertSame(1, $reserved->fresh()->used_count);
+    }
+
     public function test_contract_registration_without_reservation_counts_coupon(): void
     {
         $this->fakeGateway();
@@ -1179,7 +1429,7 @@ class PublicHiringLeadStoreTest extends TestCase
             'name' => 'Joao Souza',
             'email' => 'joao@example.com',
             'phone' => '11988888888',
-            'document' => '99887766554',
+            'document' => '11144477735',
             'gender' => 'M',
             'birth_date' => '1990-01-01',
             'address' => 'Rua das Flores',

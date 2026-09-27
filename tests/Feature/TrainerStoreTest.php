@@ -31,7 +31,7 @@ class TrainerStoreTest extends TestCase
     {
         return [
             'name' => 'Treinador Teste',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'phone' => '11999999999',
             'gender' => 'male',
             'address_postal_code' => '01001000',
@@ -70,7 +70,7 @@ class TrainerStoreTest extends TestCase
         $response = $this->actingAs($user)->post(route('trainers.store'), $payload);
 
         $response->assertRedirect(route('trainers.index'));
-        $this->assertDatabaseHas('trainers', ['document' => '12345678901']);
+        $this->assertDatabaseHas('trainers', ['document' => '12345678909']);
     }
 
     public function test_trainer_creation_persists_linked_modalities(): void

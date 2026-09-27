@@ -6,6 +6,7 @@ use App\Actions\Contracts\ApplyContractAction;
 use App\Actions\Contracts\NotifyContractBillingFailureAction;
 use App\Actions\Contracts\ApplyContractDiscountAction;
 use App\Actions\HiringLeads\CreateSiteLeadAction;
+use App\Actions\HiringLeads\RecordContractLeadAction;
 use App\DTOs\Contracts\ApplyContractDTO;
 use App\DTOs\Contracts\ContractPreviewData;
 use App\DTOs\Emails\BillingFailureData;
@@ -29,6 +30,7 @@ use App\PaymentGateways\Contracts\PaymentGatewayAdapter;
 use App\Repositories\Contracts\ClientRepositoryInterface;
 use App\Repositories\Contracts\ContractRepositoryInterface;
 use App\Services\CancellationFeeService;
+use App\Services\ContactNormalizer;
 use App\Services\Gateway\GatewayAdapterResolver;
 use App\Services\PrintableReportService;
 use Carbon\CarbonImmutable;
@@ -51,8 +53,10 @@ class PublicHiringLeadController extends Controller
         private readonly ContractRepositoryInterface $contractRepository,
         private readonly GatewayAdapterResolver $gatewayResolver,
         private readonly CreateSiteLeadAction $createLead,
+        private readonly RecordContractLeadAction $recordContractLead,
         private readonly ApplyContractAction $applyContract,
         private readonly CancellationFeeService $cancellationFeeService,
+        private readonly ContactNormalizer $contactNormalizer,
         private readonly NotifyContractBillingFailureAction $notifyContractBillingFailure,
     ) {}
 
@@ -116,6 +120,7 @@ class PublicHiringLeadController extends Controller
 
         return Inertia::render('public/Registration', [
             'plan' => $plan?->only(['id', 'name', 'public_slug']),
+            'plans' => $isContractFlow ? [] : $this->selectablePlans($plan),
             'requiresLegalRepresentative' => $plan?->requiresLegalRepresentative() ?? false,
             'coupon' => $coupon?->code,
             'couponWarning' => $couponWarning,
@@ -209,7 +214,7 @@ class PublicHiringLeadController extends Controller
         $payload = [
             'name' => $data['name'],
             'email' => $data['email'],
-            'phone' => $data['phone'],
+            'phone' => $this->contactNormalizer->phone($data['phone']),
             'document' => $document,
             'gender' => $data['gender'] ?? null,
             'birth_date' => $data['birth_date'] ?? null,
@@ -359,6 +364,44 @@ class PublicHiringLeadController extends Controller
         return redirect()->route('public.register');
     }
 
+    /**
+     * Visible plans offered on the pre-registration form. The selection is only
+     * a preference: the contract keeps its own terms once created.
+     *
+     * @return array<int, array{id: int, name: string, price: float}>
+     */
+    private function selectablePlans(?Plan $preselected): array
+    {
+        $plans = Plan::query()
+            ->where('visibility', 'visible')
+            ->orderBy('name')
+            ->get(['id', 'name', 'price']);
+
+        if ($preselected === null) {
+            return $plans->map(fn (Plan $plan): array => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'price' => $plan->price,
+            ])->all();
+        }
+
+        return $plans
+            ->push(new Plan([
+                'id' => $preselected->id,
+                'name' => $preselected->name,
+                'price' => $preselected->price,
+            ]))
+            ->unique('id')
+            ->sortBy('name')
+            ->map(fn (Plan $plan): array => [
+                'id' => $plan->id,
+                'name' => $plan->name,
+                'price' => $plan->price,
+            ])
+            ->values()
+            ->all();
+    }
+
     private function storeContractRegistration(array $data, PublicHiringLeadRequest $request): RedirectResponse
     {
         $contract = Contract::query()
@@ -424,33 +467,9 @@ class PublicHiringLeadController extends Controller
 
             $this->storeCreditCard($gateway, $cardToken, $gatewayCustomer);
 
-            HiringLead::query()->create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'phone' => $data['phone'],
-                'document' => $document,
-                'gender' => $data['gender'] ?? null,
-                'birth_date' => $data['birth_date'] ?? null,
-                'address' => $data['address'] ?? null,
-                'address_number' => $data['address_number'] ?? null,
-                'address_complement' => $data['address_complement'] ?? null,
-                'address_district' => $data['address_district'] ?? null,
-                'address_state' => $data['address_state'] ?? null,
-                'address_city' => $data['address_city'] ?? null,
-                'address_postal_code' => $data['address_postal_code'] ?? null,
-                'status' => HiringLeadStatus::NEW->value,
-                'source' => HiringLeadSource::CONTRACT->value,
-                'payment_method' => 'credit_card',
-                'audience_category' => $data['audience_category'] ?? null,
-                'legal_representative_name' => $data['legal_representative_name'] ?? null,
-                'legal_representative_document' => ! empty($data['legal_representative_document']) ? preg_replace('/\D/', '', (string) $data['legal_representative_document']) : null,
-                'legal_representative_birth_date' => $data['legal_representative_birth_date'] ?? null,
-                'visibility' => 'visible',
-                'accepted_at' => CarbonImmutable::now(),
-                'plan_id' => $plan?->getKey(),
-                'coupon_id' => $coupon?->getKey(),
-                'contract_id' => $contract->id,
-                'client_id' => $client->id,
+            $this->recordContractLead->execute([
+                'contract' => $contract,
+                'client' => $client,
             ]);
 
             $failureReason = BillingFailureData::REASON_INVOICE_ISSUANCE;
@@ -589,33 +608,9 @@ class PublicHiringLeadController extends Controller
 
             $this->storeCreditCard($gateway, $cardToken, $gatewayCustomer);
 
-            HiringLead::query()->create([
-                'name' => $client->name,
-                'email' => $client->email,
-                'phone' => $client->phone,
-                'document' => $document,
-                'gender' => $client->gender,
-                'birth_date' => $client->birth_date,
-                'address' => $client->address,
-                'address_number' => $client->address_number,
-                'address_complement' => $client->address_complement,
-                'address_district' => $client->address_district,
-                'address_state' => $client->address_state,
-                'address_city' => $client->address_city,
-                'address_postal_code' => $client->address_postal_code,
-                'status' => HiringLeadStatus::NEW->value,
-                'source' => HiringLeadSource::CONTRACT->value,
-                'payment_method' => 'credit_card',
-                'audience_category' => $client->audience_category?->value,
-                'legal_representative_name' => $client->legal_representative_name,
-                'legal_representative_document' => $client->legal_representative_document,
-                'legal_representative_birth_date' => $client->legal_representative_birth_date,
-                'visibility' => 'visible',
-                'accepted_at' => CarbonImmutable::now(),
-                'plan_id' => $plan?->getKey(),
-                'coupon_id' => $coupon?->getKey(),
-                'contract_id' => $contract->id,
-                'client_id' => $client->id,
+            $this->recordContractLead->execute([
+                'contract' => $contract,
+                'client' => $client,
             ]);
 
             $failureReason = BillingFailureData::REASON_INVOICE_ISSUANCE;
@@ -668,6 +663,10 @@ class PublicHiringLeadController extends Controller
         $coupon->increment('used_count');
     }
 
+    /**
+     * A pre-registration already reserved the redemption when it registered the
+     * coupon, so a contract that inherited it must not count it a second time.
+     */
     private function shouldCountCouponUse(Contract $contract, Coupon $coupon): bool
     {
         $reserved = HiringLead::query()

@@ -18,6 +18,7 @@ class SettingSeeder extends Seeder
             ['name' => 'sale_default_category', 'label' => 'Categoria de Vendas', 'content' => '', 'object_type' => 'select:financial-category', 'group' => 'billing'],
             ['name' => 'direct_lesson_default_category', 'label' => 'Categoria de Aula Avulsa', 'content' => '', 'object_type' => 'select:financial-category', 'group' => 'billing'],
             ['name' => 'default_financial_account', 'label' => 'Conta Padrão', 'content' => '', 'object_type' => 'select:financial-account', 'group' => 'financial'],
+            ['name' => 'default_country_code', 'label' => 'Código de País dos Telefones', 'content' => '55', 'object_type' => 'text', 'group' => 'general'],
             ['name' => 'hiring_terms', 'label' => 'Termos de Pré-cadastro', 'content' => '', 'object_type' => 'textarea', 'group' => 'peoples'],
             ['name' => 'privacy_notice', 'label' => 'Aviso de Privacidade (LGPD)', 'content' => '', 'object_type' => 'textarea', 'group' => 'peoples'],
             ['name' => 'image_rights_terms', 'label' => 'Cláusula de Direitos de Imagem', 'content' => '', 'object_type' => 'textarea', 'group' => 'peoples'],

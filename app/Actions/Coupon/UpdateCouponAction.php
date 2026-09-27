@@ -38,8 +38,12 @@ class UpdateCouponAction extends BaseAction
 
         $this->couponRepository->update($coupon, $updateData);
 
+        if ($dto->plan_ids !== null) {
+            $coupon->plans()->sync($dto->plan_ids);
+        }
+
         return ActionResultDTO::success(
-            $coupon->refresh(),
+            $coupon->refresh()->load('plans'),
             'Cupom atualizado com sucesso.'
         );
     }

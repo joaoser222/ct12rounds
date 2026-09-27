@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\HasVisibility;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Coupon extends Model
 {
@@ -28,6 +29,22 @@ class Coupon extends Model
         'max_uses' => 'integer',
         'used_count' => 'integer',
     ];
+
+    /**
+     * Plans this coupon is restricted to. An empty relation means the coupon
+     * applies to every plan.
+     */
+    public function plans(): BelongsToMany
+    {
+        return $this->belongsToMany(Plan::class, 'coupon_plan');
+    }
+
+    public function appliesToPlan(int|string $planId): bool
+    {
+        $restricted = $this->plans;
+
+        return $restricted->isEmpty() || $restricted->contains('id', (int) $planId);
+    }
 
     public function isAvailable(): bool
     {

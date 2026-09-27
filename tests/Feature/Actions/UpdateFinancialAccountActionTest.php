@@ -60,7 +60,7 @@ class UpdateFinancialAccountActionTest extends TestCase
             'name' => 'Bancária',
             'account_type' => FinancialAccountType::BANK,
             'holder_name' => 'Titular Antigo',
-            'holder_document' => '12345678901',
+            'holder_document' => '12345678909',
             'holder_birth_date' => '1990-01-01',
             'bank_account_number' => '12345',
             'bank_agency' => '0001',

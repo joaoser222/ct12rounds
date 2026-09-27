@@ -175,7 +175,7 @@ class ChatControllerTest extends TestCase
                                         'name' => 'Cliente Via Tool',
                                         'email' => 'cliente@tool.com',
                                         'phone' => '11999999999',
-                                        'document' => '12345678901',
+                                        'document' => '12345678909',
                                         'gender' => 'male',
                                         'birth_date' => '1990-01-01',
                                     ]),
@@ -203,7 +203,7 @@ class ChatControllerTest extends TestCase
 
         $this->assertDatabaseHas('clients', [
             'name' => 'Cliente Via Tool',
-            'document' => '12345678901',
+            'document' => '12345678909',
         ]);
 
         $toolCalled = false;
@@ -505,7 +505,7 @@ class ChatControllerTest extends TestCase
                                         'name' => 'Cliente Groq',
                                         'email' => 'groq@tool.com',
                                         'phone' => '11999999999',
-                                        'document' => '12345678901',
+                                        'document' => '12345678909',
                                         'gender' => 'male',
                                         'birth_date' => '1990-01-01',
                                     ]),
@@ -533,7 +533,7 @@ class ChatControllerTest extends TestCase
 
         $this->assertDatabaseHas('clients', [
             'name' => 'Cliente Groq',
-            'document' => '12345678901',
+            'document' => '12345678909',
         ]);
 
         $recorded = Http::recorded()

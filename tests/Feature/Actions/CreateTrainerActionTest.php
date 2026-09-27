@@ -17,7 +17,7 @@ class CreateTrainerActionTest extends TestCase
         return [
             'name' => 'Instrutor Teste',
             'email' => 'instrutor@teste.com',
-            'document' => '12345678901',
+            'document' => '12345678909',
             'phone' => '11999999999',
             'gender' => 'male',
         ];
@@ -33,7 +33,7 @@ class CreateTrainerActionTest extends TestCase
         $this->assertTrue($result->success);
         $this->assertDatabaseHas('trainers', [
             'name' => 'Instrutor Teste',
-            'document' => '12345678901',
+            'document' => '12345678909',
         ]);
     }
 

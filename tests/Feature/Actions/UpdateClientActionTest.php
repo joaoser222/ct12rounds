@@ -16,7 +16,7 @@ class UpdateClientActionTest extends TestCase
     public function test_updates_a_client_with_valid_data(): void
     {
         $client = Client::factory()->create([
-            'document' => '12345678901',
+            'document' => '12345678909',
             'name' => 'Nome Antigo',
         ]);
 
@@ -26,7 +26,7 @@ class UpdateClientActionTest extends TestCase
             name: 'Nome Novo',
             email: 'novo@teste.com',
             phone: '11988887777',
-            document: '12345678901',
+            document: '12345678909',
             gender: 'F',
             birth_date: '1995-05-15',
         );
@@ -43,7 +43,7 @@ class UpdateClientActionTest extends TestCase
 
     public function test_returns_success_message(): void
     {
-        $client = Client::factory()->create(['document' => '12345678901']);
+        $client = Client::factory()->create(['document' => '12345678909']);
 
         $action = app(UpdateClientAction::class);
         $dto = new UpdateClientDTO(
@@ -51,7 +51,7 @@ class UpdateClientActionTest extends TestCase
             name: 'Atualizado',
             email: 'at@test.com',
             phone: '11988887777',
-            document: '12345678901',
+            document: '12345678909',
             gender: 'M',
             birth_date: '1990-01-01',
         );
@@ -71,7 +71,7 @@ class UpdateClientActionTest extends TestCase
             name: 'Inexistente',
             email: 'x@test.com',
             phone: '11988887777',
-            document: '12345678901',
+            document: '12345678909',
             gender: 'M',
             birth_date: '1990-01-01',
         );

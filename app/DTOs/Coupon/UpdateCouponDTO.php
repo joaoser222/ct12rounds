@@ -3,6 +3,7 @@
 namespace App\DTOs\Coupon;
 
 use App\DTOs\Contracts\BaseDTO;
+use Spatie\LaravelData\Attributes\Validation\ArrayType;
 use Spatie\LaravelData\Attributes\Validation\Date;
 use Spatie\LaravelData\Attributes\Validation\IntegerType;
 use Spatie\LaravelData\Attributes\Validation\Max;
@@ -14,6 +15,7 @@ use Spatie\LaravelData\Attributes\Validation\StringType;
 
 class UpdateCouponDTO extends BaseDTO
 {
+    /** @param array<int, int> $plan_ids */
     public function __construct(
         #[Required, IntegerType, Min(1)]
         public int $id,
@@ -32,5 +34,10 @@ class UpdateCouponDTO extends BaseDTO
 
         #[Nullable, Date]
         public ?string $expiration_date = null,
+
+        // null means "not submitted" and leaves the scope untouched; an empty
+        // array clears it, making the coupon apply to every plan again.
+        #[Nullable, ArrayType(IntegerType::class)]
+        public ?array $plan_ids = null,
     ) {}
 }

@@ -144,7 +144,7 @@ class StockRecalculationServiceTest extends TestCase
         return Supplier::query()->create([
             'name' => 'Fornecedor Estoque',
             'email' => 'fornecedor-estoque@example.com',
-            'document' => '12345678901234',
+            'document' => '12345678909234',
             'phone' => '11999999999',
             'visibility' => Visibility::VISIBLE->value,
         ]);

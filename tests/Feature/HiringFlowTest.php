@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\GenderType;
+use App\Enums\HiringLeadSource;
+use App\Enums\HiringLeadStatus;
 use App\Models\Client;
 use App\Models\Contract;
 use App\Models\Coupon;
@@ -60,6 +62,22 @@ class HiringFlowTest extends TestCase
     }
 
     /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function createPendingLead(string $email, array $overrides = []): HiringLead
+    {
+        return HiringLead::query()->create([
+            'name' => 'Maria Silva',
+            'email' => $email,
+            'phone' => '11999999999',
+            'status' => HiringLeadStatus::NEW->value,
+            'source' => HiringLeadSource::SITE->value,
+            'visibility' => 'visible',
+            ...$overrides,
+        ]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function validPayload(Plan $plan): array
@@ -87,6 +105,59 @@ class HiringFlowTest extends TestCase
             ->where('options.plans.0.title', 'Plano Performance')
             ->has('options.coupons')
         );
+    }
+
+    public function test_contract_wizard_reports_the_pending_pre_registrations(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'contracts.create');
+        $this->createPlan();
+
+        $this->createPendingLead('maria@example.com');
+        $this->createPendingLead('joao@example.com');
+
+        $this->actingAs($user)->get(route('contracts.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('contracts/Details')
+                ->where('options.pendingLeads', 2)
+            );
+    }
+
+    public function test_contract_wizard_ignores_already_converted_and_linked_pre_registrations(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'contracts.create');
+        $this->grantPermission($user, 'contracts.update');
+        $plan = $this->createPlan();
+
+        $this->actingAs($user)->post(route('contracts.store'), $this->validPayload($plan));
+        $contract = Contract::query()->firstOrFail();
+
+        $this->createPendingLead('maria@example.com');
+        $this->createPendingLead('joao@example.com', ['contract_id' => $contract->id]);
+        $this->createPendingLead('ana@example.com', ['status' => HiringLeadStatus::CONVERTED->value]);
+
+        $this->actingAs($user)->get(route('contracts.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('contracts/Details')
+                ->where('options.pendingLeads', 1)
+            );
+    }
+
+    public function test_contract_wizard_reports_no_pending_leads_on_a_clean_slate(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'contracts.create');
+        $this->createPlan();
+
+        $this->actingAs($user)->get(route('contracts.create'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('contracts/Details')
+                ->where('options.pendingLeads', 0)
+            );
     }
 
     public function test_contract_wizard_creates_pending_contract_with_registration_token(): void
@@ -121,14 +192,16 @@ class HiringFlowTest extends TestCase
         $this->assertSame(12, $contract->installments);
         $this->assertSame(Date::today()->format('Y-m-d'), $contract->first_due_date?->format('Y-m-d'));
         $this->assertEquals(8398.8, $contract->gross_value);
-        $this->assertEquals(0.0, $contract->discount_value);
-        $this->assertEquals(8398.8, $contract->total);
+        // The 10% coupon is capped by discount_limit, and it is already applied
+        // when the contract is created, before the QR Code is shared.
+        $this->assertEquals(100.0, $contract->discount_value);
+        $this->assertEquals(8298.8, $contract->total);
         $this->assertDatabaseCount('clients', 0);
         $this->assertDatabaseCount('invoices', 0);
         $this->assertDatabaseCount('contract_modalities', 3);
     }
 
-    public function test_contract_wizard_links_lead_and_auto_carries_reserved_coupon(): void
+    public function test_contract_wizard_links_lead_and_carries_its_coupon(): void
     {
         $user = User::factory()->create();
         $this->grantPermission($user, 'contracts.create');
@@ -161,10 +234,85 @@ class HiringFlowTest extends TestCase
 
         $response->assertRedirect(route('contracts.show', $contract));
 
+        // The pre-registration reserved the coupon, so the contract inherits it
+        // and the discount is resolved before the QR Code is shared.
         $this->assertSame($coupon->id, $contract->coupon_id);
+        $this->assertEquals(100.0, $contract->discount_value);
+        $this->assertEquals(8298.8, $contract->total);
 
         $lead->refresh();
         $this->assertSame($contract->id, $lead->contract_id);
+    }
+
+    public function test_editing_a_contract_keeps_the_coupon_chosen_by_the_team(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'contracts.create');
+        $this->grantPermission($user, 'contracts.update');
+        $plan = $this->createPlan();
+        $coupon = Coupon::query()->create([
+            'code' => 'BEMVINDO',
+            'percent' => 10,
+            'discount_limit' => 100,
+            'duration' => 30,
+            'expiration_date' => '2026-12-31',
+            'visibility' => 'visible',
+        ]);
+
+        $lead = HiringLead::query()->create([
+            'name' => 'Maria Silva',
+            'email' => 'maria@example.com',
+            'phone' => '11999999999',
+            'status' => 'new',
+            'source' => 'site',
+            'visibility' => 'visible',
+            'coupon_id' => $coupon->id,
+        ]);
+
+        $payload = $this->validPayload($plan);
+        $payload['lead_id'] = $lead->id;
+
+        $this->actingAs($user)->post(route('contracts.store'), $payload);
+
+        $contract = Contract::query()->firstOrFail();
+        $this->assertSame($coupon->id, $contract->coupon_id);
+
+        // Once created, the contract keeps the coupon it was created with: it is
+        // never re-derived from the linked pre-registration.
+        $this->actingAs($user)->put(
+            route('contracts.update', $contract),
+            ['annotations' => 'Contrato revisado pela equipe.']
+        );
+
+        $contract->refresh();
+        $this->assertSame($coupon->id, $contract->coupon_id);
+        $this->assertEquals(100.0, $contract->discount_value);
+        $this->assertEquals(8298.8, $contract->total);
+        $this->assertSame('Contrato revisado pela equipe.', $contract->annotations);
+    }
+
+    public function test_contract_wizard_applies_the_coupon_chosen_explicitly(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'contracts.create');
+        $plan = $this->createPlan();
+        $coupon = Coupon::query()->create([
+            'code' => 'PROMO10',
+            'percent' => 10,
+            'discount_limit' => 100,
+            'duration' => 30,
+            'expiration_date' => '2026-12-31',
+            'visibility' => 'visible',
+        ]);
+
+        $payload = $this->validPayload($plan);
+        $payload['coupon_id'] = $coupon->id;
+
+        $this->actingAs($user)->post(route('contracts.store'), $payload);
+
+        $contract = Contract::query()->firstOrFail();
+
+        $this->assertSame($coupon->id, $contract->coupon_id);
     }
 
     public function test_contract_wizard_validates_the_selected_plan_duration_combination(): void
@@ -215,7 +363,7 @@ class HiringFlowTest extends TestCase
             'name' => 'Cliente QR',
             'email' => 'qr@example.com',
             'phone' => '11977776666',
-            'document' => '22233344455',
+            'document' => '22233344405',
             'gender' => GenderType::MALE->value,
             'birth_date' => '1992-05-10',
             'address' => 'Rua QR',
@@ -247,7 +395,7 @@ class HiringFlowTest extends TestCase
 
         $this->assertDatabaseHas('clients', [
             'id' => $contract->client_id,
-            'document' => '22233344455',
+            'document' => '22233344405',
             'name' => 'Cliente QR',
         ]);
 
