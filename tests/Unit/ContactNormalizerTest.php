@@ -85,7 +85,15 @@ class ContactNormalizerTest extends TestCase
         $this->assertSame('11222333000181', $this->normalizer()->document('11.222.333/0001-81'));
     }
 
-    public function test_it_reads_the_country_code_from_the_setting(): void
+    public function test_it_reads_the_country_code_from_the_fixed_config(): void
+    {
+        config()->set('contact.country_code', '1');
+
+        $this->assertSame('1', $this->normalizer()->countryCode());
+        $this->assertSame('111988888888', $this->normalizer()->phone('(11) 98888-8888'));
+    }
+
+    public function test_the_country_code_does_not_come_from_a_setting(): void
     {
         Setting::query()->create([
             'name' => 'default_country_code',
@@ -95,23 +103,8 @@ class ContactNormalizerTest extends TestCase
             'group' => 'general',
         ]);
 
-        $this->assertSame('1', $this->normalizer()->countryCode());
-        $this->assertSame('111988888888', $this->normalizer()->phone('(11) 98888-8888'));
-    }
-
-    public function test_it_falls_back_to_brazil_when_the_setting_is_blank_or_missing(): void
-    {
         $this->assertSame('55', $this->normalizer()->countryCode());
-
-        Setting::query()->create([
-            'name' => 'default_country_code',
-            'label' => 'Código de País dos Telefones',
-            'content' => '',
-            'object_type' => 'text',
-            'group' => 'general',
-        ]);
-
-        $this->assertSame('55', $this->normalizer()->countryCode());
+        $this->assertSame('5511988888888', $this->normalizer()->phone('(11) 98888-8888'));
     }
 
     private function normalizer(): ContactNormalizer

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Setting;
 use InvalidArgumentException;
 
 /**
@@ -10,15 +9,10 @@ use InvalidArgumentException;
  *
  * Phone numbers are stored in international form (country code included) so
  * that the value is unambiguous regardless of how the user typed it. The
- * country code comes from the `default_country_code` setting instead of being
- * hardcoded.
+ * country code is fixed in `config/contact.php`.
  */
 class ContactNormalizer
 {
-    private const COUNTRY_CODE_SETTING = 'default_country_code';
-
-    private const FALLBACK_COUNTRY_CODE = '55';
-
     /**
      * Brazilian national lengths: 10 digits (area code + landline) and
      * 11 digits (area code + mobile, which always carries the extra 9).
@@ -82,16 +76,6 @@ class ContactNormalizer
 
     public function countryCode(): string
     {
-        $stored = Setting::query()
-            ->where('name', self::COUNTRY_CODE_SETTING)
-            ->value('content');
-
-        if (! is_string($stored) && ! is_int($stored)) {
-            return self::FALLBACK_COUNTRY_CODE;
-        }
-
-        $digits = preg_replace('/\D/', '', (string) $stored) ?? '';
-
-        return $digits === '' ? self::FALLBACK_COUNTRY_CODE : $digits;
+        return (string) config('contact.country_code');
     }
 }
