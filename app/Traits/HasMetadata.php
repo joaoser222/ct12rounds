@@ -14,6 +14,8 @@ trait HasMetadata
     /**
      * List of fields that will be returned by options().
      * Can be overridden in the enum that uses this trait.
+     *
+     * @return array<int, string>
      */
     protected static function fields(): array
     {
@@ -22,6 +24,8 @@ trait HasMetadata
 
     /**
      * Return all values as an array.
+     *
+     * @return array<int, string>
      */
     public static function values(): array
     {
@@ -30,6 +34,8 @@ trait HasMetadata
 
     /**
      * Return array for selects (value => [fields defined in fields()]).
+     *
+     * @return array<string, array<string, string>>
      */
     public static function options(): array
     {

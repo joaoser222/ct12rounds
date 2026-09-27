@@ -3,6 +3,8 @@
 namespace App\Traits;
 
 use App\Enums\Visibility;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 trait HasVisibility
 {
@@ -88,33 +90,55 @@ trait HasVisibility
     }
 
     // Scopes
-    public function scopeVisible($query)
+    /**
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    public function scopeVisible(Builder $query): Builder
     {
         return $query->where('visibility', Visibility::VISIBLE->value);
     }
 
-    public function scopeHidden($query)
+    /**
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    public function scopeHidden(Builder $query): Builder
     {
         return $query->where('visibility', Visibility::HIDDEN->value);
     }
 
-    public function scopeArchived($query)
+    /**
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    public function scopeArchived(Builder $query): Builder
     {
         return $query->where('visibility', Visibility::ARCHIVED->value);
     }
 
-    public function scopeNotArchived($query)
+    /**
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
+    public function scopeNotArchived(Builder $query): Builder
     {
         return $query->where('visibility', '!=', Visibility::ARCHIVED->value);
     }
 
     // Static methods for use in validations
 
+    /**
+     * @return array<string, array<string, string>>
+     */
     public static function getVisibilityOptions(): array
     {
         return Visibility::options();
     }
 
+    /**
+     * @return array<int, string>
+     */
     public static function getValidVisibilityValues(): array
     {
         return Visibility::values();
