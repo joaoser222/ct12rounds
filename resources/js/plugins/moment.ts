@@ -1,4 +1,4 @@
-import moment, { type Moment, type MomentInput } from 'moment';
+import moment from 'moment';
 import 'moment/dist/locale/pt-br';
 
 /**
