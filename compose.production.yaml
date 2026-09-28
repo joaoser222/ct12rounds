@@ -9,12 +9,20 @@ services:
       sh -c 'set -e;
       node /var/www/html/bootstrap/ssr/ssr.js > /tmp/ssr.log 2>&1 &
       mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache;
-      chown -R www-data:www-data storage bootstrap/cache;
+      find storage bootstrap/cache -path storage/app/backups -prune -o -exec chown www-data:www-data {} +;
+      php artisan migrate --force;
       exec php-fpm'
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 20s
     environment:
       INERTIA_SSR_ENABLED: "true"
     volumes:
       - laravel_storage:/var/www/html/storage
+      - bootstrap_cache:/var/www/html/bootstrap/cache
       - public_build:/var/www/html/public/build
       - ${BACKUP_HOST_PATH:-./backups}:/var/www/html/storage/app/backups
   caddy:
@@ -31,27 +39,39 @@ services:
       - path: production.env
         required: true
   queue:
+    user: "www-data"
     env_file:
       - path: .env
         required: true
       - path: production.env
         required: true
+    depends_on:
+      app:
+        condition: service_healthy
     volumes:
       - laravel_storage:/var/www/html/storage
+      - bootstrap_cache:/var/www/html/bootstrap/cache
   scheduler:
     container_name: ct12rounds_scheduler
+    user: "www-data"
     env_file:
       - path: .env
         required: true
       - path: production.env
         required: true
+    depends_on:
+      app:
+        condition: service_healthy
     volumes:
       - laravel_storage:/var/www/html/storage
+      - bootstrap_cache:/var/www/html/bootstrap/cache
       - public_build:/var/www/html/public/build
       - ${BACKUP_HOST_PATH:-./backups}:/var/www/html/storage/app/backups
 
 volumes:
   laravel_storage:
     name: ct12rounds_laravel_storage
+  bootstrap_cache:
+    name: ct12rounds_bootstrap_cache
   public_build:
     name: ct12rounds_public_build
