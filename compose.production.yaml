@@ -15,12 +15,15 @@ services:
       INERTIA_SSR_ENABLED: "true"
     volumes:
       - laravel_storage:/var/www/html/storage
+      - public_build:/var/www/html/public/build
+      - ${BACKUP_HOST_PATH:-./backups}:/var/www/html/storage/app/backups
   caddy:
     container_name: ct12rounds_caddy
     ports:
       - "80:80"
     volumes:
       - ./public:/var/www/html/public:ro
+      - public_build:/var/www/html/public/build
   db:
     env_file:
       - path: .env
@@ -33,7 +36,22 @@ services:
         required: true
       - path: production.env
         required: true
+    volumes:
+      - laravel_storage:/var/www/html/storage
+  scheduler:
+    container_name: ct12rounds_scheduler
+    env_file:
+      - path: .env
+        required: true
+      - path: production.env
+        required: true
+    volumes:
+      - laravel_storage:/var/www/html/storage
+      - public_build:/var/www/html/public/build
+      - ${BACKUP_HOST_PATH:-./backups}:/var/www/html/storage/app/backups
 
 volumes:
   laravel_storage:
     name: ct12rounds_laravel_storage
+  public_build:
+    name: ct12rounds_public_build
