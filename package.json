@@ -32,7 +32,6 @@
     "dependencies": {
         "@inertiajs/server": "^0.1.0",
         "@inertiajs/vue3": "^3.0.0",
-        "@mdi/font": "^7.4.47",
         "@tabler/icons-webfont": "3.34.0",
         "apexcharts": "^7.4.0",
         "axios": "^1.11.0",
