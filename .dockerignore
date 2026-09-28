@@ -4,6 +4,7 @@
 .git
 .phpunit.cache
 bootstrap/cache/*.php
+bootstrap/ssr
 node_modules
 public/build
 storage/logs
