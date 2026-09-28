@@ -4,8 +4,6 @@ services:
     build:
       context: .
     image: ${APP_IMAGE:-ct12rounds:local}
-    volumes:
-      - ./public/build:/var/www/html/public/build
     depends_on:
       db:
         condition: service_healthy
