@@ -35,7 +35,7 @@
                 <v-card-title class="d-flex justify-space-between align-center">
                     <span>Selecionar Cor</span>
                     <v-btn
-                        icon="mdi-close"
+                        icon="ti ti-x"
                         variant="text"
                         size="small"
                         @click="closeDialog"

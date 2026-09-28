@@ -3,11 +3,10 @@ import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
 import type { ThemeDefinition } from 'vuetify';
 import { VBtn } from 'vuetify/components';
-import { aliases } from 'vuetify/iconsets/mdi';
 import { VFileUpload } from 'vuetify/labs/VFileUpload';
 import { pt } from 'vuetify/locale';
 import themes from '../themes/index';
-import { tabler } from './tabler';
+import { aliases, tabler } from './tabler';
 
 /**
  * Central Vuetify configuration for the application.
