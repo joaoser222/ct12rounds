@@ -660,39 +660,6 @@ onBeforeUnmount(() => {
   <p>© 2025 CT 12 Rounds. Todos os direitos reservados.</p>
   <p>Metodologia 12 Rounds — Palmas, Tocantins</p>
 </div>
-
-<script>
-const obs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if(e.isIntersecting){
-      e.target.classList.add('on');
-      obs.unobserve(e.target);
-    }
-  });
-}, {threshold: 0.08, rootMargin: '0px 0px -40px 0px'});
-
-document.querySelectorAll('.rv, .rv-l, .rv-r, .rv-s').forEach(el => obs.observe(el));
-
-// Hamburger menu
-const hamBtn = document.getElementById('hamBtn');
-const mobileMenu = document.getElementById('mobileMenu');
-const mobileClose = document.getElementById('mobileClose');
-
-function openMenu(){
-  mobileMenu.classList.add('open');
-  hamBtn.classList.add('open');
-  document.body.style.overflow='hidden';
-}
-function closeMenu(){
-  mobileMenu.classList.remove('open');
-  hamBtn.classList.remove('open');
-  document.body.style.overflow='';
-}
-
-hamBtn.addEventListener('click', openMenu);
-mobileClose.addEventListener('click', closeMenu);
-document.querySelectorAll('.mm-link, .mm-cta').forEach(el => el.addEventListener('click', closeMenu));
-</script>
     </div>
 </template>
 
