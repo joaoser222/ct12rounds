@@ -46,3 +46,7 @@ RUN composer dump-autoload --optimize --no-scripts
 COPY --from=node-deps /app/node_modules /var/www/html/node_modules
 COPY --from=node-build /app/public/build ./public/build
 COPY --from=node-build /app/bootstrap/ssr ./bootstrap/ssr
+
+# Named volumes inherit ownership from these paths when first created, so the
+# www-data worker can write them without depending on a runtime chown.
+RUN chown -R www-data:www-data storage bootstrap/cache
