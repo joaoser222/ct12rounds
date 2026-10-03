@@ -13,17 +13,19 @@ class TrainerSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Run the database seeds.
+     * Matched by name, never by id: the database assigns ids so the sequence
+     * stays aligned with max(id) and inserts from the application cannot collide.
      */
     public function run(): void
     {
-        Trainer::upsert([[
-            'id' => 1,
-            'name' => 'Treinador Padrão',
-            'document' => '00000000000',
-            'phone' => '99999999999',
-            'gender' => GenderType::MALE->value,
-            'visibility' => Visibility::VISIBLE->value,
-        ]], ['id'], ['name', 'document', 'phone']);
+        Trainer::updateOrCreate(
+            ['name' => 'Treinador Padrão'],
+            [
+                'document' => '00000000000',
+                'phone' => '99999999999',
+                'gender' => GenderType::MALE->value,
+                'visibility' => Visibility::VISIBLE->value,
+            ],
+        );
     }
 }
