@@ -11,7 +11,7 @@ return [
     | Optional credentials used by UserSeeder. When ADMIN_PASSWORD is empty the
     | seeder does nothing, so a fresh install never ships a known password.
     | The role and the permissions are assigned by `access-control:sync`, which
-    | owns that data; run it after seeding.
+    | DatabaseSeeder runs at the end of every seeding.
     |
     */
 

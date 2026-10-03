@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -32,5 +33,9 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,
             ReportSeeder::class,
         ]);
+
+        // Roles, permissions and the default role of every user are owned by
+        // this command, so the seeded administrator ends up with access.
+        Artisan::call('access-control:sync');
     }
 }
