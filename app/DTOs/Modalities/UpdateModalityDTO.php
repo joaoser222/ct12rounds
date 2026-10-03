@@ -12,6 +12,9 @@ use Spatie\LaravelData\Attributes\Validation\StringType;
 
 class UpdateModalityDTO extends BaseDTO
 {
+    /**
+     * @param  array<int, array<string, mixed>>  $graduations
+     */
     public function __construct(
         #[Required, IntegerType, Min(1)]
         public int $id,
@@ -21,5 +24,7 @@ class UpdateModalityDTO extends BaseDTO
 
         #[Nullable, StringType, Max(7)]
         public ?string $color = null,
+
+        public array $graduations = [],
     ) {}
 }

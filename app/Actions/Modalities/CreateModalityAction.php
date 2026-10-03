@@ -7,6 +7,7 @@ use App\DTOs\Modalities\ActionResultDTO;
 use App\DTOs\Modalities\CreateModalityDTO;
 use App\Models\Modality;
 use App\Repositories\Contracts\ModalityRepositoryInterface;
+use App\Services\GraduationService;
 
 class CreateModalityAction extends BaseAction
 {
@@ -17,6 +18,7 @@ class CreateModalityAction extends BaseAction
 
     public function __construct(
         private readonly ModalityRepositoryInterface $modalityRepository,
+        private readonly GraduationService $graduationService,
     ) {}
 
     protected function handle(mixed $input): ActionResultDTO
@@ -31,8 +33,10 @@ class CreateModalityAction extends BaseAction
             'color' => $dto->color,
         ]);
 
+        $this->graduationService->syncModalityGraduations($modality, $dto->graduations);
+
         return ActionResultDTO::success(
-            $modality,
+            $modality->refresh()->load('graduations'),
             'Modalidade criada com sucesso.'
         );
     }

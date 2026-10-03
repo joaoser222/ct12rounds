@@ -28,4 +28,9 @@ class Modality extends Model
     {
         return $this->hasMany(ClassSchedule::class);
     }
+
+    public function graduations(): HasMany
+    {
+        return $this->hasMany(ModalityGraduation::class);
+    }
 }

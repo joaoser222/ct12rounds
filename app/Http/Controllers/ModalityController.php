@@ -9,6 +9,7 @@ use App\Actions\Modalities\UpdateModalityAction;
 use App\DTOs\Modalities\CreateModalityDTO;
 use App\DTOs\Modalities\UpdateModalityDTO;
 use App\Models\Modality;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,15 +51,13 @@ class ModalityController extends CrudModuleController
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        ]);
+        $validated = $request->validate($this->graduationRules());
 
         $result = $this->createModality->execute(
             CreateModalityDTO::from([
                 'name' => $validated['name'],
                 'color' => $validated['color'] ?? null,
+                'graduations' => $validated['graduations'] ?? [],
             ])
         );
 
@@ -81,16 +80,14 @@ class ModalityController extends CrudModuleController
         /** @var Modality $modality */
         $modality = $this->modelFromRoute($request);
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        ]);
+        $validated = $request->validate($this->graduationRules());
 
         $result = $this->updateModality->execute(
             UpdateModalityDTO::from([
                 'id' => $modality->getKey(),
                 'name' => $validated['name'],
                 'color' => $validated['color'] ?? null,
+                'graduations' => $validated['graduations'] ?? [],
             ])
         );
 
@@ -104,5 +101,31 @@ class ModalityController extends CrudModuleController
         ]);
 
         return redirect()->route($this->routePrefix().'.index');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function moduleDetailsProps(?Model $model = null): array
+    {
+        return [
+            'graduations' => $model instanceof Modality
+                ? $model->graduations()->orderBy('id')->get(['id', 'name'])->all()
+                : [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function graduationRules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:255'],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'graduations' => ['nullable', 'array'],
+            'graduations.*.id' => ['nullable', 'integer'],
+            'graduations.*.name' => ['required', 'string', 'max:255'],
+        ];
     }
 }

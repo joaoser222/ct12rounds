@@ -7,6 +7,7 @@ use App\DTOs\Modalities\ActionResultDTO;
 use App\DTOs\Modalities\UpdateModalityDTO;
 use App\Models\Modality;
 use App\Repositories\Contracts\ModalityRepositoryInterface;
+use App\Services\GraduationService;
 
 class UpdateModalityAction extends BaseAction
 {
@@ -17,6 +18,7 @@ class UpdateModalityAction extends BaseAction
 
     public function __construct(
         private readonly ModalityRepositoryInterface $modalityRepository,
+        private readonly GraduationService $graduationService,
     ) {}
 
     protected function handle(mixed $input): ActionResultDTO
@@ -33,8 +35,10 @@ class UpdateModalityAction extends BaseAction
             'color' => $dto->color,
         ]);
 
+        $this->graduationService->syncModalityGraduations($modality, $dto->graduations);
+
         return ActionResultDTO::success(
-            $modality->refresh(),
+            $modality->refresh()->load('graduations'),
             'Modalidade atualizada com sucesso.'
         );
     }
