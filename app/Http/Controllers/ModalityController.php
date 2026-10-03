@@ -110,7 +110,7 @@ class ModalityController extends CrudModuleController
     {
         return [
             'graduations' => $model instanceof Modality
-                ? $model->graduations()->orderBy('id')->get(['id', 'name'])->all()
+                ? $model->graduations()->orderBy('id')->get(['id', 'name', 'color'])->all()
                 : [],
         ];
     }
@@ -126,6 +126,7 @@ class ModalityController extends CrudModuleController
             'graduations' => ['nullable', 'array'],
             'graduations.*.id' => ['nullable', 'integer'],
             'graduations.*.name' => ['required', 'string', 'max:255'],
+            'graduations.*.color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ];
     }
 }

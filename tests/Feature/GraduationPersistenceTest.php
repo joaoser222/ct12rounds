@@ -125,6 +125,73 @@ class GraduationPersistenceTest extends TestCase
         $this->assertDatabaseCount('modality_graduations', 0);
     }
 
+    public function test_graduation_stores_its_color(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'modalities.create');
+
+        $this->actingAs($user)->post(route('modalities.store'), [
+            'name' => 'Kickboxing',
+            'graduations' => [
+                ['name' => 'Faixa Branca', 'color' => '#FFFFFF'],
+                ['name' => 'Faixa Azul'],
+            ],
+        ])->assertRedirect(route('modalities.index'));
+
+        $modality = Modality::query()->where('name', 'Kickboxing')->firstOrFail();
+
+        $this->assertSame(
+            ['#ffffff', null],
+            $modality->graduations()->orderBy('position')->pluck('color')->all(),
+        );
+    }
+
+    public function test_graduation_rejects_an_invalid_color(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'modalities.create');
+
+        $this->actingAs($user)->post(route('modalities.store'), [
+            'name' => 'Kickboxing',
+            'graduations' => [['name' => 'Faixa Branca', 'color' => 'azul']],
+        ])->assertSessionHasErrors('graduations.0.color');
+
+        $this->assertDatabaseCount('modality_graduations', 0);
+    }
+
+    public function test_graduation_name_is_stored_capitalized(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'modalities.create');
+
+        $this->actingAs($user)->post(route('modalities.store'), [
+            'name' => 'Muay Thai',
+            'graduations' => [['name' => '  faixa branca  ']],
+        ])->assertRedirect(route('modalities.index'));
+
+        $this->assertDatabaseHas('modality_graduations', ['name' => 'Faixa Branca']);
+    }
+
+    public function test_graduations_differing_only_by_case_are_stored_once(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'modalities.create');
+
+        $this->actingAs($user)->post(route('modalities.store'), [
+            'name' => 'Muay Thai',
+            'graduations' => [
+                ['name' => 'faixa branca', 'color' => '#111111'],
+                ['name' => 'Faixa Branca', 'color' => '#222222'],
+            ],
+        ])->assertRedirect(route('modalities.index'));
+
+        $this->assertDatabaseCount('modality_graduations', 1);
+        $this->assertDatabaseHas('modality_graduations', [
+            'name' => 'Faixa Branca',
+            'color' => '#111111',
+        ]);
+    }
+
     public function test_client_links_a_graduation_of_its_modality(): void
     {
         $user = User::factory()->create();

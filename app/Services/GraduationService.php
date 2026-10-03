@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Modality;
 use App\Models\ModalityGraduation;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class GraduationService
 {
@@ -39,7 +40,11 @@ class GraduationService
             if ($id !== null && $existingIds->has($id)) {
                 $modality->graduations()
                     ->whereKey($id)
-                    ->update(['name' => $graduation['name'], 'position' => $position]);
+                    ->update([
+                        'name' => $graduation['name'],
+                        'color' => $graduation['color'],
+                        'position' => $position,
+                    ]);
 
                 $keptIds[] = $id;
 
@@ -48,6 +53,7 @@ class GraduationService
 
             $keptIds[] = $modality->graduations()->create([
                 'name' => $graduation['name'],
+                'color' => $graduation['color'],
                 'position' => $position,
             ])->getKey();
         }
@@ -82,10 +88,20 @@ class GraduationService
     }
 
     /**
-     * Trims names, drops empty ones and keeps only the first of each duplicate.
+     * Trims names, title-cases them, drops empty ones and keeps only the first
+     * of each duplicate.
+     *
+     * Duplicates are keyed on the normalized name, so "faixa branca" and
+     * "Faixa Branca" collapse into one row instead of tripping the
+     * (modality_id, name) unique index.
+     *
+     * ponytail: Str::title lowercases acronyms ("AFA" -> "Afa"). The form's
+     * v-text-case keeps them, so the stored value can differ from the typed
+     * one. Mirror the directive's preposition rules here only if labels with
+     * prepositions or acronyms actually show up.
      *
      * @param  array<int, array<string, mixed>>  $graduations
-     * @return Collection<int, array{id: int|null, name: string}>
+     * @return Collection<int, array{id: int|null, name: string, color: string|null}>
      */
     private function normalizeGraduations(array $graduations): Collection
     {
@@ -93,16 +109,22 @@ class GraduationService
         $seen = [];
 
         foreach ($graduations as $graduation) {
-            $name = trim((string) ($graduation['name'] ?? ''));
+            $name = Str::title(trim((string) ($graduation['name'] ?? '')));
 
             if ($name === '' || isset($seen[$name])) {
                 continue;
             }
 
             $seen[$name] = true;
+
+            // The controller already enforces the hex format; only the empty
+            // case needs a value, since <input type="color"> can submit one.
+            $color = trim((string) ($graduation['color'] ?? ''));
+
             $rows[] = [
                 'id' => isset($graduation['id']) ? (int) $graduation['id'] : null,
                 'name' => $name,
+                'color' => $color === '' ? null : strtolower($color),
             ];
         }
 

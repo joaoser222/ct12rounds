@@ -13,9 +13,20 @@
             <td>
                 <v-text-field
                     v-model="item.name"
+                    v-text-case="'capitalize'"
                     label="Graduação"
                     hide-details="auto"
+                    :rules="[required]"
                     :error-messages="itemError(index, 'name')"
+                />
+            </td>
+            <td>
+                <v-text-field
+                    v-model="item.color"
+                    label="Cor"
+                    type="color"
+                    hide-details="auto"
+                    :error-messages="itemError(index, 'color')"
                 />
             </td>
         </template>
@@ -23,9 +34,12 @@
 </template>
 
 <script setup lang="ts">
+import { required } from '@/plugins/validators';
+
 type ModalityGraduation = {
     id?: number;
     name?: string;
+    color?: string;
 };
 
 type FormErrors = Record<string, string | undefined>;
@@ -45,10 +59,10 @@ const emit = defineEmits<{
     (e: 'update:items', value: ModalityGraduation[]): void;
 }>();
 
-const columns = [{ title: 'Graduação' }];
+const columns = [{ title: 'Graduação' }, { title: 'Cor', width: '120px' }];
 
 function addItem(): void {
-    emit('update:items', [...props.items, { name: '' }]);
+    emit('update:items', [...props.items, { name: '', color: '#ffffff' }]);
 }
 
 function removeItem(index: number): void {

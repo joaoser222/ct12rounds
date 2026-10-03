@@ -14,6 +14,7 @@ class ModalityGraduation extends Model
     protected $fillable = [
         'modality_id',
         'name',
+        'color',
         'position',
     ];
 

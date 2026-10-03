@@ -11,6 +11,7 @@ defineOptions({ layout: AuthenticatedLayout });
 type ModalityGraduation = {
     id?: number;
     name?: string;
+    color?: string;
 };
 
 type Modality = {
