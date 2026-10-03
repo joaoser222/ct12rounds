@@ -4,6 +4,12 @@ services:
     build:
       context: .
     image: ${APP_IMAGE:-ct12rounds:local}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # .env aponta para o Postgres da maquina; dentro da rede do compose e `db`.
+      DB_HOST: db
     depends_on:
       db:
         condition: service_healthy
@@ -30,6 +36,12 @@ services:
       context: .
     image: ${APP_IMAGE:-ct12rounds:local}
     command: php artisan queue:work --tries=1 --timeout=0
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # .env aponta para o Postgres da maquina; dentro da rede do compose e `db`.
+      DB_HOST: db
     depends_on:
       db:
         condition: service_healthy
@@ -40,6 +52,12 @@ services:
       context: .
     image: ${APP_IMAGE:-ct12rounds:local}
     command: php artisan schedule:work
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # .env aponta para o Postgres da maquina; dentro da rede do compose e `db`.
+      DB_HOST: db
     depends_on:
       db:
         condition: service_healthy
