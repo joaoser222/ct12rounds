@@ -64,6 +64,20 @@ The canonical project guidance is under `.agents/`. When this index is less
 specific than a relevant guardrail or skill, the more specific file takes
 precedence.
 
+The skills vendored from `addyosmani/agent-skills` are generic process material,
+not project conventions. Apply these limits to them:
+
+- This file and `.agents/guardrails/` win on any conflict.
+- Load one only when the request actually needs that process, and never chain
+  skills automatically.
+- They never spawn subagents or hand work to another role; review happens in
+  the current conversation.
+- They never create documentation, base directories, dependencies, or CI
+  configuration without an explicit user request.
+- Their stack examples (React, Tailwind, npm, pytest, Prisma) are illustrative
+  only. This project is PHP 8.3, PHPUnit, Laravel 13, Vue 3, and Vuetify 3.
+- They must not reference files that do not exist in this repository.
+
 ===
 
 <laravel-boost-guidelines>

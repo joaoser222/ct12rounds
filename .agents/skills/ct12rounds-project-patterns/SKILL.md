@@ -19,7 +19,7 @@ Activate this skill whenever working on application code in this repository, esp
 - Creating or modifying Inertia Vue pages, Vuetify tables, details pages, forms, menus, or shared frontend components.
 - Adding tests for module access, command behavior, services, reports, or persistence flows.
 
-Pair this skill with `laravel-best-practices` for backend PHP changes, `inertia-vue-development` for Inertia Vue pages, and `vuetify-development` for UI work.
+Pair this skill with `laravel-best-practices` for backend PHP changes and `vuetify-development` for Inertia Vue pages and UI work.
 
 ## Backend Architecture
 
