@@ -67,4 +67,9 @@ class Client extends Model
     {
         return $this->hasMany(Invoice::class, 'holder_id')->where('holder_type', 'client');
     }
+
+    public function graduations(): HasMany
+    {
+        return $this->hasMany(ClientGraduation::class);
+    }
 }

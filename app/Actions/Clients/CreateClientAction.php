@@ -9,6 +9,7 @@ use App\DTOs\Clients\CreateClientDTO;
 use App\Models\Client;
 use App\Repositories\Contracts\ClientRepositoryInterface;
 use App\Services\ContactNormalizer;
+use App\Services\GraduationService;
 
 class CreateClientAction extends BaseAction
 {
@@ -20,6 +21,7 @@ class CreateClientAction extends BaseAction
     public function __construct(
         private readonly ClientRepositoryInterface $clientRepository,
         private readonly ContactNormalizer $contactNormalizer,
+        private readonly GraduationService $graduationService,
     ) {}
 
     protected function handle(mixed $input): ActionResultDTO
@@ -50,6 +52,8 @@ class CreateClientAction extends BaseAction
             'address_city' => $dto->address_city,
             'status' => 'active',
         ]);
+
+        $this->graduationService->syncClientGraduations($client, $dto->graduations);
 
         return ActionResultDTO::success(
             ClientResultDTO::fromModel($client),

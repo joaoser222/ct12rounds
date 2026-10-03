@@ -20,6 +20,9 @@ use Spatie\LaravelData\Attributes\Validation\StringType;
 
 class UpdateClientDTO extends BaseDTO
 {
+    /**
+     * @param  array<int, array<string, mixed>>  $graduations
+     */
     public function __construct(
         #[Required, Integer, Min(1)]
         public int $id,
@@ -77,5 +80,7 @@ class UpdateClientDTO extends BaseDTO
 
         #[Nullable, Enum(ClientStatus::class)]
         public ?string $status = null,
+
+        public array $graduations = [],
     ) {}
 }

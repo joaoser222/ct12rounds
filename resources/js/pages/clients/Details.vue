@@ -4,9 +4,16 @@ import { reactive, ref } from 'vue';
 import type { DetailsRoutes } from '@/shared/page';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import ClientFormFields from '@/components/clients/ClientFormFields.vue';
+import ClientGraduationsTable from '@/components/clients/ClientGraduationsTable.vue';
 import { useSharedOptions } from '@/shared/options';
 
 defineOptions({ layout: AuthenticatedLayout });
+
+type ClientGraduation = {
+    modality_id?: number | string | null;
+    modality_graduation_id?: number | string | null;
+    promoted_at?: string | null;
+};
 
 type Client = {
     id?: number;
@@ -29,6 +36,13 @@ type Client = {
     address_city?: string | null;
 };
 
+type GraduationOption = {
+    value: string;
+    label: string;
+    modality_id: string;
+    modality_name: string;
+};
+
 type ImageRightsDefaults = {
     image_producer_name: string;
     image_usage_purpose: string;
@@ -45,7 +59,11 @@ const props = defineProps<{
     client?: Client | null;
     routes: DetailsRoutes;
     imageRightsDefaults: ImageRightsDefaults;
+    graduations?: ClientGraduation[];
+    graduationOptions?: GraduationOption[];
 }>();
+
+const activeTab = ref('general');
 
 const imageRightsDialog = ref(false);
 const imageRightsForm = reactive<ImageRightsDefaults>({
@@ -73,6 +91,7 @@ const defaults = {
     address_district: '',
     address_state: '',
     address_city: '',
+    graduations: (props.graduations ?? []).map((item) => ({ ...item })),
 };
 
 function onAudienceCategoryUpdate(form: Record<string, any>, value: string) {
@@ -126,16 +145,42 @@ function generateImageRightsPdf(): void {
             :routes="routes"
             module="clients"
         >
-            <template #default="{ form, errors }">
-                <ClientFormFields
-                    :form="form"
-                    :errors="errors"
-                    :gender-types="genderTypes"
-                    :states="states"
-                    @update:audience-category="
-                        onAudienceCategoryUpdate(form, $event)
-                    "
-                />
+            <template #default="{ form, errors, isCreating }">
+                <v-tabs v-model="activeTab" color="primary" class="mb-4">
+                    <v-tab value="general">Dados Gerais</v-tab>
+                    <v-tab value="graduations">Graduações</v-tab>
+                </v-tabs>
+
+                <v-window v-model="activeTab">
+                    <v-window-item value="general">
+                        <ClientFormFields
+                            :form="form"
+                            :errors="errors"
+                            :gender-types="genderTypes"
+                            :states="states"
+                            @update:audience-category="
+                                onAudienceCategoryUpdate(form, $event)
+                            "
+                        />
+                    </v-window-item>
+
+                    <v-window-item value="graduations">
+                        <v-alert
+                            v-if="isCreating"
+                            type="info"
+                            variant="tonal"
+                            class="mb-4"
+                            text="Salve o cliente para vincular as graduações."
+                        />
+
+                        <ClientGraduationsTable
+                            v-else
+                            v-model:items="form.graduations"
+                            :options="graduationOptions ?? []"
+                            :errors="errors"
+                        />
+                    </v-window-item>
+                </v-window>
             </template>
 
             <template #actions="{ isCreating }">

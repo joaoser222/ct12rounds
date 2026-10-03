@@ -13,8 +13,12 @@ use App\Enums\ClientStatus;
 use App\Enums\GenderType;
 use App\Http\Requests\ClientRequest;
 use App\Models\Client;
+use App\Models\ClientGraduation;
+use App\Models\LoyaltyLevel;
+use App\Models\ModalityGraduation;
 use App\Models\State;
 use App\Services\PrintableReportService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -196,8 +200,54 @@ class ClientController extends CrudModuleController
                 'forum_city' => $model instanceof Client ? $model->address_city : '',
                 'legal_representative_relationship' => 'responsável legal',
             ],
-
+            'graduations' => $this->clientGraduationRows($model),
+            'graduationOptions' => $this->graduationOptions(),
         ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function clientGraduationRows(?Model $model): array
+    {
+        if (! $model instanceof Client) {
+            return [];
+        }
+
+        return $model->graduations()
+            ->with('modalityGraduation:id,name,modality_id')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ClientGraduation $graduation): array => [
+                'modality_id' => (int) $graduation->modalityGraduation->modality_id,
+                'modality_graduation_id' => (int) $graduation->modality_graduation_id,
+                'promoted_at' => $graduation->promoted_at?->format('Y-m-d'),
+            ])
+            ->all();
+    }
+
+    /**
+     * Modalities and their graduations, used by the dependent selects on the client tab.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function graduationOptions(): array
+    {
+        return ModalityGraduation::query()
+            ->whereHas('modality', fn (Builder $query) => $query->where('visibility', 'visible'))
+            ->with('modality:id,name')
+            ->orderBy('modality_id')
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ModalityGraduation $graduation): array => [
+                'value' => (string) $graduation->getKey(),
+                'label' => $graduation->name,
+                'modality_id' => (string) $graduation->modality_id,
+                'modality_name' => $graduation->modality->name,
+                'position' => (int) $graduation->position,
+            ])
+            ->all();
     }
 
     protected function moduleIndexProps(Request $request): array
@@ -205,11 +255,11 @@ class ClientController extends CrudModuleController
         return [
             'options' => [
                 'clientStatus' => $this->enumOptions(ClientStatus::class),
-                'loyaltyLevels' => \App\Models\LoyaltyLevel::query()
+                'loyaltyLevels' => LoyaltyLevel::query()
                     ->select(['id', 'name', 'color'])
                     ->orderBy('name')
                     ->get()
-                    ->map(fn (\App\Models\LoyaltyLevel $level): array => [
+                    ->map(fn (LoyaltyLevel $level): array => [
                         'value' => (string) $level->getKey(),
                         'label' => $level->name,
                         'color' => $level->color,

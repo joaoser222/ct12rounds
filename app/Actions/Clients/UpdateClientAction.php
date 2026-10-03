@@ -9,6 +9,7 @@ use App\DTOs\Clients\UpdateClientDTO;
 use App\Models\Client;
 use App\Repositories\Contracts\ClientRepositoryInterface;
 use App\Services\ContactNormalizer;
+use App\Services\GraduationService;
 
 class UpdateClientAction extends BaseAction
 {
@@ -20,6 +21,7 @@ class UpdateClientAction extends BaseAction
     public function __construct(
         private readonly ClientRepositoryInterface $clientRepository,
         private readonly ContactNormalizer $contactNormalizer,
+        private readonly GraduationService $graduationService,
     ) {}
 
     protected function handle(mixed $input): ActionResultDTO
@@ -54,6 +56,7 @@ class UpdateClientAction extends BaseAction
         ], fn ($value) => $value !== null);
 
         $this->clientRepository->update($client, $updateData);
+        $this->graduationService->syncClientGraduations($client, $dto->graduations);
 
         return ActionResultDTO::success(
             ClientResultDTO::fromModel($client->refresh()),
