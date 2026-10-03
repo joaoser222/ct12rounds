@@ -32,7 +32,24 @@
                     hide-details="auto"
                     :disabled="!item.modality_id"
                     :error-messages="itemError(index, 'modality_graduation_id')"
-                />
+                >
+                    <template #item="{ props: optionProps, item: option }">
+                        <v-list-item
+                            v-bind="optionProps"
+                            :title="option.raw.label"
+                        >
+                            <template #prepend>
+                                <span
+                                    class="graduation-swatch"
+                                    :style="{
+                                        backgroundColor:
+                                            option.raw.color || 'transparent',
+                                    }"
+                                />
+                            </template>
+                        </v-list-item>
+                    </template>
+                </v-select>
             </td>
             <td>
                 <v-text-field
@@ -72,6 +89,7 @@ type ClientGraduation = {
 type GraduationOption = {
     value: string;
     label: string;
+    color?: string | null;
     modality_id: string;
     modality_name: string;
     position: number;
@@ -212,3 +230,13 @@ function itemError(index: number, field: string): string | undefined {
     return props.errors[`graduations.${index}.${field}`];
 }
 </script>
+
+<style scoped>
+.graduation-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgb(var(--v-border-color));
+}
+</style>

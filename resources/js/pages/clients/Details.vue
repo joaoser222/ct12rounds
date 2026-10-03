@@ -39,6 +39,7 @@ type Client = {
 type GraduationOption = {
     value: string;
     label: string;
+    color?: string | null;
     modality_id: string;
     modality_name: string;
 };

@@ -243,6 +243,7 @@ class ClientController extends CrudModuleController
             ->map(fn (ModalityGraduation $graduation): array => [
                 'value' => (string) $graduation->getKey(),
                 'label' => $graduation->name,
+                'color' => $graduation->color,
                 'modality_id' => (string) $graduation->modality_id,
                 'modality_name' => $graduation->modality->name,
                 'position' => (int) $graduation->position,
