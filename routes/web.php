@@ -137,8 +137,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::moduleReadOnly(GatewayInvoiceController::class);
     Route::post('gateway/sync/{scope}', GatewaySyncController::class)
         ->where('scope', 'payments|transfers|customers|postbacks')
+        ->middleware('throttle:5,1')
         ->name('gateway.sync');
     Route::post('gateway-accounts/{gateway_account}/sync', GatewayAccountSyncController::class)
+        ->middleware('throttle:5,1')
         ->name('gateway-accounts.sync');
 
     // Relatórios
