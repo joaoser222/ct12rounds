@@ -20,6 +20,13 @@ class AsaasCreditCardPaymentTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::preventStrayRequests();
+    }
+
     public function test_credit_card_payment_sends_the_stored_token_to_charge_immediately(): void
     {
         $adapter = $this->adapter();

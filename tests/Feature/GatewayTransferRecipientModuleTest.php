@@ -13,6 +13,13 @@ class GatewayTransferRecipientModuleTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::preventStrayRequests();
+    }
+
     public function test_users_with_permission_can_create_gateway_transfer_recipients(): void
     {
         $user = User::factory()->create();

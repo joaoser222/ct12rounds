@@ -18,6 +18,13 @@ class ImportGatewayInvoicesTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::preventStrayRequests();
+    }
+
     private function fakeAsaas(array $customers = [], array $payments = [], array $transfers = []): void
     {
         $responses = [];

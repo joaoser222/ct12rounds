@@ -28,6 +28,9 @@ class PublicHiringLeadStoreTest extends TestCase
 {
     use RefreshDatabase;
 
+    // No Http::preventStrayRequests() here: Inertia SSR posts to the local
+    // /render endpoint, which is a legitimate internal request.
+
     private array $validCardData = [
         'card_number' => '4321987654461111',
         'card_expiry_month' => '12',

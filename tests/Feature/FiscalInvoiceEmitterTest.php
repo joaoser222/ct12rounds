@@ -17,12 +17,20 @@ use App\Models\Invoice;
 use App\Models\Sale;
 use App\Services\Gateway\FiscalInvoiceEmitter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Tests\TestCase;
 
 class FiscalInvoiceEmitterTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::preventStrayRequests();
+    }
 
     private function makeAccount(array $overrides = []): GatewayAccount
     {

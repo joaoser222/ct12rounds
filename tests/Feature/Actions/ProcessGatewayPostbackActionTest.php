@@ -13,6 +13,13 @@ class ProcessGatewayPostbackActionTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Http::preventStrayRequests();
+    }
+
     private function makeAccount(string $name = 'Asaas'): GatewayAccount
     {
         return GatewayAccount::query()->create([

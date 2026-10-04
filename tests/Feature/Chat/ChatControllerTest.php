@@ -18,6 +18,9 @@ class ChatControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    // No Http::preventStrayRequests() here: Inertia SSR posts to the local
+    // /render endpoint, which is a legitimate internal request.
+
     private function givePermission(User $user, string $permissionName): void
     {
         $permission = Permission::firstOrCreate(
