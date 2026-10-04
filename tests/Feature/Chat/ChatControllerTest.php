@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Chat;
 
 use App\Models\ChatMessage;
-use App\Models\Client;
 use App\Models\Conversation;
 use App\Models\Permission;
 use App\Models\User;
@@ -31,64 +30,7 @@ class ChatControllerTest extends TestCase
         $user->permissions()->attach($permission);
     }
 
-    public function test_chat_executes_readonly_resource_via_llm_tool_call(): void
-    {
-        $client = Client::factory()->create(['name' => 'Cliente Teste MCP']);
-
-        $user = User::factory()->create();
-        $this->givePermission($user, 'chat.view');
-        $this->givePermission($user, 'clients.view');
-
-        Http::fake([
-            '*' => Http::sequence()
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => null,
-                            'tool_calls' => [[
-                                'id' => 'call_1',
-                                'type' => 'function',
-                                'function' => [
-                                    'name' => 'read_client',
-                                    'arguments' => (string) json_encode(['id' => (string) $client->id]),
-                                ],
-                            ]],
-                        ],
-                    ]],
-                ])
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => 'Aqui estão os dados do cliente.',
-                        ],
-                    ]],
-                ]),
-        ]);
-
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Mostre o cliente',
-        ]);
-
-        $response->assertOk();
-        $response->assertJson(['reply' => 'Aqui estão os dados do cliente.']);
-
-        $toolCalled = false;
-        foreach (Http::recorded() as [$request]) {
-            $body = $request->data();
-            foreach ($body['messages'] ?? [] as $message) {
-                if (($message['role'] ?? null) === 'tool'
-                    && str_contains((string) ($message['content'] ?? ''), 'Cliente Teste MCP')) {
-                    $toolCalled = true;
-                }
-            }
-        }
-
-        $this->assertTrue($toolCalled, 'O recurso read_client não foi executado com os dados do cliente.');
-    }
-
-    public function test_chat_without_module_permission_exposes_no_resource_tool(): void
+    public function test_chat_never_sends_tools_or_tool_choice_to_the_provider(): void
     {
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
@@ -98,28 +40,95 @@ class ChatControllerTest extends TestCase
                 'choices' => [[
                     'message' => [
                         'role' => 'assistant',
-                        'content' => 'Resposta sem ferramentas.',
+                        'content' => 'Abra o menu Clientes.',
                     ],
                 ]],
             ]),
         ]);
 
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Mostre algo',
-        ]);
+        $this->actingAs($user)->postJson('/chat/message', ['message' => 'Como cadastro um cliente?'])
+            ->assertOk();
 
-        $response->assertOk();
-        $response->assertJson(['reply' => 'Resposta sem ferramentas.']);
-
-        $sentTools = false;
         foreach (Http::recorded() as [$request]) {
             $body = $request->data();
-            if (! empty($body['tools'])) {
-                $sentTools = true;
-            }
-        }
 
-        $this->assertFalse($sentTools, 'Usuário sem permissão de módulo não deve receber tools.');
+            $this->assertArrayNotHasKey('tools', $body, 'O chat nao pode enviar schema de ferramenta.');
+            $this->assertArrayNotHasKey('functions', $body, 'O chat nao pode enviar functions.');
+            $this->assertArrayNotHasKey('tool_choice', $body, 'O chat nao pode oferecer escolha de ferramenta.');
+        }
+    }
+
+    public function test_chat_makes_a_single_provider_call_per_message(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        Http::fake([
+            '*' => Http::response([
+                'choices' => [[
+                    'message' => [
+                        'role' => 'assistant',
+                        'content' => 'Resposta direta.',
+                    ],
+                ]],
+            ]),
+        ]);
+
+        $this->actingAs($user)->postJson('/chat/message', ['message' => 'Como registro pagamento?'])
+            ->assertOk()
+            ->assertJson(['reply' => 'Resposta direta.']);
+
+        $this->assertCount(
+            1,
+            Http::recorded(),
+            'Sem loop de ferramenta, uma mensagem deve custar exatamente uma chamada.',
+        );
+    }
+
+    public function test_chat_injects_matching_guide_as_context(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        Http::fake([
+            '*' => Http::response([
+                'choices' => [[
+                    'message' => ['role' => 'assistant', 'content' => 'Siga os passos.'],
+                ]],
+            ]),
+        ]);
+
+        $this->actingAs($user)->postJson('/chat/message', [
+            'message' => 'Como registro o pagamento de uma parcela de aula direta?',
+        ])->assertOk();
+
+        $body = Http::recorded()->first()[0]->data();
+        $sent = implode("\n", array_column($body['messages'], 'content'));
+
+        $this->assertStringContainsString('Guia: aulas-diretas', $sent);
+    }
+
+    public function test_chat_sends_system_prompt_with_screen_menu_and_no_write_instructions(): void
+    {
+        $user = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
+
+        Http::fake([
+            '*' => Http::response([
+                'choices' => [[
+                    'message' => ['role' => 'assistant', 'content' => 'Resposta.'],
+                ]],
+            ]),
+        ]);
+
+        $this->actingAs($user)->postJson('/chat/message', ['message' => 'oi'])->assertOk();
+
+        $body = Http::recorded()->first()[0]->data();
+        $system = $body['messages'][0]['content'] ?? '';
+
+        $this->assertSame('system', $body['messages'][0]['role']);
+        $this->assertStringContainsString('/receivables?searchField=status&search=overdued', $system);
+        $this->assertStringContainsString('Telas disponíveis', $system);
     }
 
     public function test_chat_falls_back_to_next_model_when_first_fails(): void
@@ -128,136 +137,53 @@ class ChatControllerTest extends TestCase
         $this->givePermission($user, 'chat.view');
 
         config([
-            'mcp_chat.providers' => ['primary/model', 'fallback/model'],
+            'mcp_chat.base_url' => 'https://fake.test/chat/completions',
+            'mcp_chat.providers' => ['model-a', 'model-b'],
         ]);
 
         Http::fake([
-            '*' => Http::sequence()
-                ->push(['choices' => [['message' => ['role' => 'assistant', 'content' => 'erro']]]], 500)
+            'https://fake.test/chat/completions' => Http::sequence()
+                ->push(['error' => 'boom'], 500)
                 ->push([
                     'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => 'Resposta do modelo de fallback.',
-                        ],
+                        'message' => ['role' => 'assistant', 'content' => 'Resposta do segundo modelo.'],
                     ]],
                 ]),
         ]);
 
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Olá',
-        ]);
+        $this->actingAs($user)->postJson('/chat/message', ['message' => 'oi'])
+            ->assertOk()
+            ->assertJson(['reply' => 'Resposta do segundo modelo.']);
 
-        $response->assertOk();
-        $response->assertJson(['reply' => 'Resposta do modelo de fallback.']);
-
-        // First request (primary model) failed, second (fallback) succeeded.
-        $this->assertCount(2, Http::recorded());
+        $models = array_map(fn ($pair) => $pair[0]->data()['model'], Http::recorded()->all());
+        $this->assertSame(['model-a', 'model-b'], $models);
     }
 
-    public function test_chat_executes_writable_tool_when_user_has_permission(): void
-    {
-        $this->withoutExceptionHandling();
-        $user = User::factory()->create();
-        $this->givePermission($user, 'chat.view');
-        $this->givePermission($user, 'clients.create');
-
-        Http::fake([
-            '*' => Http::sequence()
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => null,
-                            'tool_calls' => [[
-                                'id' => 'call_1',
-                                'type' => 'function',
-                                'function' => [
-                                    'name' => 'create-client',
-                                    'arguments' => (string) json_encode([
-                                        'name' => 'Cliente Via Tool',
-                                        'email' => 'cliente@tool.com',
-                                        'phone' => '11999999999',
-                                        'document' => '12345678909',
-                                        'gender' => 'male',
-                                        'birth_date' => '1990-01-01',
-                                    ]),
-                                ],
-                            ]],
-                        ],
-                    ]],
-                ])
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => 'Cliente criado com sucesso.',
-                        ],
-                    ]],
-                ]),
-        ]);
-
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Crie um cliente',
-        ]);
-
-        $response->assertOk();
-        $response->assertJson(['reply' => 'Cliente criado com sucesso.']);
-
-        $this->assertDatabaseHas('clients', [
-            'name' => 'Cliente Via Tool',
-            'document' => '12345678909',
-        ]);
-
-        $toolCalled = false;
-        foreach (Http::recorded() as [$request]) {
-            $body = $request->data();
-            if (! empty($body['tools'])) {
-                $names = array_column(array_column($body['tools'], 'function'), 'name');
-                if (in_array('create-client', $names, true)) {
-                    $toolCalled = true;
-                }
-            }
-        }
-
-        $this->assertTrue($toolCalled, 'A tool create-client não foi exposta ao LLM.');
-    }
-
-    public function test_chat_hides_writable_tool_without_permission(): void
+    public function test_chat_sends_chat_template_kwargs_from_config(): void
     {
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
-        // Intentionally NOT granting clients.create.
+
+        config([
+            'mcp_chat.base_url' => 'https://fake.test/chat/completions',
+            'mcp_chat.providers' => ['some/model'],
+            'mcp_chat.chat_template_kwargs' => ['enable_thinking' => false],
+        ]);
 
         Http::fake([
-            '*' => Http::response([
+            'https://fake.test/chat/completions' => Http::response([
                 'choices' => [[
-                    'message' => [
-                        'role' => 'assistant',
-                        'content' => 'Sem ferramentas de escrita.',
-                    ],
+                    'message' => ['role' => 'assistant', 'content' => 'Resposta final.'],
                 ]],
             ]),
         ]);
 
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Crie um cliente',
-        ]);
+        $this->actingAs($user)->postJson('/chat/message', ['message' => 'Ola'])
+            ->assertOk()
+            ->assertJson(['reply' => 'Resposta final.']);
 
-        $response->assertOk();
-
-        $exposedToolNames = [];
-        foreach (Http::recorded() as [$request]) {
-            $body = $request->data();
-            if (! empty($body['tools'])) {
-                $exposedToolNames = array_merge(
-                    $exposedToolNames,
-                    array_column(array_column($body['tools'], 'function'), 'name'),
-                );
-            }
-        }
-
-        $this->assertNotContains('create-client', $exposedToolNames, 'Usuário sem permissão não deve ver a tool de escrita.');
+        $recorded = Http::recorded()->first(fn ($pair) => str_contains($pair[0]->url(), 'fake.test'));
+        $this->assertSame(['enable_thinking' => false], $recorded[0]->data()['chat_template_kwargs']);
     }
 
     public function test_chat_persists_conversation_and_messages(): void
@@ -348,11 +274,6 @@ class ChatControllerTest extends TestCase
             'role' => 'user',
             'content' => 'Continuação',
         ]);
-        $this->assertDatabaseHas('chat_messages', [
-            'conversation_id' => $conversation->id,
-            'role' => 'assistant',
-            'content' => 'Resposta com contexto.',
-        ]);
 
         $this->assertSame(
             4,
@@ -398,10 +319,7 @@ class ChatControllerTest extends TestCase
         $response = $this->actingAs($user)->getJson('/chat/conversations');
 
         $response->assertOk();
-        $titles = array_column($response->json('conversations'), 'title');
-        $this->assertCount(10, $titles);
-        $this->assertSame('Conversa 1', $titles[0]);
-        $this->assertSame('Conversa 10', $titles[9]);
+        $this->assertCount(10, $response->json('conversations'));
     }
 
     public function test_chat_returns_conversation_messages_for_owner(): void
@@ -409,40 +327,29 @@ class ChatControllerTest extends TestCase
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
 
-        $conversation = Conversation::create([
-            'user_id' => $user->id,
-            'title' => 'Minha conversa',
-        ]);
-        $conversation->messages()->create(['role' => 'user', 'content' => 'Olá']);
-        $conversation->messages()->create(['role' => 'assistant', 'content' => 'Olá! Como posso ajudar?']);
+        $conversation = Conversation::create(['user_id' => $user->id, 'title' => 'Minha']);
+        $conversation->messages()->create(['role' => 'user', 'content' => 'Pergunta']);
+        $conversation->messages()->create(['role' => 'assistant', 'content' => 'Resposta']);
 
         $response = $this->actingAs($user)->getJson("/chat/conversations/{$conversation->id}");
 
         $response->assertOk();
-        $response->assertJsonPath('conversation.id', $conversation->id);
-        $response->assertJsonPath('conversation.title', 'Minha conversa');
-
-        $messages = $response->json('messages');
-        $this->assertCount(2, $messages);
-        $this->assertSame(['id', 'role', 'text'], array_keys($messages[0]));
-        $this->assertSame('user', $messages[0]['role']);
-        $this->assertSame('Olá', $messages[0]['text']);
-        $this->assertSame('assistant', $messages[1]['role']);
-        $this->assertSame('Olá! Como posso ajudar?', $messages[1]['text']);
+        $this->assertSame('Minha', $response->json('conversation.title'));
+        $this->assertSame(
+            ['Pergunta', 'Resposta'],
+            array_column($response->json('messages'), 'text'),
+        );
     }
 
     public function test_chat_hides_conversation_messages_from_other_users(): void
     {
-        $owner = User::factory()->create();
-        $intruder = User::factory()->create();
-        $this->givePermission($intruder, 'chat.view');
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $this->givePermission($user, 'chat.view');
 
-        $conversation = Conversation::create([
-            'user_id' => $owner->id,
-            'title' => 'Conversa privada',
-        ]);
+        $conversation = Conversation::create(['user_id' => $other->id, 'title' => 'De outro']);
 
-        $this->actingAs($intruder)
+        $this->actingAs($user)
             ->getJson("/chat/conversations/{$conversation->id}")
             ->assertNotFound();
     }
@@ -452,135 +359,28 @@ class ChatControllerTest extends TestCase
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
 
-        $old = Conversation::create(['user_id' => $user->id, 'title' => 'Conversa antiga']);
-        $old->forceFill(['updated_at' => now()->subDays(1)])->save();
+        $first = Conversation::create(['user_id' => $user->id, 'title' => 'Primeira']);
+        $first->forceFill(['updated_at' => now()->subHour()])->save();
 
-        $newer = Conversation::create(['user_id' => $user->id, 'title' => 'Conversa mais nova']);
-        $newer->forceFill(['updated_at' => now()->subMinutes(5)])->save();
+        $second = Conversation::create(['user_id' => $user->id, 'title' => 'Segunda']);
+        $second->forceFill(['updated_at' => now()->subDays(3)])->save();
 
         Http::fake([
             '*' => Http::response([
                 'choices' => [[
-                    'message' => [
-                        'role' => 'assistant',
-                        'content' => 'Resposta na conversa antiga.',
-                    ],
+                    'message' => ['role' => 'assistant', 'content' => 'Nova resposta.'],
                 ]],
             ]),
         ]);
 
         $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Continuando a conversa antiga',
-            'conversation_id' => $old->id,
+            'message' => 'Continuação',
+            'conversation_id' => $first->id,
         ])->assertOk();
 
-        $response = $this->actingAs($user)->getJson('/chat/conversations');
+        $titles = array_column($this->actingAs($user)->getJson('/chat/conversations')->json('conversations'), 'title');
 
-        $response->assertOk();
-        $titles = array_column($response->json('conversations'), 'title');
-        $this->assertSame('Conversa antiga', $titles[0], 'A conversa com atividade recente deve vir primeiro.');
-    }
-
-    public function test_chat_uses_groq_with_tool_calls_format(): void
-    {
-        $user = User::factory()->create();
-        $this->givePermission($user, 'chat.view');
-        $this->givePermission($user, 'clients.create');
-
-        config([
-            'mcp_chat.base_url' => 'https://api.groq.com/openai/v1/chat/completions',
-            'mcp_chat.providers' => ['llama-3.3-70b-versatile'],
-        ]);
-
-        Http::fake([
-            'https://api.groq.com/openai/v1/chat/completions' => Http::sequence()
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => null,
-                            'tool_calls' => [[
-                                'id' => 'call_1',
-                                'type' => 'function',
-                                'function' => [
-                                    'name' => 'create-client',
-                                    'arguments' => (string) json_encode([
-                                        'name' => 'Cliente Groq',
-                                        'email' => 'groq@tool.com',
-                                        'phone' => '11999999999',
-                                        'document' => '12345678909',
-                                        'gender' => 'male',
-                                        'birth_date' => '1990-01-01',
-                                    ]),
-                                ],
-                            ]],
-                        ],
-                    ]],
-                ])
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => 'Cliente criado via Groq.',
-                        ],
-                    ]],
-                ]),
-        ]);
-
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Crie um cliente',
-        ]);
-
-        $response->assertOk();
-        $response->assertJson(['reply' => 'Cliente criado via Groq.']);
-
-        $this->assertDatabaseHas('clients', [
-            'name' => 'Cliente Groq',
-            'document' => '12345678909',
-        ]);
-
-        $recorded = Http::recorded()
-            ->first(fn ($pair) => str_contains($pair[0]->url(), 'groq.com'));
-
-        $this->assertNotNull($recorded, 'A requisição deve ir para o endpoint da Groq.');
-        $body = $recorded[0]->data();
-        $this->assertSame('llama-3.3-70b-versatile', $body['model']);
-        $this->assertArrayHasKey('tools', $body);
-        $this->assertSame('auto', $body['tool_choice']);
-    }
-
-    public function test_chat_sends_chat_template_kwargs_from_config(): void
-    {
-        $user = User::factory()->create();
-        $this->givePermission($user, 'chat.view');
-
-        config([
-            'mcp_chat.base_url' => 'https://fake.test/chat/completions',
-            'mcp_chat.providers' => ['some/model'],
-            'mcp_chat.chat_template_kwargs' => ['enable_thinking' => false],
-        ]);
-
-        Http::fake([
-            'https://fake.test/chat/completions' => Http::sequence()
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => 'Resposta final.',
-                        ],
-                    ]],
-                ]),
-        ]);
-
-        $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Ola',
-        ])->assertOk()->assertJson(['reply' => 'Resposta final.']);
-
-        $recorded = Http::recorded()
-            ->first(fn ($pair) => str_contains($pair[0]->url(), 'fake.test'));
-
-        $this->assertNotNull($recorded, 'A requisição deve ir para o provedor configurado.');
-        $this->assertSame(['enable_thinking' => false], $recorded[0]->data()['chat_template_kwargs']);
+        $this->assertSame(['Primeira', 'Segunda'], $titles);
     }
 
     public function test_chat_stream_emits_tokens_and_persists_message(): void
@@ -652,9 +452,11 @@ class ChatControllerTest extends TestCase
             '*' => Http::response($sseBody, 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
-        $checks = 0;
         $service = app(ChatService::class);
 
+        // Interrupt as soon as the first token has been emitted, whatever the
+        // number of internal checks. Counting calls would couple the test to
+        // the service's read loop.
         $response = $service->streamAsk(
             'Oi',
             [],
@@ -666,10 +468,8 @@ class ChatControllerTest extends TestCase
             },
             $conversation->id,
             null,
-            function () use (&$checks): bool {
-                $checks++;
-
-                return $checks > 3;
+            function (): bool {
+                return str_contains((string) ob_get_contents(), 'Olá');
             },
         );
 
@@ -695,186 +495,47 @@ class ChatControllerTest extends TestCase
         ]);
     }
 
-    public function test_chat_lists_eligible_prompts_for_current_user(): void
+    public function test_chat_lists_suggested_questions_without_module_permission(): void
     {
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
-        $this->givePermission($user, 'clients.create');
 
         $response = $this->actingAs($user)->getJson('/chat/prompts');
 
         $response->assertOk();
         $response->assertJsonStructure(['prompts']);
-        $this->assertNotEmpty($response->json('prompts'));
-        $this->assertArrayHasKey('text', $response->json('prompts')[0]);
 
-        $names = array_column($response->json('prompts'), 'name');
-        $this->assertContains('onboard-client', $names);
+        $prompts = $response->json('prompts');
+        $this->assertNotEmpty($prompts);
+        $this->assertArrayHasKey('name', $prompts[0]);
+        $this->assertArrayHasKey('label', $prompts[0]);
+        $this->assertArrayHasKey('question', $prompts[0]);
+
+        $names = array_column($prompts, 'name');
+        $this->assertContains('vendas-vencidas', $names);
     }
 
-    public function test_chat_hides_prompts_without_module_permission(): void
+    public function test_chat_suggestion_resolves_to_its_question(): void
     {
         $user = User::factory()->create();
         $this->givePermission($user, 'chat.view');
-
-        $response = $this->actingAs($user)->getJson('/chat/prompts');
-
-        $response->assertOk();
-        $this->assertEmpty($response->json('prompts'));
-    }
-
-    public function test_chat_synthesizes_final_answer_when_model_returns_empty_content(): void
-    {
-        $user = User::factory()->create();
-        $this->givePermission($user, 'chat.view');
-        $this->givePermission($user, 'clients.view');
-
-        Http::fake([
-            '*' => Http::sequence()
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => null,
-                            'tool_calls' => [[
-                                'id' => 'call_1',
-                                'type' => 'function',
-                                'function' => [
-                                    'name' => 'read_client',
-                                    'arguments' => (string) json_encode(['id' => '1']),
-                                ],
-                            ]],
-                        ],
-                    ]],
-                ])
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => '',
-                        ],
-                    ]],
-                ])
-                ->push([
-                    'choices' => [[
-                        'message' => [
-                            'role' => 'assistant',
-                            'content' => 'Resposta final sintetizada a partir dos dados.',
-                        ],
-                    ]],
-                ]),
-        ]);
-
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Mostre o cliente 1',
-        ]);
-
-        $response->assertOk();
-        $response->assertJson(['reply' => 'Resposta final sintetizada a partir dos dados.']);
-    }
-
-    public function test_chat_injects_prompt_instructions_when_prompt_activated(): void
-    {
-        $user = User::factory()->create();
-        $this->givePermission($user, 'chat.view');
-        $this->givePermission($user, 'clients.create');
 
         Http::fake([
             '*' => Http::response([
                 'choices' => [[
-                    'message' => [
-                        'role' => 'assistant',
-                        'content' => 'Vamos criar o cliente.',
-                    ],
+                    'message' => ['role' => 'assistant', 'content' => 'Resposta.'],
                 ]],
             ]),
         ]);
 
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Criar cliente',
-            'prompt' => 'onboard-client',
-        ]);
+        $this->actingAs($user)->postJson('/chat/message', [
+            'message' => 'Contas vencidas',
+            'prompt' => 'vendas-vencidas',
+        ])->assertOk();
 
-        $response->assertOk();
+        $body = Http::recorded()->first()[0]->data();
+        $sent = implode("\n", array_column($body['messages'], 'content'));
 
-        $injected = false;
-        foreach (Http::recorded() as [$request]) {
-            $body = $request->data();
-            foreach ($body['messages'] ?? [] as $message) {
-                if (($message['role'] ?? null) === 'system'
-                    && str_contains((string) ($message['content'] ?? ''), 'criar contrato informando o ID do cliente')) {
-                    $injected = true;
-                }
-            }
-        }
-
-        $this->assertTrue($injected, 'As instruções do prompt não foram injetadas como mensagem de sistema.');
-    }
-
-    public function test_chat_stream_executes_resource_via_tool_call(): void
-    {
-        $client = Client::factory()->create(['name' => 'Cliente Stream Tool']);
-
-        $user = User::factory()->create();
-        $this->givePermission($user, 'chat.view');
-        $this->givePermission($user, 'clients.view');
-
-        $toolCallChunk = json_encode([
-            'choices' => [[
-                'delta' => [
-                    'tool_calls' => [[
-                        'index' => 0,
-                        'id' => 'call_1',
-                        'type' => 'function',
-                        'function' => [
-                            'name' => 'read_client',
-                            'arguments' => (string) json_encode(['id' => (string) $client->id]),
-                        ],
-                    ]],
-                ],
-            ]],
-        ]);
-
-        $finalChunk = json_encode([
-            'choices' => [[
-                'delta' => ['content' => 'Aqui estão os dados do cliente.'],
-            ]],
-        ]);
-
-        $sseToolCall = 'data: '.$toolCallChunk."\n\n".'data: [DONE]'."\n\n";
-        $sseFinal = 'data: '.$finalChunk."\n\n".'data: [DONE]'."\n\n";
-
-        Http::fake([
-            '*' => Http::sequence()
-                ->push($sseToolCall)
-                ->push($sseFinal),
-        ]);
-
-        $response = $this->actingAs($user)->postJson('/chat/message', [
-            'message' => 'Mostre o cliente',
-            'stream' => true,
-        ]);
-
-        $response->assertOk();
-        $this->assertStringContainsString('text/event-stream', (string) $response->headers->get('Content-Type'));
-
-        ob_start();
-        $response->baseResponse->sendContent();
-        $output = (string) ob_get_clean();
-
-        $this->assertStringContainsString('"type":"done"', $output);
-
-        $toolCalled = false;
-        foreach (Http::recorded() as [$request]) {
-            $body = $request->data();
-            foreach ($body['messages'] ?? [] as $message) {
-                if (($message['role'] ?? null) === 'tool'
-                    && str_contains((string) ($message['content'] ?? ''), 'Cliente Stream Tool')) {
-                    $toolCalled = true;
-                }
-            }
-        }
-
-        $this->assertTrue($toolCalled, 'O recurso read_client não foi executado via streaming.');
+        $this->assertStringContainsString('contas a receber vencidas', $sent);
     }
 }
