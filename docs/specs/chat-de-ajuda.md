@@ -80,7 +80,7 @@ Verified in code, **not a hypothesis**:
 | Inertia props | `CrudModuleController::index()` | passes them through in `filters` |
 | Frontend | `resources/js/components/TablePage.vue:165` | `search.value = page.props.filters?.search ?? ''` |
 
-`GET /receivables?searchField=status&search=overdue` already opens the table with the
+`GET /receivables?searchField=status&search=overdued` already opens the table with the
 search applied. **Zero frontend change.**
 
 ---
@@ -163,7 +163,7 @@ app/Services/Help/HelpService.php     system prompt + guide lookup
 1. No request to the LLM provider sends `tools` or `functions`.
 2. Schema payload per message = 0 bytes.
 3. One iteration per message: no tool-call loop.
-4. `GET /receivables?searchField=status&search=overdue` keeps working.
+4. `GET /receivables?searchField=status&search=overdued` keeps working.
 5. A known usage question ("how do I terminate a contract?") returns instructions as
    text.
 6. A known data question ("overdue contracts") returns a link to the filtered screen.
