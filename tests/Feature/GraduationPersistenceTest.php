@@ -364,6 +364,61 @@ class GraduationPersistenceTest extends TestCase
         );
     }
 
+    public function test_reordering_graduations_does_not_rename_them(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'modalities.update');
+        $this->grantPermission($user, 'modalities.view');
+
+        $modality = Modality::factory()->create(['name' => 'Muay Thai']);
+        $white = $modality->graduations()->create(['name' => 'Branca', 'position' => 0]);
+        $blue = $modality->graduations()->create(['name' => 'Azul', 'position' => 1]);
+        $red = $modality->graduations()->create(['name' => 'Vermelha', 'position' => 2]);
+
+        $this->actingAs($user)->put(route('modalities.update', $modality->id), [
+            'name' => $modality->name,
+            'graduations' => [
+                ['id' => $blue->id, 'name' => 'Azul'],
+                ['id' => $white->id, 'name' => 'Branca'],
+                ['id' => $red->id, 'name' => 'Vermelha'],
+            ],
+        ])->assertRedirect(route('modalities.index'));
+
+        $this->assertSame(
+            ['Azul', 'Branca', 'Vermelha'],
+            $modality->graduations()->orderBy('position')->pluck('name')->all(),
+        );
+    }
+
+    public function test_modality_details_exposes_graduations_in_the_reordered_position(): void
+    {
+        $user = User::factory()->create();
+        $this->grantPermission($user, 'modalities.update');
+        $this->grantPermission($user, 'modalities.view');
+
+        $modality = Modality::factory()->create(['name' => 'Muay Thai']);
+        $white = $modality->graduations()->create(['name' => 'Branca', 'position' => 0]);
+        $blue = $modality->graduations()->create(['name' => 'Azul', 'position' => 1]);
+
+        $this->actingAs($user)->put(route('modalities.update', $modality->id), [
+            'name' => $modality->name,
+            'graduations' => [
+                ['id' => $blue->id, 'name' => 'Azul'],
+                ['id' => $white->id, 'name' => 'Branca'],
+            ],
+        ])->assertRedirect(route('modalities.index'));
+
+        $response = $this->actingAs($user)->get(route('modalities.show', $modality->id));
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('modalities/Details')
+            ->where('graduations.0.id', $blue->id)
+            ->where('graduations.0.name', 'Azul')
+            ->where('graduations.1.id', $white->id)
+            ->where('graduations.1.name', 'Branca')
+        );
+    }
+
     public function test_client_graduations_store_the_promotion_date(): void
     {
         $user = User::factory()->create();

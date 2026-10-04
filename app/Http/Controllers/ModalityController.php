@@ -110,7 +110,9 @@ class ModalityController extends CrudModuleController
     {
         return [
             'graduations' => $model instanceof Modality
-                ? $model->graduations()->orderBy('id')->get(['id', 'name', 'color'])->all()
+                // position first so a reordered catalog round-trips into the form;
+                // id breaks ties between rows saved with the same position.
+                ? $model->graduations()->orderBy('position')->orderBy('id')->get(['id', 'name', 'color'])->all()
                 : [],
         ];
     }

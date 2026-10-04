@@ -33,6 +33,7 @@
         >
             <thead>
                 <tr>
+                    <th v-if="reorderable" style="width: 72px"></th>
                     <th
                         v-for="(column, index) in columns"
                         :key="`${column.title}-${index}`"
@@ -53,6 +54,24 @@
                     v-for="(item, index) in items"
                     :key="resolveRowKey(item, index)"
                 >
+                    <td v-if="reorderable" class="reorder-cell">
+                        <v-btn-icon
+                            icon="ti ti-chevron-up"
+                            variant="text"
+                            size="small"
+                            aria-label="Mover para cima"
+                            :disabled="index === 0"
+                            @click="$emit('move', index, -1)"
+                        />
+                        <v-btn-icon
+                            icon="ti ti-chevron-down"
+                            variant="text"
+                            size="small"
+                            aria-label="Mover para baixo"
+                            :disabled="index === items.length - 1"
+                            @click="$emit('move', index, 1)"
+                        />
+                    </td>
                     <slot
                         name="row"
                         :item="item"
@@ -91,6 +110,8 @@ const props = withDefaults(
         emptyMessage?: string;
         minItems?: number;
         rowKeyField?: string;
+        /** Renders up/down buttons and emits `move(index, offset)`. */
+        reorderable?: boolean;
     }>(),
     {
         items: () => [],
@@ -101,12 +122,14 @@ const props = withDefaults(
         emptyMessage: 'Nenhum item adicionado.',
         minItems: 0,
         rowKeyField: 'id',
+        reorderable: false,
     },
 );
 
 defineEmits<{
     (e: 'add'): void;
     (e: 'remove', index: number): void;
+    (e: 'move', index: number, offset: number): void;
 }>();
 
 function resolveRowKey(item: any, index: number): string | number {
@@ -127,5 +150,9 @@ function resolveRowKey(item: any, index: number): string | number {
 
 .editable-rows-table :deep(td) {
     vertical-align: top;
+}
+
+.reorder-cell {
+    white-space: nowrap;
 }
 </style>

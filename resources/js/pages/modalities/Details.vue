@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import type { DetailsRoutes } from '@/shared/page';
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
 import ModalityCard from '@/components/ModalityCard.vue';
@@ -26,8 +25,6 @@ const props = defineProps<{
     graduations?: ModalityGraduation[];
 }>();
 
-const activeTab = ref('general');
-
 const defaults = {
     name: '',
     color: '',
@@ -43,57 +40,37 @@ const defaults = {
         :routes="routes"
         module="modalities"
     >
-        <template #default="{ form, errors, isCreating }">
-            <v-tabs v-model="activeTab" color="primary" class="mb-4">
-                <v-tab value="general">Dados Gerais</v-tab>
-                <v-tab value="graduations">Graduações</v-tab>
-            </v-tabs>
-
-            <v-window v-model="activeTab">
-                <v-window-item value="general">
-                    <v-row class="ma-0">
-                        <v-col cols="12" md="6">
-                            <v-text-field
-                                v-model="form.name"
-                                v-text-case="'capitalize'"
-                                label="Nome"
-                                :rules="[required]"
-                                :error-messages="errors.name"
-                            />
-                        </v-col>
-                        <v-col cols="12" md="6">
-                            <v-text-field
-                                v-model="form.color"
-                                label="Cor"
-                                type="color"
-                                :error-messages="errors.color"
-                            />
-                        </v-col>
-                        <v-col cols="12">
-                            <div class="text-subtitle-2 text-medium-emphasis mb-2">
-                                Pré-visualização
-                            </div>
-                            <ModalityCard :name="form.name" :color="form.color" />
-                        </v-col>
-                    </v-row>
-                </v-window-item>
-
-                <v-window-item value="graduations">
-                    <v-alert
-                        v-if="isCreating"
-                        type="info"
-                        variant="tonal"
-                        class="mb-4"
-                        text="Salve a modalidade para cadastrar as graduações."
+        <template #default="{ form, errors }">
+            <v-row class="ma-0">
+                <v-col cols="12" md="6">
+                    <v-text-field
+                        v-model="form.name"
+                        v-text-case="'capitalize'"
+                        label="Nome"
+                        :rules="[required]"
+                        :error-messages="errors.name"
                     />
-
-                    <ModalityGraduationsTable
-                        v-else
-                        v-model:items="form.graduations"
-                        :errors="errors"
+                </v-col>
+                <v-col cols="12" md="6">
+                    <v-text-field
+                        v-model="form.color"
+                        label="Cor"
+                        type="color"
+                        :error-messages="errors.color"
                     />
-                </v-window-item>
-            </v-window>
+                </v-col>
+                <v-col cols="12">
+                    <div class="text-subtitle-2 text-medium-emphasis mb-2">
+                        Pré-visualização
+                    </div>
+                    <ModalityCard :name="form.name" :color="form.color" />
+                </v-col>
+            </v-row>
+
+            <ModalityGraduationsTable
+                v-model:items="form.graduations"
+                :errors="errors"
+            />
         </template>
     </DetailsPage>
 </template>

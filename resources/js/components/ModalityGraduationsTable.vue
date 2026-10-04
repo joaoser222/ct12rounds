@@ -6,8 +6,10 @@
         description="Graduações possíveis para os clientes desta modalidade."
         add-label="Adicionar Graduação"
         empty-message="Nenhuma graduação cadastrada. Clique em Adicionar Graduação para continuar."
+        reorderable
         @add="addItem"
         @remove="removeItem"
+        @move="moveItem"
     >
         <template #row="{ item, index }">
             <td>
@@ -70,6 +72,24 @@ function removeItem(index: number): void {
         'update:items',
         props.items.filter((_, itemIndex) => itemIndex !== index),
     );
+}
+
+/**
+ * Moves a row one slot up or down. The backend derives `position` from the
+ * array index, so persisting the new order is the whole reorder mechanism.
+ */
+function moveItem(index: number, offset: number): void {
+    const target = index + offset;
+    const items = [...props.items];
+
+    if (target < 0 || target >= items.length) {
+        return;
+    }
+
+    const [moved] = items.splice(index, 1);
+    items.splice(target, 0, moved);
+
+    emit('update:items', items);
 }
 
 function itemError(index: number, field: string): string | undefined {
