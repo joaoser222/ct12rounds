@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatMessage;
 use App\Models\Conversation;
-use App\Services\Mcp\ChatPromptProvider;
 use App\Services\Mcp\ChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +15,6 @@ class ChatController extends Controller
 {
     public function __construct(
         private readonly ChatService $chatService,
-        private readonly ChatPromptProvider $promptProvider,
     ) {}
 
     public function message(Request $request): JsonResponse|StreamedResponse
@@ -123,7 +121,7 @@ class ChatController extends Controller
     public function prompts(Request $request): JsonResponse
     {
         return response()->json([
-            'prompts' => $this->promptProvider->promptsForCurrentUser(),
+            'prompts' => $this->chatService->suggestions(),
         ]);
     }
 }

@@ -13,15 +13,13 @@ return [
 
     'max_tokens' => (int) env('MCP_CHAT_MAX_TOKENS', 1024),
 
-    'max_tool_iterations' => (int) env('MCP_CHAT_MAX_TOOL_ITERATIONS', 5),
-
     'request_timeout' => (int) env('MCP_CHAT_REQUEST_TIMEOUT', 60),
 
     'connect_timeout' => (int) env('MCP_CHAT_CONNECT_TIMEOUT', 10),
 
     // Extra fields merged into the outgoing request body for every call. Used
     // here to disable the reasoning trace of Nemotron (enable_thinking=false),
-    // since the chat expects plain content and tool_calls deltas.
+    // since the chat expects plain content.
     'chat_template_kwargs' => [
         'enable_thinking' => false,
     ],
