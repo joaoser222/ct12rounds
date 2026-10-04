@@ -80,7 +80,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::get('chat', fn () => inertia('Chat'))->name('chat')->can('chat.view');
     Route::get('chat/prompts', [ChatController::class, 'prompts'])->name('chat.prompts')->can('chat.view');
-    Route::post('chat/message', [ChatController::class, 'message'])->name('chat.message')->can('chat.view');
+    Route::post('chat/message', [ChatController::class, 'message'])->middleware('throttle:20,1')->name('chat.message')->can('chat.view');
     Route::get('chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations')->can('chat.view');
     Route::get('chat/conversations/{conversation}', [ChatController::class, 'show'])->name('chat.conversations.show')->can('chat.view');
     Route::get('select-box/{objectName}', SelectBoxController::class)->name('select-box');
