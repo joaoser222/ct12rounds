@@ -14,9 +14,7 @@ type ChatMessage = {
 type ChatPrompt = {
     name: string;
     label: string;
-    description: string;
-    text: string;
-    client_message: string | null;
+    question: string;
 };
 
 type ConversationSummary = {
@@ -34,8 +32,6 @@ const conversations = ref<ConversationSummary[]>([]);
 const historyDrawer = ref(false);
 const messagesHost = ref<HTMLElement | null>(null);
 const abortController = ref<AbortController | null>(null);
-const snackbar = ref(false);
-const snackbarText = ref('');
 
 const xsrfToken = decodeURIComponent(
     document.cookie.match(/(^|; )XSRF-TOKEN=([^;]*)/)?.[1] ?? '',
@@ -93,41 +89,51 @@ async function loadConversations(): Promise<void> {
     }
 }
 
+type TextSegment =
+    | { kind: 'text'; value: string }
+    | { kind: 'link'; value: string; href: string };
+
+const linkPattern = /\[([^\]]+)\]\((\/[^)\s]*)\)/g;
+
+const segments = computed<Record<number, TextSegment[]>>(() => {
+    const parsed: Record<number, TextSegment[]> = {};
+
+    messages.value.forEach((message, index) => {
+        if (message.role !== 'assistant' || !message.text.includes('](')) {
+            return;
+        }
+
+        const parts: TextSegment[] = [];
+        let lastIndex = 0;
+
+        for (const match of message.text.matchAll(linkPattern)) {
+            const at = match.index ?? 0;
+
+            if (at > lastIndex) {
+                parts.push({ kind: 'text', value: message.text.slice(lastIndex, at) });
+            }
+
+            parts.push({ kind: 'link', value: match[1], href: match[2] });
+            lastIndex = at + match[0].length;
+        }
+
+        if (lastIndex < message.text.length) {
+            parts.push({ kind: 'text', value: message.text.slice(lastIndex) });
+        }
+
+        parsed[index] = parts;
+    });
+
+    return parsed;
+});
+
 function applyPrompt(prompt: ChatPrompt): void {
     if (loading.value) {
         return;
     }
 
-    draft.value = prompt.label;
+    draft.value = prompt.question;
     void send(prompt.name);
-}
-
-async function copyClientMessage(prompt: ChatPrompt): Promise<void> {
-    if (!prompt.client_message) {
-        return;
-    }
-
-    try {
-        await navigator.clipboard.writeText(prompt.client_message);
-        snackbarText.value = 'Mensagem copiada!';
-        snackbar.value = true;
-    } catch {
-        try {
-            const textarea = document.createElement('textarea');
-            textarea.value = prompt.client_message;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            snackbarText.value = 'Mensagem copiada!';
-            snackbar.value = true;
-        } catch {
-            snackbarText.value = 'Não foi possível copiar a mensagem.';
-            snackbar.value = true;
-        }
-    }
 }
 
 function startNewConversation(): void {
@@ -372,14 +378,14 @@ async function send(promptName: string | null = null): Promise<void> {
                         class="text-medium-emphasis"
                         style="max-width: 420px"
                     >
-                        Assistente que lê dados e executa ações permitidas à sua
-                        conta (clientes, vendas, recebimentos, entre outros),
-                        conforme as ferramentas do servidor MCP.
+                        Assistente que explica como usar o sistema. Quando a
+                        resposta depende de um dado, ele te leva até a tela
+                        certa já filtrada.
                     </p>
                 </div>
 
                 <template
-                    v-for="message in messages"
+                    v-for="(message, messageIndex) in messages"
                     :key="message.id"
                 >
                     <div
@@ -398,7 +404,22 @@ async function send(promptName: string | null = null): Promise<void> {
                                     : 'chat-bubble-assistant'
                             "
                         >
-                            {{ message.text }}
+                            <template
+                                v-if="segments[messageIndex]"
+                            >
+                                <template
+                                    v-for="(segment, segmentIndex) in segments[messageIndex]"
+                                    :key="segmentIndex"
+                                >
+                                    <a
+                                        v-if="segment.kind === 'link'"
+                                        :href="segment.href"
+                                        class="chat-link"
+                                    >{{ segment.value }}</a>
+                                    <template v-else>{{ segment.value }}</template>
+                                </template>
+                            </template>
+                            <template v-else>{{ message.text }}</template>
                         </div>
                     </div>
                 </template>
@@ -420,32 +441,19 @@ async function send(promptName: string | null = null): Promise<void> {
                 class="px-4 pt-2"
             >
                 <div class="d-flex flex-wrap ga-2">
-                    <template
+                    <v-btn
                         v-for="prompt in prompts"
                         :key="prompt.name"
+                        variant="tonal"
+                        color="primary"
+                        size="small"
+                        rounded="sm"
+                        :disabled="loading"
+                        :title="prompt.question"
+                        @click="applyPrompt(prompt)"
                     >
-                        <v-btn
-                            variant="tonal"
-                            color="primary"
-                            size="small"
-                            rounded="sm"
-                            :disabled="loading"
-                            :title="prompt.description"
-                            @click="applyPrompt(prompt)"
-                        >
-                            {{ prompt.label }}
-                        </v-btn>
-                        <v-btn
-                            v-if="prompt.client_message"
-                            icon="ti ti-copy"
-                            variant="text"
-                            size="x-small"
-                            rounded="sm"
-                            :disabled="loading"
-                            title="Copiar mensagem para cliente"
-                            @click="copyClientMessage(prompt)"
-                        />
-                    </template>
+                        {{ prompt.label }}
+                    </v-btn>
                 </div>
             </div>
 
@@ -506,14 +514,7 @@ async function send(promptName: string | null = null): Promise<void> {
         </v-slide-x-transition>
     </div>
 
-    <v-snackbar
-        v-model="snackbar"
-        :timeout="2000"
-        location="bottom"
-    >
-        {{ snackbarText }}
-    </v-snackbar>
-</template>
+    </template>
 
 <style scoped>
 .chat-bubble {
@@ -530,6 +531,12 @@ async function send(promptName: string | null = null): Promise<void> {
 .chat-bubble-assistant {
     background: rgba(var(--v-theme-on-surface), 0.07);
     border-bottom-left-radius: 4px;
+}
+
+.chat-link {
+    color: rgb(var(--v-theme-primary));
+    font-weight: 600;
+    text-decoration: underline;
 }
 
 .typing-dot {
