@@ -7,9 +7,15 @@ verification.
 
 ## Communication
 
-Communicate with the user in Portuguese. Keep this file, skills, source code,
-identifiers, commit messages, and technical artifacts in English unless an
-existing project convention requires Portuguese UI text.
+Communicate with the user in Portuguese.
+
+Write in English: this file, skills, source code, identifiers, commit messages, and
+technical artifacts. Specs under `docs/specs/` are technical artifacts — they are read
+by agents across sessions and carry file paths, enum names, and query fragments — so
+they are written in English.
+
+Keep in Portuguese: UI text, and prose in `docs/` outside `docs/specs/`, to match the
+existing text there. See `docs/ACCESS_CONTROL.md`.
 
 ## Stack
 
