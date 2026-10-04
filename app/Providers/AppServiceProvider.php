@@ -68,6 +68,7 @@ use App\Services\Gateway\FiscalSyncOrchestrator;
 use App\Services\Gateway\GatewayAdapterResolver;
 use App\Services\Gateway\GatewayBillingOrchestrator;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -224,6 +225,8 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        Model::preventLazyLoading(! app()->isProduction());
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
