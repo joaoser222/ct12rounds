@@ -30,6 +30,8 @@ class GatewaySyncTest extends TestCase
         parent::setUp();
 
         config(['cache.default' => 'array']);
+
+        Http::preventStrayRequests();
     }
 
     private function asaasAccount(): GatewayAccount
@@ -104,7 +106,7 @@ class GatewaySyncTest extends TestCase
         $this->asaasAccount();
         $user = $this->userWithSyncPermission();
 
-        Cache::lock(SyncGatewayDataJob::lockName('payments'), 600, Str::random(40))->get();
+        Cache::lock(SyncGatewayDataJob::lockName('payments'), SyncGatewayDataJob::LOCK_TTL, Str::random(40))->get();
 
         $response = $this->actingAs($user)->postJson(route('gateway.sync', 'payments'));
 
@@ -146,7 +148,7 @@ class GatewaySyncTest extends TestCase
         $account = $this->asaasAccount();
         $user = $this->userWithSyncPermission();
 
-        Cache::lock(SyncGatewayDataJob::lockName('transfers'), 600, Str::random(40))->get();
+        Cache::lock(SyncGatewayDataJob::lockName('transfers'), SyncGatewayDataJob::LOCK_TTL, Str::random(40))->get();
 
         $response = $this->actingAs($user)->postJson(route('gateway-accounts.sync', $account));
 
@@ -204,7 +206,7 @@ class GatewaySyncTest extends TestCase
 
         foreach (GatewaySyncService::SCOPES as $scope) {
             $this->assertTrue(
-                Cache::lock(SyncGatewayDataJob::lockName($scope), 600)->get(),
+                Cache::lock(SyncGatewayDataJob::lockName($scope), SyncGatewayDataJob::LOCK_TTL)->get(),
                 "Lock for scope [{$scope}] was not released.",
             );
         }
@@ -244,7 +246,7 @@ class GatewaySyncTest extends TestCase
 
         foreach (GatewaySyncService::SCOPES as $scope) {
             $this->assertTrue(
-                Cache::lock(SyncGatewayDataJob::lockName($scope), 600)->get(),
+                Cache::lock(SyncGatewayDataJob::lockName($scope), SyncGatewayDataJob::LOCK_TTL)->get(),
                 "Lock for scope [{$scope}] was not released after failure.",
             );
         }
@@ -264,7 +266,7 @@ class GatewaySyncTest extends TestCase
         $account = $this->asaasAccount();
         $scope = 'customers';
         $lockOwner = Str::random(40);
-        $lock = Cache::lock(SyncGatewayDataJob::lockName($scope), 600, $lockOwner);
+        $lock = Cache::lock(SyncGatewayDataJob::lockName($scope), SyncGatewayDataJob::LOCK_TTL, $lockOwner);
         $lock->get();
 
         Http::fake([
@@ -279,7 +281,7 @@ class GatewaySyncTest extends TestCase
         $job->handle(app(\App\Services\Gateway\GatewaySyncService::class));
 
         $this->assertTrue(
-            Cache::lock(SyncGatewayDataJob::lockName($scope), 600)->get(),
+            Cache::lock(SyncGatewayDataJob::lockName($scope), SyncGatewayDataJob::LOCK_TTL)->get(),
         );
     }
 
@@ -308,7 +310,7 @@ class GatewaySyncTest extends TestCase
 
         $scope = 'payments';
         $lockOwner = Str::random(40);
-        $lock = Cache::lock(SyncGatewayDataJob::lockName($scope), 600, $lockOwner);
+        $lock = Cache::lock(SyncGatewayDataJob::lockName($scope), SyncGatewayDataJob::LOCK_TTL, $lockOwner);
         $lock->get();
 
         $job = new SyncGatewayDataJob([$account->id], $scope, $lockOwner);
@@ -346,7 +348,7 @@ class GatewaySyncTest extends TestCase
 
         $scope = 'postbacks';
         $lockOwner = Str::random(40);
-        $lock = Cache::lock(SyncGatewayDataJob::lockName($scope), 600, $lockOwner);
+        $lock = Cache::lock(SyncGatewayDataJob::lockName($scope), SyncGatewayDataJob::LOCK_TTL, $lockOwner);
         $lock->get();
 
         $job = new SyncGatewayDataJob([$account->id], $scope, $lockOwner);
