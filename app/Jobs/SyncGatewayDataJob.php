@@ -22,6 +22,13 @@ class SyncGatewayDataJob implements ShouldQueue
     public int $timeout = 600;
 
     /**
+     * Lock lifetime must outlive the longest running sync job, which is
+     * SyncFullGatewayAccountJob::$timeout. Keep it in sync with that value
+     * and with the queue retry_after setting.
+     */
+    public const LOCK_TTL = 1900;
+
+    /**
      * @param  array<int, int>  $gatewayAccountIds
      * @param  array<string, int>  $stats
      */
@@ -34,8 +41,13 @@ class SyncGatewayDataJob implements ShouldQueue
     public function handle(GatewaySyncService $syncService): void
     {
         try {
+            $accounts = GatewayAccount::query()
+                ->whereIn('id', $this->gatewayAccountIds)
+                ->get()
+                ->keyBy('id');
+
             foreach ($this->gatewayAccountIds as $accountId) {
-                $account = GatewayAccount::query()->find($accountId);
+                $account = $accounts->get($accountId);
 
                 if ($account === null) {
                     continue;
@@ -79,7 +91,7 @@ class SyncGatewayDataJob implements ShouldQueue
         $locks = [];
 
         foreach (GatewaySyncService::SCOPES as $scope) {
-            $lock = Cache::lock(self::lockName($scope), 600, $lockOwner);
+            $lock = Cache::lock(self::lockName($scope), self::LOCK_TTL, $lockOwner);
 
             if (! $lock->get()) {
                 foreach ($locks as $heldLock) {
@@ -98,7 +110,7 @@ class SyncGatewayDataJob implements ShouldQueue
     public static function releaseAllLocks(string $lockOwner): void
     {
         foreach (GatewaySyncService::SCOPES as $scope) {
-            Cache::lock(self::lockName($scope), 600, $lockOwner)->forceRelease();
+            Cache::lock(self::lockName($scope), self::LOCK_TTL, $lockOwner)->forceRelease();
         }
     }
 }
