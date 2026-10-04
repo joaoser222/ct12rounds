@@ -301,23 +301,31 @@ class ChatService
         $maxAttempts = (int) ($config['retry_attempts'] ?? 3);
         $delaySeconds = (float) ($config['retry_base_delay'] ?? 2);
 
-        $response = Http::withToken((string) $provider['api_key'])
-            ->withOptions(['stream' => $stream])
-            ->timeout((int) $config['request_timeout'])
-            ->post((string) $provider['base_url'], $payload);
+        $response = $this->post($provider, $config, $payload, $stream);
 
         for ($attempt = 1; $attempt < $maxAttempts && $response->status() === 429; $attempt++) {
             $wait = $this->retryDelaySeconds($response, $delaySeconds);
             $delaySeconds = min($delaySeconds * 2, 15);
             usleep((int) ($wait * 1000000));
 
-            $response = Http::withToken((string) $provider['api_key'])
-                ->withOptions(['stream' => $stream])
-                ->timeout((int) $config['request_timeout'])
-                ->post((string) $provider['base_url'], $payload);
+            $response = $this->post($provider, $config, $payload, $stream);
         }
 
         return $response;
+    }
+
+    /**
+     * @param  array<string, mixed>  $provider
+     * @param  array<string, mixed>  $config
+     * @param  array<string, mixed>  $payload
+     */
+    private function post(array $provider, array $config, array $payload, bool $stream): Response
+    {
+        return Http::withToken((string) $provider['api_key'])
+            ->withOptions(['stream' => $stream])
+            ->timeout((int) $config['request_timeout'])
+            ->connectTimeout((int) ($config['connect_timeout'] ?? 10))
+            ->post((string) $provider['base_url'], $payload);
     }
 
     /**

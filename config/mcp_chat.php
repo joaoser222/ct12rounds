@@ -17,6 +17,8 @@ return [
 
     'request_timeout' => (int) env('MCP_CHAT_REQUEST_TIMEOUT', 60),
 
+    'connect_timeout' => (int) env('MCP_CHAT_CONNECT_TIMEOUT', 10),
+
     // Extra fields merged into the outgoing request body for every call. Used
     // here to disable the reasoning trace of Nemotron (enable_thinking=false),
     // since the chat expects plain content and tool_calls deltas.
