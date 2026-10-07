@@ -9,12 +9,12 @@ use App\Actions\Products\UpdateProductAction;
 use App\DTOs\Products\CreateProductDTO;
 use App\DTOs\Products\UpdateProductDTO;
 use App\Enums\ProductType;
+use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ProductController extends CrudModuleController
@@ -131,13 +131,6 @@ class ProductController extends CrudModuleController
     /** @return array<string, mixed> */
     private function validatedProductData(Request $request): array
     {
-        return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'purchase_price' => ['required', 'numeric', 'min:0'],
-            'sale_price' => ['required', 'numeric', 'min:0'],
-            'quantity' => ['nullable', 'integer', 'min:0'],
-            'product_type' => ['required', Rule::enum(ProductType::class)],
-            'product_unity' => ['required', 'string', 'max:10', Rule::exists('product_unities', 'code')],
-        ]);
+        return $this->validatedRequestData($request, ProductRequest::class);
     }
 }

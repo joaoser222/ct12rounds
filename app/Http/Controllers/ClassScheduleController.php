@@ -8,6 +8,7 @@ use App\Actions\ClassSchedules\CreateClassScheduleAction;
 use App\Actions\ClassSchedules\UpdateClassScheduleAction;
 use App\DTOs\ClassSchedules\CreateClassScheduleDTO;
 use App\DTOs\ClassSchedules\UpdateClassScheduleDTO;
+use App\Http\Requests\ClassScheduleRequest;
 use App\Models\ClassSchedule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -60,17 +61,22 @@ class ClassScheduleController extends CrudModuleController
         return ClassSchedule::class;
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return ClassScheduleRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return ClassScheduleRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createClassSchedule->execute(
-            CreateClassScheduleDTO::from($request->validate([
-                'modality_id' => ['required', 'integer', 'exists:modalities,id'],
-                'week_day' => ['required', 'integer', 'min:1', 'max:6'],
-                'start_time' => ['required', 'string', 'date_format:H:i'],
-                'end_time' => ['required', 'string', 'date_format:H:i', 'after:start_time'],
-            ]))
+            CreateClassScheduleDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -93,12 +99,7 @@ class ClassScheduleController extends CrudModuleController
 
         $result = $this->updateClassSchedule->execute(
             UpdateClassScheduleDTO::from([
-                ...$request->validate([
-                    'modality_id' => ['nullable', 'integer', 'exists:modalities,id'],
-                    'week_day' => ['nullable', 'integer', 'min:1', 'max:6'],
-                    'start_time' => ['nullable', 'string', 'date_format:H:i'],
-                    'end_time' => ['nullable', 'string', 'date_format:H:i'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $classSchedule->getKey(),
             ])
         );

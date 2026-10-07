@@ -9,6 +9,7 @@ use App\Actions\FinancialAccounts\UpdateFinancialAccountAction;
 use App\DTOs\FinancialAccounts\CreateFinancialAccountDTO;
 use App\DTOs\FinancialAccounts\UpdateFinancialAccountDTO;
 use App\Enums\FinancialAccountType;
+use App\Http\Requests\FinancialAccountRequest;
 use App\Models\FinancialAccount;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -47,22 +48,22 @@ class FinancialAccountController extends CrudModuleController
         return FinancialAccount::class;
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return FinancialAccountRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return FinancialAccountRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createFinancialAccount->execute(
-            CreateFinancialAccountDTO::from($request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'account_type' => ['required', 'string', 'in:cash,bank'],
-                'holder_name' => ['nullable', 'string', 'max:255'],
-                'holder_document' => ['nullable', 'string', 'max:20'],
-                'holder_birth_date' => ['nullable', 'date'],
-                'bank_account_number' => ['nullable', 'string', 'max:50'],
-                'bank_agency' => ['nullable', 'string', 'max:50'],
-                'bank_account_type' => ['nullable', 'string', 'max:20'],
-                'bank_code' => ['nullable', 'string', 'max:20'],
-            ]))
+            CreateFinancialAccountDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -85,17 +86,7 @@ class FinancialAccountController extends CrudModuleController
 
         $result = $this->updateFinancialAccount->execute(
             UpdateFinancialAccountDTO::from([
-                ...$request->validate([
-                    'name' => ['nullable', 'string', 'max:255'],
-                    'account_type' => ['nullable', 'string', 'in:cash,bank'],
-                    'holder_name' => ['nullable', 'string', 'max:255'],
-                    'holder_document' => ['nullable', 'string', 'max:20'],
-                    'holder_birth_date' => ['nullable', 'date'],
-                    'bank_account_number' => ['nullable', 'string', 'max:50'],
-                    'bank_agency' => ['nullable', 'string', 'max:50'],
-                    'bank_account_type' => ['nullable', 'string', 'max:20'],
-                    'bank_code' => ['nullable', 'string', 'max:20'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $financialAccount->getKey(),
             ])
         );

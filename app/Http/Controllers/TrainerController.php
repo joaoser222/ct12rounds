@@ -9,6 +9,7 @@ use App\Actions\Trainer\UpdateTrainerAction;
 use App\DTOs\Trainer\CreateTrainerDTO;
 use App\DTOs\Trainer\UpdateTrainerDTO;
 use App\Enums\GenderType;
+use App\Http\Requests\TrainerRequest;
 use App\Models\Modality;
 use App\Models\Trainer;
 use App\Models\State;
@@ -16,7 +17,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,29 +52,22 @@ class TrainerController extends CrudModuleController
         return Trainer::class;
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return TrainerRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return TrainerRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createTrainer->execute(
-            CreateTrainerDTO::from($request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['nullable', 'email', 'max:255'],
-                'document' => ['required', 'string', 'max:20'],
-                'birth_date' => ['nullable', 'date'],
-                'phone' => ['nullable', 'string', 'max:20'],
-                'gender' => ['nullable', 'in:male,female,other'],
-                'profile_image' => ['nullable', 'string', 'max:255'],
-                'address' => ['nullable', 'string', 'max:255'],
-                'address_number' => ['required', 'string', 'max:50'],
-                'address_complement' => ['nullable', 'string', 'max:255'],
-                'address_state' => ['nullable', 'string', 'max:2'],
-                'address_city' => ['nullable', 'string', 'max:255'],
-                'address_district' => ['nullable', 'string', 'max:255'],
-                'address_postal_code' => ['required', 'string', 'max:10'],
-                'trainer_modalities' => ['nullable', 'array'],
-                'trainer_modalities.*' => ['integer', 'distinct', Rule::exists('modalities', 'id')],
-            ]))
+            CreateTrainerDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -97,24 +90,7 @@ class TrainerController extends CrudModuleController
 
         $result = $this->updateTrainer->execute(
             UpdateTrainerDTO::from([
-                ...$request->validate([
-                    'name' => ['nullable', 'string', 'max:255'],
-                    'email' => ['nullable', 'email', 'max:255'],
-                    'document' => ['nullable', 'string', 'max:20'],
-                    'birth_date' => ['nullable', 'date'],
-                    'phone' => ['nullable', 'string', 'max:20'],
-                    'gender' => ['nullable', 'in:male,female,other'],
-                    'profile_image' => ['nullable', 'string', 'max:255'],
-                    'address' => ['nullable', 'string', 'max:255'],
-                    'address_number' => ['required', 'string', 'max:50'],
-                    'address_complement' => ['nullable', 'string', 'max:255'],
-                    'address_state' => ['nullable', 'string', 'max:2'],
-                    'address_city' => ['nullable', 'string', 'max:255'],
-                    'address_district' => ['nullable', 'string', 'max:255'],
-                    'address_postal_code' => ['required', 'string', 'max:10'],
-                    'trainer_modalities' => ['nullable', 'array'],
-                    'trainer_modalities.*' => ['integer', 'distinct', Rule::exists('modalities', 'id')],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $trainer->getKey(),
             ])
         );

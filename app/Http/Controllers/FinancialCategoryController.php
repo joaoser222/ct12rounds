@@ -9,6 +9,7 @@ use App\Actions\FinancialCategories\UpdateFinancialCategoryAction;
 use App\DTOs\FinancialCategories\CreateFinancialCategoryDTO;
 use App\DTOs\FinancialCategories\UpdateFinancialCategoryDTO;
 use App\Enums\OperationType;
+use App\Http\Requests\FinancialCategoryRequest;
 use App\Models\FinancialCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -60,17 +61,22 @@ class FinancialCategoryController extends CrudModuleController
         return FinancialCategory::class;
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return FinancialCategoryRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return FinancialCategoryRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createFinancialCategory->execute(
-            CreateFinancialCategoryDTO::from($request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'color' => ['nullable', 'string', 'max:7'],
-                'operation_type' => ['required', 'string', 'in:receivable,payable'],
-                'cost_center_id' => ['nullable', 'integer', 'min:1'],
-            ]))
+            CreateFinancialCategoryDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -93,12 +99,7 @@ class FinancialCategoryController extends CrudModuleController
 
         $result = $this->updateFinancialCategory->execute(
             UpdateFinancialCategoryDTO::from([
-                ...$request->validate([
-                    'name' => ['nullable', 'string', 'max:255'],
-                    'color' => ['nullable', 'string', 'max:7'],
-                    'operation_type' => ['nullable', 'string', 'in:receivable,payable'],
-                    'cost_center_id' => ['nullable', 'integer', 'min:1'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $financialCategory->getKey(),
             ])
         );

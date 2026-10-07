@@ -9,6 +9,7 @@ use App\Actions\CostCenters\UpdateCostCenterAction;
 use App\DTOs\CostCenters\CreateCostCenterDTO;
 use App\DTOs\CostCenters\UpdateCostCenterDTO;
 use App\Enums\OperationType;
+use App\Http\Requests\CostCenterRequest;
 use App\Models\CostCenter;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -47,16 +48,22 @@ class CostCenterController extends CrudModuleController
         return CostCenter::class;
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return CostCenterRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return CostCenterRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createCostCenter->execute(
-            CreateCostCenterDTO::from($request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'color' => ['nullable', 'string', 'max:7'],
-                'operation_type' => ['required', 'string', 'in:receivable,payable'],
-            ]))
+            CreateCostCenterDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -79,11 +86,7 @@ class CostCenterController extends CrudModuleController
 
         $result = $this->updateCostCenter->execute(
             UpdateCostCenterDTO::from([
-                ...$request->validate([
-                    'name' => ['nullable', 'string', 'max:255'],
-                    'color' => ['nullable', 'string', 'max:7'],
-                    'operation_type' => ['nullable', 'string', 'in:receivable,payable'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $costCenter->getKey(),
             ])
         );

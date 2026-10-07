@@ -8,6 +8,7 @@ use App\Actions\Coupon\CreateCouponAction;
 use App\Actions\Coupon\UpdateCouponAction;
 use App\DTOs\Coupon\CreateCouponDTO;
 use App\DTOs\Coupon\UpdateCouponDTO;
+use App\Http\Requests\CouponRequest;
 use App\Models\Coupon;
 use App\Models\Plan;
 use Illuminate\Database\Eloquent\Model;
@@ -87,20 +88,22 @@ class CouponController extends CrudModuleController
         ]);
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return CouponRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return CouponRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createCoupon->execute(
-            CreateCouponDTO::from($request->validate([
-                'code' => ['required', 'string', 'max:50'],
-                'percent' => ['required', 'numeric', 'min:0'],
-                'discount_limit' => ['nullable', 'numeric', 'min:0'],
-                'duration' => ['nullable', 'string', 'max:50'],
-                'expiration_date' => ['nullable', 'date'],
-                'plan_ids' => ['nullable', 'array'],
-                'plan_ids.*' => ['integer', 'exists:plans,id'],
-            ]))
+            CreateCouponDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -123,15 +126,7 @@ class CouponController extends CrudModuleController
 
         $result = $this->updateCoupon->execute(
             UpdateCouponDTO::from([
-                ...$request->validate([
-                    'code' => ['nullable', 'string', 'max:50'],
-                    'percent' => ['nullable', 'numeric', 'min:0'],
-                    'discount_limit' => ['nullable', 'numeric', 'min:0'],
-                    'duration' => ['nullable', 'string', 'max:50'],
-                    'expiration_date' => ['nullable', 'date'],
-                    'plan_ids' => ['nullable', 'array'],
-                    'plan_ids.*' => ['integer', 'exists:plans,id'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $coupon->getKey(),
             ])
         );

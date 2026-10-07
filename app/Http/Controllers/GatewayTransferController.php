@@ -10,6 +10,7 @@ use App\Models\GatewayTransfer;
 use App\Models\GatewayTransferRecipient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use App\Http\Requests\GatewayTransferRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -87,15 +88,11 @@ class GatewayTransferController extends ReadOnlyModuleController
         ]);
     }
 
-    public function store(Request $request): RedirectResponse|JsonResponse
+    public function store(GatewayTransferRequest $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
-        $transfer = $this->createGatewayTransfer->execute($request->validate([
-            'gateway_transfer_recipient_id' => ['required', 'integer', 'exists:gateway_transfer_recipients,id'],
-            'value' => ['required', 'numeric', 'gt:0'],
-            'description' => ['nullable', 'string', 'max:500'],
-        ]));
+        $transfer = $this->createGatewayTransfer->execute($request->validated());
 
         if ($request->expectsJson()) {
             return response()->json($transfer, 201);

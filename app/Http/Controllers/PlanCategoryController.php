@@ -8,6 +8,7 @@ use App\Actions\PlanCategories\CreatePlanCategoryAction;
 use App\Actions\PlanCategories\UpdatePlanCategoryAction;
 use App\DTOs\PlanCategories\CreatePlanCategoryDTO;
 use App\DTOs\PlanCategories\UpdatePlanCategoryDTO;
+use App\Http\Requests\PlanCategoryRequest;
 use App\Models\PlanCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -45,14 +46,22 @@ class PlanCategoryController extends CrudModuleController
         return PlanCategory::class;
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return PlanCategoryRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return PlanCategoryRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createPlanCategory->execute(
-            CreatePlanCategoryDTO::from($request->validate([
-                'name' => ['required', 'string', 'max:255'],
-            ]))
+            CreatePlanCategoryDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -75,9 +84,7 @@ class PlanCategoryController extends CrudModuleController
 
         $result = $this->updatePlanCategory->execute(
             UpdatePlanCategoryDTO::from([
-                ...$request->validate([
-                    'name' => ['nullable', 'string', 'max:255'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $planCategory->getKey(),
             ])
         );

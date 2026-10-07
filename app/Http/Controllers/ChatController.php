@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChatMessageRequest;
 use App\Models\ChatMessage;
 use App\Models\Conversation;
 use App\Services\Mcp\ChatService;
@@ -17,17 +18,9 @@ class ChatController extends Controller
         private readonly ChatService $chatService,
     ) {}
 
-    public function message(Request $request): JsonResponse|StreamedResponse
+    public function message(ChatMessageRequest $request): JsonResponse|StreamedResponse
     {
-        $data = $request->validate([
-            'message' => ['required', 'string', 'max:4000'],
-            'history' => ['nullable', 'array'],
-            'history.*.role' => ['required_with:history', 'string', 'in:user,assistant'],
-            'history.*.content' => ['required_with:history', 'string', 'max:8000'],
-            'conversation_id' => ['nullable', 'integer', 'exists:chat_conversations,id'],
-            'prompt' => ['nullable', 'string', 'max:255'],
-            'stream' => ['nullable', 'boolean'],
-        ]);
+        $data = $request->validated();
 
         $user = $request->user();
 

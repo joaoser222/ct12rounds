@@ -20,9 +20,11 @@ class FinancialAccountRequest extends FormRequest
     {
         $isBankAccount = $this->input('account_type') === FinancialAccountType::BANK->value;
 
+        $required = $this->isMethod('POST') ? 'required' : 'nullable';
+
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'account_type' => ['required', Rule::enum(FinancialAccountType::class)],
+            'name' => [$required, 'string', 'max:255'],
+            'account_type' => [$required, Rule::enum(FinancialAccountType::class)],
             'holder_name' => [Rule::requiredIf($isBankAccount), 'nullable', 'string', 'max:255'],
             'holder_document' => [Rule::requiredIf($isBankAccount), 'nullable', 'string', 'max:20'],
             'holder_birth_date' => [Rule::requiredIf($isBankAccount), 'nullable', 'date'],

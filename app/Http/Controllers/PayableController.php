@@ -11,6 +11,7 @@ use App\DTOs\Payables\UpdatePayableDTO;
 use App\Enums\InvoiceStatus;
 use App\Enums\OperationType;
 use App\Enums\PaymentMethod;
+use App\Http\Requests\PayableRequest;
 use App\Models\Payable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -55,21 +56,22 @@ class PayableController extends CrudModuleController
         return Payable::query()->where('operation_type', OperationType::PAYABLE->value);
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return PayableRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return PayableRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createPayable->execute(
-            CreatePayableDTO::from($request->validate([
-                'supplier_id' => ['required', 'integer', 'min:1'],
-                'due_date' => ['required', 'date'],
-                'total' => ['required', 'numeric', 'min:0'],
-                'payment_method' => ['required', 'string', 'in:pix,boleto,credit_card,cash'],
-                'operation_type' => ['required', 'string', 'in:receivable,payable'],
-                'annotations' => ['nullable', 'string', 'max:500'],
-                'financial_account_id' => ['nullable', 'integer', 'min:1'],
-                'financial_category_id' => ['nullable', 'integer', 'min:1'],
-            ]))
+            CreatePayableDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -92,16 +94,7 @@ class PayableController extends CrudModuleController
 
         $result = $this->updatePayable->execute(
             UpdatePayableDTO::from([
-                ...$request->validate([
-                    'supplier_id' => ['nullable', 'integer', 'min:1'],
-                    'due_date' => ['nullable', 'date'],
-                    'total' => ['nullable', 'numeric', 'min:0'],
-                    'payment_method' => ['nullable', 'string', 'in:pix,boleto,credit_card,cash'],
-                    'operation_type' => ['nullable', 'string', 'in:receivable,payable'],
-                    'annotations' => ['nullable', 'string', 'max:500'],
-                    'financial_account_id' => ['nullable', 'integer', 'min:1'],
-                    'financial_category_id' => ['nullable', 'integer', 'min:1'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $payable->getKey(),
             ])
         );

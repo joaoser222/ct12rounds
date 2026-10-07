@@ -15,7 +15,9 @@ use App\DTOs\Contracts\UpdateContractDTO;
 use App\Enums\BillableStatus;
 use App\Enums\HiringLeadStatus;
 use App\Enums\PaymentMethod;
+use App\Http\Requests\CancelContractRequest;
 use App\Http\Requests\ContractWizardRequest;
+use App\Http\Requests\UpdateContractRequest;
 use App\Models\Contract;
 use App\Models\Coupon;
 use App\Models\HiringLead;
@@ -139,7 +141,7 @@ class ContractController extends CrudModuleController
 
         $result = $this->cancelContract->execute(
             CancelContractDTO::from([
-                ...$request->validate(['reason' => ['nullable', 'string', 'max:500']]),
+                ...$this->validatedRequestData($request, CancelContractRequest::class),
                 'contract_id' => $contract->getKey(),
             ])
         );
@@ -196,7 +198,7 @@ class ContractController extends CrudModuleController
 
         $result = $this->updateContract->execute(
             UpdateContractDTO::from([
-                ...$request->validate(['annotations' => ['nullable', 'string', 'max:500']]),
+                ...$this->validatedRequestData($request, UpdateContractRequest::class),
                 'id' => $contract->getKey(),
             ])
         );

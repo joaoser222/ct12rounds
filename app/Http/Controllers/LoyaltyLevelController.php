@@ -8,6 +8,7 @@ use App\Actions\LoyaltyLevels\CreateLoyaltyLevelAction;
 use App\Actions\LoyaltyLevels\UpdateLoyaltyLevelAction;
 use App\DTOs\LoyaltyLevels\CreateLoyaltyLevelDTO;
 use App\DTOs\LoyaltyLevels\UpdateLoyaltyLevelDTO;
+use App\Http\Requests\LoyaltyLevelRequest;
 use App\Models\LoyaltyLevel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -46,17 +47,22 @@ class LoyaltyLevelController extends CrudModuleController
         return LoyaltyLevel::class;
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return LoyaltyLevelRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return LoyaltyLevelRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createLoyaltyLevel->execute(
-            CreateLoyaltyLevelDTO::from($request->validate([
-                'name' => ['required', 'string', 'max:100'],
-                'min_months' => ['required', 'integer', 'min:0'],
-                'color' => ['nullable', 'string', 'max:7'],
-                'description' => ['nullable', 'string', 'max:500'],
-            ]))
+            CreateLoyaltyLevelDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -79,12 +85,7 @@ class LoyaltyLevelController extends CrudModuleController
 
         $result = $this->updateLoyaltyLevel->execute(
             UpdateLoyaltyLevelDTO::from([
-                ...$request->validate([
-                    'name' => ['nullable', 'string', 'max:100'],
-                    'min_months' => ['nullable', 'integer', 'min:0'],
-                    'color' => ['nullable', 'string', 'max:7'],
-                    'description' => ['nullable', 'string', 'max:500'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $loyaltyLevel->getKey(),
             ])
         );

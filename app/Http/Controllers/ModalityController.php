@@ -8,6 +8,7 @@ use App\Actions\Modalities\CreateModalityAction;
 use App\Actions\Modalities\UpdateModalityAction;
 use App\DTOs\Modalities\CreateModalityDTO;
 use App\DTOs\Modalities\UpdateModalityDTO;
+use App\Http\Requests\ModalityRequest;
 use App\Models\Modality;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -51,7 +52,7 @@ class ModalityController extends CrudModuleController
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
-        $validated = $request->validate($this->graduationRules());
+        $validated = $this->validatedRequestData($request, ModalityRequest::class);
 
         $result = $this->createModality->execute(
             CreateModalityDTO::from([
@@ -80,7 +81,7 @@ class ModalityController extends CrudModuleController
         /** @var Modality $modality */
         $modality = $this->modelFromRoute($request);
 
-        $validated = $request->validate($this->graduationRules());
+        $validated = $this->validatedRequestData($request, ModalityRequest::class);
 
         $result = $this->updateModality->execute(
             UpdateModalityDTO::from([
@@ -117,18 +118,4 @@ class ModalityController extends CrudModuleController
         ];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function graduationRules(): array
-    {
-        return [
-            'name' => ['required', 'string', 'max:255'],
-            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'graduations' => ['nullable', 'array'],
-            'graduations.*.id' => ['nullable', 'integer'],
-            'graduations.*.name' => ['required', 'string', 'max:255'],
-            'graduations.*.color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        ];
-    }
 }

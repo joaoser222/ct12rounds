@@ -8,6 +8,7 @@ use App\Actions\Supplier\CreateSupplierAction;
 use App\Actions\Supplier\UpdateSupplierAction;
 use App\DTOs\Supplier\CreateSupplierDTO;
 use App\DTOs\Supplier\UpdateSupplierDTO;
+use App\Http\Requests\SupplierRequest;
 use App\Models\Supplier;
 use App\Models\State;
 use Illuminate\Database\Eloquent\Model;
@@ -47,24 +48,22 @@ class SupplierController extends CrudModuleController
         return Supplier::class;
     }
 
+    protected function storeRequestClass(): ?string
+    {
+        return SupplierRequest::class;
+    }
+
+    protected function updateRequestClass(): ?string
+    {
+        return SupplierRequest::class;
+    }
+
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $this->authorizeAccess(AccessAction::CREATE);
 
         $result = $this->createSupplier->execute(
-            CreateSupplierDTO::from($request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['nullable', 'email', 'max:255'],
-                'document' => ['required', 'string', 'max:20'],
-                'phone' => ['nullable', 'string', 'max:20'],
-                'address' => ['nullable', 'string', 'max:255'],
-                'address_number' => ['required', 'string', 'max:50'],
-                'address_complement' => ['nullable', 'string', 'max:255'],
-                'address_state' => ['nullable', 'string', 'max:2'],
-                'address_city' => ['nullable', 'string', 'max:255'],
-                'address_district' => ['nullable', 'string', 'max:255'],
-                'address_postal_code' => ['required', 'string', 'max:10'],
-            ]))
+            CreateSupplierDTO::from($this->validatedRequestData($request, $this->storeRequestClass()))
         );
 
         if (! $result->success) {
@@ -87,19 +86,7 @@ class SupplierController extends CrudModuleController
 
         $result = $this->updateSupplier->execute(
             UpdateSupplierDTO::from([
-                ...$request->validate([
-                    'name' => ['nullable', 'string', 'max:255'],
-                    'email' => ['nullable', 'email', 'max:255'],
-                    'document' => ['nullable', 'string', 'max:20'],
-                    'phone' => ['nullable', 'string', 'max:20'],
-                    'address' => ['nullable', 'string', 'max:255'],
-                    'address_number' => ['required', 'string', 'max:50'],
-                    'address_complement' => ['nullable', 'string', 'max:255'],
-                    'address_state' => ['nullable', 'string', 'max:2'],
-                    'address_city' => ['nullable', 'string', 'max:255'],
-                    'address_district' => ['nullable', 'string', 'max:255'],
-                    'address_postal_code' => ['required', 'string', 'max:10'],
-                ]),
+                ...$this->validatedRequestData($request, $this->updateRequestClass()),
                 'id' => $supplier->getKey(),
             ])
         );
