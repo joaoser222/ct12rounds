@@ -1,0 +1,79 @@
+name: master
+
+on:
+  push:
+    branches: [develop]
+
+env:
+  REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }}
+  IMAGE: ct12rounds
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: ct12rounds
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: ct12rounds_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ct12rounds"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, bcmath, pdo_pgsql, zip
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan config:clear
+      - run: php artisan test --compact
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_USERNAME: ct12rounds
+          DB_PASSWORD: secret
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - run: |
+          echo '{"insecure-registries": ["${{ secrets.REGISTRY_HOST }}"]}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: ${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:develop
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            git pull --ff-only
+            export APP_IMAGE=${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:develop
+            COMPOSE="docker compose --project-directory . -f docker/compose.yaml -f docker/compose.develop.yaml"
+            $COMPOSE pull app
+            $COMPOSE up -d db registry
+            $COMPOSE run --rm --no-deps app php artisan db:backup || true
+            $COMPOSE run --rm --no-deps app php artisan migrate --force
+            $COMPOSE up -d app

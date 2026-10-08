@@ -69,6 +69,14 @@ services:
       db:
         condition: service_healthy
     profiles: ["worker"]
+  registry:
+    image: registry:2
+    container_name: ct12rounds_registry
+    # ponytail: sem auth/TLS; restrinja a porta 5000 por firewall.
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
   loki:
     image: grafana/loki:2.9.0
     container_name: ct12rounds_loki
@@ -106,6 +114,8 @@ services:
     profiles: ["monitoring"]
 
 volumes:
+  registry_data:
+    name: ct12rounds_registry_data
   postgres_data:
     name: ct12rounds_postgres_data
   loki_data:
