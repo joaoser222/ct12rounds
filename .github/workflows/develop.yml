@@ -51,6 +51,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
         with:
           driver: docker
@@ -60,6 +61,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
+          platforms: linux/arm64
           file: docker/Dockerfile
           push: true
           tags: ${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:develop
