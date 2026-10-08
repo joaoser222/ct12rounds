@@ -1,0 +1,18 @@
+# Configuração local (máquina do desenvolvedor).
+#
+# Uso: docker compose -f compose.yaml -f compose.develop.yaml -f compose.local.yaml up -d
+#
+# Herda a camada de .env (base) + develop.env dos env_file do
+# compose.develop.yaml e expõe o Caddy em http://localhost:80.
+
+services:
+  caddy:
+    ports:
+      - "80:80"
+  test:
+    environment:
+      APP_ENV: testing
+      DB_HOST: db
+      DB_PORT: 5432
+    volumes:
+      - ./.env:/var/www/html/.env:ro

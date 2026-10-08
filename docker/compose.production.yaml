@@ -11,7 +11,6 @@ services:
       mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache;
       find storage bootstrap/cache -path storage/app/backups -prune -o -exec chown www-data:www-data {} +;
       rm -rf /build-shared/* && cp -a public/build/. /build-shared/;
-      php artisan migrate --force;
       exec php-fpm'
     healthcheck:
       test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9000) ? 0 : 1);"]
@@ -19,8 +18,6 @@ services:
       timeout: 5s
       retries: 24
       start_period: 20s
-    environment:
-      INERTIA_SSR_ENABLED: "true"
     volumes:
       - laravel_storage:/var/www/html/storage
       - bootstrap_cache:/var/www/html/bootstrap/cache

@@ -4,17 +4,27 @@
 # Uso:
 #   ./scripts/deploy.sh
 #
-# Sempre usa o par compose.yaml + compose.production.yaml. Usar apenas o
-# compose.yaml sobe o container sem env_file, sem SSR e sem o Caddy na porta 80.
+# Sempre usa o par docker/compose.yaml + docker/compose.production.yaml. Usar
+# apenas o compose.yaml sobe o container sem env_file, sem SSR e sem o Caddy
+# na porta 80.
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-COMPOSE=(docker compose -f compose.yaml -f compose.production.yaml)
+COMPOSE=(docker compose --project-directory "$PWD" -f docker/compose.yaml -f docker/compose.production.yaml)
 
 echo "==> Building app image"
 "${COMPOSE[@]}" build app
+
+echo "==> Ensuring db is up"
+"${COMPOSE[@]}" up -d db
+
+echo "==> Database backup (pre-deploy)"
+"${COMPOSE[@]}" run --rm --no-deps app php artisan db:backup || echo "backup failed; continuing" >&2
+
+echo "==> Running migrations"
+"${COMPOSE[@]}" run --rm --no-deps app php artisan migrate --force
 
 echo "==> Starting app"
 "${COMPOSE[@]}" up -d app

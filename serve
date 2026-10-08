@@ -49,12 +49,12 @@ base_environment_file=".env"
 case "$environment" in
     develop)
         environment_file="develop.env"
-        compose_override="compose.develop.yaml"
-        compose_local="compose.local.yaml"
+        compose_override="docker/compose.develop.yaml"
+        compose_local="docker/compose.local.yaml"
         ;;
     production)
         environment_file="production.env"
-        compose_override="compose.production.yaml"
+        compose_override="docker/compose.production.yaml"
         compose_local=""
         ;;
 esac
@@ -72,7 +72,7 @@ fi
 # O frontend é compilado pelo ambiente de desenvolvimento (npm run build no
 # host) e os assets são fornecidos aos containers via volume; o Docker não
 # builda o frontend. Não há profile de dev.
-compose_files=("$project_dir/compose.yaml" "$project_dir/$compose_override")
+compose_files=("$project_dir/docker/compose.yaml" "$project_dir/$compose_override")
 
 if [[ -n "$compose_local" ]]; then
     compose_files+=("$project_dir/$compose_local")

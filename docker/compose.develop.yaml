@@ -44,6 +44,7 @@ services:
     container_name: ct12rounds_test
     build:
       context: .
+      dockerfile: docker/Dockerfile
     image: ${APP_IMAGE:-ct12rounds:local}
     command: >-
       sh -c 'php artisan migrate:fresh --force --env=testing && php artisan test --compact'
