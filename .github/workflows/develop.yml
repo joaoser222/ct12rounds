@@ -1,4 +1,4 @@
-name: master
+name: develop
 
 on:
   push:
@@ -78,11 +78,14 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            git pull --ff-only
-            export APP_IMAGE=${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:develop
-            COMPOSE="docker compose --project-directory . -f docker/compose.yaml -f docker/compose.develop.yaml"
-            $COMPOSE pull app
+            git fetch origin
+            git checkout -f develop
+            git reset --hard origin/develop
+            export APP_IMAGE_DEVELOP=${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:develop
+            COMPOSE="docker compose --project-directory . -f docker/compose.yaml -f docker/compose.production.yaml"
+            $COMPOSE pull app_develop
             $COMPOSE up -d db registry
-            $COMPOSE run --rm --no-deps app php artisan db:backup || true
-            $COMPOSE run --rm --no-deps app php artisan migrate --force
-            $COMPOSE up -d app
+            $COMPOSE run --rm --no-deps app_develop php artisan db:backup || true
+            $COMPOSE run --rm --no-deps app_develop php artisan migrate --force
+            $COMPOSE run --rm --no-deps app_develop php artisan db:seed --class=SettingSeeder --force
+            $COMPOSE up -d app_develop

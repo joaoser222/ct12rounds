@@ -73,7 +73,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    image: ${APP_IMAGE:-ct12rounds:local}
+    image: ${APP_IMAGE_DEVELOP:-ct12rounds:local}
     env_file:
       - path: .env
         required: true

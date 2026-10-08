@@ -78,11 +78,14 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            git pull --ff-only
+            git fetch origin
+            git checkout -f master
+            git reset --hard origin/master
             export APP_IMAGE=${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:production
             COMPOSE="docker compose --project-directory . -f docker/compose.yaml -f docker/compose.production.yaml"
             $COMPOSE pull app
             $COMPOSE up -d db registry
             $COMPOSE run --rm --no-deps app php artisan db:backup || true
             $COMPOSE run --rm --no-deps app php artisan migrate --force
+            $COMPOSE run --rm --no-deps app php artisan db:seed --class=SettingSeeder --force
             $COMPOSE up -d app
