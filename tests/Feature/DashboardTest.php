@@ -17,22 +17,15 @@ class DashboardTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_users_can_visit_the_applications_home_page()
+    public function test_authenticated_users_see_the_landing_page_on_the_root_route()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $response = $this->get(route('home'));
-        $response
+        $this->get(route('home'))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Home')
-                ->where('name', config('app.name'))
-                ->where('auth.user.id', $user->id)
-                ->where('auth.user.name', $user->name)
-                ->where('auth.user.email', $user->email)
-                ->where('auth.user.permissions_version', $user->permissionsVersion())
-                ->missing('sidebarOpen')
+                ->component('public/Landing')
             );
     }
 

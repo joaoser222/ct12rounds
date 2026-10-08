@@ -20,10 +20,6 @@ class HomeController extends Controller
 
     public function index(Request $request): InertiaResponse|RedirectResponse
     {
-        if (auth()->check()) {
-            return inertia('Home');
-        }
-
         $settings = $this->landingSettings->resolved();
 
         if (! $settings['enabled']) {

@@ -25,16 +25,12 @@ class PublicHiringLandingTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_users_see_home_when_landing_is_disabled(): void
+    public function test_authenticated_users_are_redirected_to_login_when_landing_is_disabled(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get(route('home'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Home')
-                ->where('auth.user.id', $user->id)
-            );
+            ->assertRedirect(route('login'));
     }
 
     public function test_landing_renders_static_page_with_configurable_settings_when_enabled(): void
