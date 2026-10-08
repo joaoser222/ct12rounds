@@ -1,6 +1,13 @@
-:80 {
+ct12rounds.com.br {
     root * /var/www/html/public
     encode zstd gzip
     php_fastcgi app:9000
+    file_server
+}
+
+develop.ct12rounds.com.br {
+    root * /var/www/html/public
+    encode zstd gzip
+    php_fastcgi app_develop:9000
     file_server
 }

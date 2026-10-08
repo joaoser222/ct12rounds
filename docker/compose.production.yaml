@@ -67,7 +67,36 @@ services:
       - bootstrap_cache:/var/www/html/bootstrap/cache
       - ${BACKUP_HOST_PATH:-./backups}:/var/www/html/storage/app/backups
 
+  app_develop:
+    container_name: ct12rounds_app_develop
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: ${APP_IMAGE:-ct12rounds:local}
+    env_file:
+      - path: .env
+        required: true
+      - path: develop.env
+        required: true
+    environment:
+      DB_HOST: db
+    command: >-
+      sh -c 'set -e;
+      mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache;
+      chown -R www-data:www-data storage bootstrap/cache;
+      exec php-fpm'
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - app_develop_storage:/var/www/html/storage
+      - app_develop_bootstrap_cache:/var/www/html/bootstrap/cache
 volumes:
+  app_develop_storage:
+    name: ct12rounds_app_develop_storage
+  app_develop_bootstrap_cache:
+    name: ct12rounds_app_develop_bootstrap_cache
   laravel_storage:
     name: ct12rounds_laravel_storage
   bootstrap_cache:
