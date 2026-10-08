@@ -90,3 +90,4 @@ jobs:
             $COMPOSE run --rm --no-deps app_develop php artisan migrate --force
             $COMPOSE run --rm --no-deps app_develop php artisan db:seed --class=SettingSeeder --force
             $COMPOSE up -d app_develop
+            $COMPOSE up -d --force-recreate --no-deps caddy
