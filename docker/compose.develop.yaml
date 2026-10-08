@@ -19,7 +19,11 @@ services:
       - bootstrap_cache:/var/www/html/bootstrap/cache
   caddy:
     container_name: ct12rounds_caddy
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
+      - ./Caddyfile.develop:/etc/caddy/Caddyfile:ro
       - ./public:/var/www/html/public:ro
       - laravel_storage:/var/www/html/storage:ro
   db:

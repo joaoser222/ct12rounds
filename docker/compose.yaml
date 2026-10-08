@@ -20,8 +20,6 @@ services:
     restart: unless-stopped
     depends_on:
       - app
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
   db:
     container_name: ct12rounds_db
     restart: unless-stopped

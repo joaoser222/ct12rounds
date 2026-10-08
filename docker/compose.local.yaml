@@ -9,6 +9,8 @@ services:
   caddy:
     ports:
       - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
   test:
     environment:
       APP_ENV: testing
