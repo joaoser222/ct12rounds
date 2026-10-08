@@ -31,6 +31,11 @@ class SettingSeeder extends Seeder
             ['name' => 'landing_about_text', 'label' => 'Landing - Texto institucional', 'content' => '', 'object_type' => 'textarea', 'group' => 'landing'],
             ['name' => 'landing_meta_title', 'label' => 'Landing - Meta title (SEO)', 'content' => 'CT 12 Rounds — Centro de Treinamento', 'object_type' => 'text', 'group' => 'landing'],
             ['name' => 'landing_meta_description', 'label' => 'Landing - Meta description (SEO)', 'content' => 'Boxe, Kickboxing e Jiu-Jitsu em Palmas — TO. Metodologia 12 Rounds: defesa pessoal, condicionamento e alta performance.', 'object_type' => 'textarea', 'group' => 'landing'],
+            ['name' => 'site_mode', 'label' => 'Estado público do site', 'content' => 'off', 'object_type' => 'options:off|No ar,construction|Em construção,maintenance|Em manutenção', 'group' => 'site'],
+            ['name' => 'site_construction_title', 'label' => 'Em construção - Título', 'content' => 'Estamos em construção', 'object_type' => 'text', 'group' => 'site'],
+            ['name' => 'site_construction_message', 'label' => 'Em construção - Mensagem', 'content' => 'Estamos preparando tudo por aqui. Voltamos em breve.', 'object_type' => 'textarea', 'group' => 'site'],
+            ['name' => 'site_maintenance_title', 'label' => 'Em manutenção - Título', 'content' => 'Estamos em manutenção', 'object_type' => 'text', 'group' => 'site'],
+            ['name' => 'site_maintenance_message', 'label' => 'Em manutenção - Mensagem', 'content' => 'Estamos realizando uma manutenção programada. Voltamos em breve.', 'object_type' => 'textarea', 'group' => 'site'],
         ])->each(function (array $attributes): void {
             $setting = Setting::query()->firstOrNew(['name' => $attributes['name']]);
 

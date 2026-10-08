@@ -15,6 +15,7 @@ type SettingField = {
     object_type: string;
     input_type: string;
     select_object_name?: string | null;
+    options?: { value: string; title: string }[];
     group: string | null;
 };
 
@@ -41,9 +42,10 @@ const GROUP_LABEL: Record<string, string> = {
     financial: 'Financeiro',
     peoples: 'Pessoas',
     landing: 'Landing page',
+    site: 'Site',
 };
 
-const GROUP_ORDER = ['billing', 'financial', 'peoples', 'landing'];
+const GROUP_ORDER = ['billing', 'financial', 'peoples', 'landing', 'site'];
 
 const tabs = computed(() => {
     const grouped = new Map<string, SettingField[]>();
@@ -127,6 +129,14 @@ function isNumericField(setting: SettingField): boolean {
 function isSelectField(setting: SettingField): boolean {
     return (
         setting.input_type === 'select' && Boolean(setting.select_object_name)
+    );
+}
+
+function isStaticSelectField(setting: SettingField): boolean {
+    return (
+        setting.input_type === 'select' &&
+        !setting.select_object_name &&
+        (setting.options?.length ?? 0) > 0
     );
 }
 
@@ -235,6 +245,25 @@ onMounted(() => {
                                         "
                                         :label="setting.label"
                                         clearable
+                                        persistent-hint
+                                        :error-messages="
+                                            form.errors[
+                                                `settings.${setting.name}`
+                                            ]
+                                        "
+                                        :disabled="
+                                            !hasPermission('update') ||
+                                            form.processing
+                                        "
+                                    />
+
+                                    <v-select
+                                        v-else-if="isStaticSelectField(setting)"
+                                        v-model="form.settings[setting.name]"
+                                        :items="setting.options"
+                                        item-title="title"
+                                        item-value="value"
+                                        :label="setting.label"
                                         persistent-hint
                                         :error-messages="
                                             form.errors[

@@ -39,6 +39,10 @@ class UpdateSettingsRequest extends FormRequest
      */
     private function rulesForSetting(Setting $setting): array
     {
+        if ($setting->isStaticSelection()) {
+            return ['nullable', 'string', Rule::in(collect($setting->options())->pluck('value')->all())];
+        }
+
         $selectTable = $setting->selectTable();
 
         if ($selectTable !== null) {

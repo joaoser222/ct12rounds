@@ -66,7 +66,7 @@ class SettingController extends AbstractModuleController
     }
 
     /**
-     * @return array<int, array{id: int, name: string, label: string, content: mixed, object_type: string, input_type: string, select_object_name: string|null, group: string|null}>
+     * @return array<int, array{id: int, name: string, label: string, content: mixed, object_type: string, input_type: string, select_object_name: string|null, options: array<int, array{value: string, title: string}>, group: string|null}>
      */
     private function settingsPayload(): array
     {
@@ -80,8 +80,9 @@ class SettingController extends AbstractModuleController
                 'label' => $setting->label,
                 'content' => $setting->content,
                 'object_type' => $setting->object_type,
-                'input_type' => $setting->isSelection() ? 'select' : $setting->object_type,
+                'input_type' => $setting->isSelection() || $setting->isStaticSelection() ? 'select' : $setting->object_type,
                 'select_object_name' => $setting->selectObjectName(),
+                'options' => $setting->options(),
                 'group' => $setting->group,
             ])
             ->all();

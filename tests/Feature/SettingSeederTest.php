@@ -23,7 +23,7 @@ class SettingSeederTest extends TestCase
         $this->seed(SettingSeeder::class);
         $this->seed(SettingSeeder::class);
 
-        $this->assertDatabaseCount('settings', 18);
+        $this->assertDatabaseCount('settings', 23);
 
         $this->assertSame('', Setting::query()->where('name', 'contract_default_category')->value('content'));
         $this->assertSame('', Setting::query()->where('name', 'purchase_default_category')->value('content'));
@@ -36,6 +36,8 @@ class SettingSeederTest extends TestCase
         $this->assertSame('', Setting::query()->where('name', 'billing_failure_notification_email')->value('content'));
         $this->assertSame('1', Setting::query()->where('name', 'landing_enabled')->value('content'));
         $this->assertSame('Começar agora', Setting::query()->where('name', 'landing_main_cta_text')->value('content'));
+        $this->assertSame('off', Setting::query()->where('name', 'site_mode')->value('content'));
+        $this->assertSame('site', Setting::query()->where('name', 'site_mode')->value('group'));
 
         $this->assertSame('Categoria de Contratos', Setting::query()->where('name', 'contract_default_category')->value('label'));
         $this->assertSame('Categoria de Vendas', Setting::query()->where('name', 'sale_default_category')->value('label'));
