@@ -1,6 +1,7 @@
 services:
   app:
     container_name: ct12rounds_app
+    restart: unless-stopped
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -16,12 +17,14 @@ services:
         condition: service_healthy
   caddy:
     image: caddy:2-alpine
+    restart: unless-stopped
     depends_on:
       - app
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
   db:
     container_name: ct12rounds_db
+    restart: unless-stopped
     image: postgres:17
     environment:
       POSTGRES_USER: ${DB_USERNAME}
@@ -37,6 +40,7 @@ services:
       - ./docker/postgres/init-test-database.sql:/docker-entrypoint-initdb.d/init-test-database.sql:ro
   queue:
     container_name: ct12rounds_queue
+    restart: unless-stopped
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -54,6 +58,7 @@ services:
     profiles: ["worker"]
   scheduler:
     container_name: ct12rounds_scheduler
+    restart: unless-stopped
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -72,6 +77,7 @@ services:
   registry:
     image: registry:2
     container_name: ct12rounds_registry
+    restart: unless-stopped
     # ponytail: sem auth/TLS; restrinja a porta 5000 por firewall.
     ports:
       - "5000:5000"
@@ -80,6 +86,7 @@ services:
   loki:
     image: grafana/loki:2.9.0
     container_name: ct12rounds_loki
+    restart: unless-stopped
     volumes:
       - loki_data:/loki
     ports:
@@ -88,6 +95,7 @@ services:
   promtail:
     image: grafana/promtail:2.9.0
     container_name: ct12rounds_promtail
+    restart: unless-stopped
     volumes:
       - ./docker/promtail/config.yml:/etc/promtail/config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -100,6 +108,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: ct12rounds_grafana
+    restart: unless-stopped
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
