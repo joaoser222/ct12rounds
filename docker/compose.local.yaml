@@ -10,7 +10,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile.develop:/etc/caddy/Caddyfile:ro
   test:
     environment:
       APP_ENV: testing

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -19,6 +20,13 @@ class DashboardTest extends TestCase
 
     public function test_authenticated_users_see_the_landing_page_on_the_root_route()
     {
+        Setting::query()->create([
+            'name' => 'landing_enabled',
+            'label' => 'Landing page ativa',
+            'content' => '1',
+            'object_type' => 'boolean',
+        ]);
+
         $user = User::factory()->create();
         $this->actingAs($user);
 

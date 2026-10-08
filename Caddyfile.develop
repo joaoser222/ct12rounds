@@ -4,3 +4,4 @@ develop.ct12rounds.com.br {
     php_fastcgi app:9000
     file_server
 }
+# ponytail: domain won't resolve without /etc/hosts entry; add "127.0.0.1 develop.ct12rounds.com.br" to /etc/hosts or use localhost
