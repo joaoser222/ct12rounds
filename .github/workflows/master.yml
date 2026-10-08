@@ -52,6 +52,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
       - run: |
           echo '{"insecure-registries": ["${{ secrets.REGISTRY_HOST }}"]}' | sudo tee /etc/docker/daemon.json
           sudo service docker restart
