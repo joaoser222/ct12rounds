@@ -90,7 +90,7 @@ jobs:
               git -C "$SRC" worktree add --force --detach "$DEPLOY" origin/master
             fi
             ln -sfn "$SRC/.env" "$DEPLOY/.env"
-            mkdir -p "$SRC/backups"
+            mkdir -p "$SRC/backups" "$DEPLOY/public/build"
             export BACKUP_HOST_PATH="$SRC/backups"
             export APP_IMAGE=${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:production
             COMPOSE="docker compose -p ct12rounds --project-directory $DEPLOY -f $DEPLOY/docker/compose.yaml -f $DEPLOY/docker/compose.production.yaml"

@@ -32,6 +32,8 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./public:/var/www/html/public:ro
       - public_build:/var/www/html/public/build
+      - caddy_data:/data
+      - caddy_config:/config
   db:
     env_file:
       - path: .env
@@ -93,6 +95,10 @@ services:
       - app_develop_storage:/var/www/html/storage
       - app_develop_bootstrap_cache:/var/www/html/bootstrap/cache
 volumes:
+  caddy_data:
+    name: ct12rounds_caddy_data
+  caddy_config:
+    name: ct12rounds_caddy_config
   app_develop_storage:
     name: ct12rounds_app_develop_storage
   app_develop_bootstrap_cache:
