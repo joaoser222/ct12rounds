@@ -46,12 +46,11 @@ jobs:
 
   build:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
         with:
           driver: docker
@@ -65,6 +64,8 @@ jobs:
           file: docker/Dockerfile
           push: true
           tags: ${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:develop
+          cache-from: type=inline
+          cache-to: type=inline
 
   deploy:
     needs: build
