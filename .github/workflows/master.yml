@@ -93,7 +93,7 @@ jobs:
             mkdir -p "$SRC/backups" "$DEPLOY/public/build"
             export BACKUP_HOST_PATH="$SRC/backups"
             export APP_IMAGE=${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:production
-            COMPOSE="docker compose -p ct12rounds --project-directory $DEPLOY -f $DEPLOY/docker/compose.yaml -f $DEPLOY/docker/compose.production.yaml"
+            COMPOSE="docker compose -p ct12rounds --project-directory $DEPLOY -f $DEPLOY/docker/compose.yaml -f $DEPLOY/docker/compose.production.yaml --profile monitoring"
             $COMPOSE pull app
             $COMPOSE up -d db registry
             $COMPOSE run --rm --no-deps app php artisan db:backup || true
@@ -101,3 +101,4 @@ jobs:
             $COMPOSE run --rm --no-deps app php artisan db:seed --class=SettingSeeder --force
             $COMPOSE up -d app
             $COMPOSE up -d --force-recreate --no-deps caddy
+            $COMPOSE up -d loki promtail grafana
