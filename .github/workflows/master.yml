@@ -80,12 +80,20 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            cd ${{ secrets.DEPLOY_PATH }}
-            git fetch origin
-            git checkout -f master
-            git reset --hard origin/master
+            SRC="${{ secrets.DEPLOY_PATH }}"
+            DEPLOY="${SRC}-deploy"
+            git -C "$SRC" fetch origin
+            if git -C "$DEPLOY" rev-parse --git-dir >/dev/null 2>&1; then
+              git -C "$DEPLOY" fetch origin
+              git -C "$DEPLOY" checkout --force --detach origin/master
+            else
+              git -C "$SRC" worktree add --force --detach "$DEPLOY" origin/master
+            fi
+            ln -sfn "$SRC/.env" "$DEPLOY/.env"
+            mkdir -p "$SRC/backups"
+            export BACKUP_HOST_PATH="$SRC/backups"
             export APP_IMAGE=${{ secrets.REGISTRY_HOST }}/${{ env.IMAGE }}:production
-            COMPOSE="docker compose --project-directory . -f docker/compose.yaml -f docker/compose.production.yaml"
+            COMPOSE="docker compose -p ct12rounds --project-directory $DEPLOY -f $DEPLOY/docker/compose.yaml -f $DEPLOY/docker/compose.production.yaml"
             $COMPOSE pull app
             $COMPOSE up -d db registry
             $COMPOSE run --rm --no-deps app php artisan db:backup || true
