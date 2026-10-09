@@ -22,4 +22,11 @@ tools.ct12rounds.com.br {
     handle /grafana* {
         reverse_proxy grafana:3000
     }
+
+    handle_path /adminer* {
+        basic_auth {
+            {env.ADMINER_USER} {env.ADMINER_PASSWORD_HASH}
+        }
+        reverse_proxy adminer:8080
+    }
 }

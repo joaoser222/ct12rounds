@@ -20,6 +20,9 @@ services:
     restart: unless-stopped
     depends_on:
       - app
+    environment:
+      ADMINER_USER: ${ADMINER_USER}
+      ADMINER_PASSWORD_HASH: ${ADMINER_PASSWORD_HASH}
   db:
     container_name: ct12rounds_db
     restart: unless-stopped
@@ -124,6 +127,16 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     depends_on:
       - loki
+    profiles: ["monitoring"]
+  adminer:
+    image: adminer:latest
+    container_name: ct12rounds_adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      db:
+        condition: service_healthy
     profiles: ["monitoring"]
 
 volumes:

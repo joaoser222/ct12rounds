@@ -102,4 +102,4 @@ jobs:
             $COMPOSE run --rm --no-deps app php artisan db:seed --class=SettingSeeder --force
             $COMPOSE up -d app
             $COMPOSE up -d --force-recreate --no-deps caddy
-            $COMPOSE up -d loki promtail grafana
+            $COMPOSE up -d loki promtail grafana adminer
