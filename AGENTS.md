@@ -55,9 +55,11 @@ When the user asks to proceed with an existing plan, also load `plan-execution`.
 It implements the plan directly and does not delegate work.
 
 Plan/skill confirmations use strict single words: `commit` applies the proposed
-commits (git-commit), `publicar` publishes a finished `plan/<slug>` branch to
-`develop` (plan-execution), and `publish_production` merges `develop` into
-`master` after a push to develop (git-commit).
+commits (git-commit), `publish` publishes a finished branch (`plan/<slug>` or a
+`git-commit` fork branch) to `develop` (plan-execution / git-commit), and
+`publish_production` merges `develop` into `master` after a push to develop
+(git-commit). Every change reaches git through a fork branch — never commit or
+push directly on `develop` or `master`.
 
 ## Implementation And Verification
 

@@ -7,9 +7,12 @@ description: >
   "finalizar". The only keyword that triggers this skill is the literal
   string "commitar". When activated, it analyzes changed files via git
   diff, groups changes into logical commits following Angular Convention
-  with Portuguese descriptions, displays proposed commits with "Aguardando
-  confirmacao de commit" and only applies (with git push) after user
-  confirmation.
+  with Portuguese descriptions, always forks a working branch before
+  committing (never commits/pushes directly on develop or master), displays
+  proposed commits with "Aguardando confirmacao de commit" and only applies
+  (with git push of the fork branch) after user confirmation. After the
+  push it offers publishing to develop with the strict word "publish", then
+  optionally to production with "publish_production".
 compatibility:
   - git
   - conventional-commits
@@ -83,6 +86,25 @@ use the main context scope or create separate commits.
 
 ## Execution flow
 
+### Step 0: Fork branch (always)
+
+Every change — planned or not — must reach git through a fork branch. Never
+commit or push directly on `develop` or `master`.
+
+1. Discover the current branch with `git branch --show-current`.
+2. If it is already a working branch (not `develop`/`master`), reuse it.
+3. Otherwise create one from the current HEAD:
+   ```bash
+   git switch -c <tipo>/<slug>
+   ```
+   `<tipo>` is the dominant commit type of the batch (`feat`, `fix`,
+   `refactor`, `chore`, ...). `<slug>` is a short kebab-case summary of the
+   change. If the branch already exists, append a distinctive suffix
+   (date or index).
+
+Include the branch name in the Step 3 proposal so the user sees where the
+commits will land.
+
 ### Step 1: Analyze changes
 
 Run `git diff --name-status HEAD` to list all modified, added, and deleted
@@ -120,12 +142,14 @@ For each commit, generate the message in Angular format.
 
 ### Step 3: Display proposed commits
 
-Show the user the list of commits to be created:
+Show the user the fork branch and the list of commits to be created:
 
 ```
 ========================================
 🤖 Proposed commits:
 ========================================
+
+Branch: fix/site-mode-card
 
 1/3: feat(clients): adiciona CRUD de clientes
   Files:
@@ -179,12 +203,13 @@ For each proposed commit (in the order displayed):
    git commit -m "<tipo>(<escopo>): <descrição>" -m "<body>"
    ```
 
-3. **Only after ALL commits are created**, push:
+3. **Only after ALL commits are created**, push the fork branch:
    ```bash
-   git push origin <current-branch>
+   git push -u origin <fork-branch>
    ```
 
-   Discover the current branch with `git branch --show-current`.
+   Discover the fork branch with `git branch --show-current`. Never push
+   `develop` or `master` from this skill.
 
 ### Step 6: Report result
 
@@ -196,9 +221,31 @@ After successful push, display:
 
 If there is an error in any step, display the error message and stop.
 
-### Step 7: Optional production publish (develop → master)
+### Step 7: Publish to develop
 
-After a successful push **to `develop`**, ask the user:
+After a successful push of the fork branch, ask the user:
+
+```
+Deseja publicar em develop (merge FF da branch)? Responda publish para publicar.
+```
+
+Proceeding requires the exact word **`publish`** — any other reply means skip.
+This push to `develop` triggers the develop CI/deploy.
+
+Proceeding executes:
+
+1. `git switch develop && git pull --ff-only origin develop`
+2. `git merge --ff-only <fork-branch>`
+3. `git push origin develop`
+4. `git switch develop`
+
+If the fast-forward fails (develop advanced), stop and report; do not force-push
+and do not merge silently.
+
+### Step 8: Optional production publish (develop → master)
+
+Only after `publish` succeeded (or if the fork branch was already published to
+`develop` in this session), ask the user:
 
 ```
 Deseja publicar em produção (merge develop→master)? Responda publish_production para publicar.
@@ -216,10 +263,6 @@ Proceeding executes:
 
 If the fast-forward fails (master advanced), stop and report; do not force-push
 and do not merge silently.
-
-If the push just made went **to a plan branch** (`plan/<slug>`) instead of
-`develop`, skip this prompt and remind that publishing to `develop` happens via
-`plan-execution` with the word `publicar`.
 
 ## Examples
 

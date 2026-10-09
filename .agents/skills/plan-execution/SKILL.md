@@ -30,7 +30,7 @@ this skill's instructions in English.
 7. Finish with Pint after PHP changes and the narrowest meaningful test suite for
    the changed areas.
 8. Publish to `develop` — never automatic. Present a short summary and require the
-   exact word `publicar` to publish. On `publicar`:
+   exact word `publish` to publish. On `publish`:
    - `git switch develop && git pull --ff-only origin develop`
    - `git merge --ff-only plan/<slug>` then `git push origin develop`
    - `git switch develop`
