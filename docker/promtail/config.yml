@@ -21,12 +21,31 @@ scrape_configs:
         target_label: 'logstream'
       - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
         target_label: 'service'
+      - target_label: 'job'
+        replacement: 'docker'
     pipeline_stages:
       - docker: {}
-      - regex:
-          expression: '^(?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z?)\s+(?P<level>\w+)\s+(?P<message>.*)'
+      - template:
+          source: env
+          template: '{{ if eq .container "ct12rounds_app_develop" }}develop{{ else if or (eq .container "ct12rounds_app") (eq .container "ct12rounds_queue") (eq .container "ct12rounds_scheduler") }}production{{ end }}'
+      - labels:
+          env:
+      - json:
+          expressions:
+            level: level_name
+            timestamp: datetime
       - labels:
           level:
       - timestamp:
-          source: time
+          source: timestamp
           format: RFC3339Nano
+      - match:
+          selector: '{level=""}'
+          stages:
+            - regex:
+                expression: '^(?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z?)\s+(?P<level>\w+)\s+(?P<message>.*)'
+            - labels:
+                level:
+            - timestamp:
+                source: time
+                format: RFC3339Nano

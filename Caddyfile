@@ -11,3 +11,11 @@ develop.ct12rounds.com.br {
     php_fastcgi app_develop:9000
     file_server
 }
+
+tools.ct12rounds.com.br {
+    encode zstd gzip
+
+    handle /grafana* {
+        reverse_proxy grafana:3000
+    }
+}
