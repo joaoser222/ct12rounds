@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class SiteModeTest extends TestCase
@@ -30,7 +31,10 @@ class SiteModeTest extends TestCase
 
         $this->get(route('home'))
             ->assertStatus(503)
-            ->assertSee('Estamos em construção');
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('SiteMode')
+                ->where('title', 'Estamos em construção')
+            );
     }
 
     public function test_guests_see_the_maintenance_placeholder_when_mode_is_maintenance(): void
@@ -39,7 +43,10 @@ class SiteModeTest extends TestCase
 
         $this->get(route('home'))
             ->assertStatus(503)
-            ->assertSee('Estamos em manutenção');
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('SiteMode')
+                ->where('title', 'Estamos em manutenção')
+            );
     }
 
     public function test_guests_are_not_blocked_when_mode_is_off(): void

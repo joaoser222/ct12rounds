@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\SiteModeService;
 use Closure;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -36,12 +37,11 @@ class HandleSiteMode
 
         $content = $this->siteMode->content();
 
-        return response()
-            ->view('site-mode', [
-                'title' => $content['title'],
-                'message' => $content['message'],
-                'mode' => $mode,
-            ], 503)
-            ->header('Retry-After', '3600');
+        $response = Inertia::render('SiteMode', [
+            'title' => $content['title'],
+            'message' => $content['message'],
+        ])->toResponse($request);
+
+        return $response->setStatusCode(503)->header('Retry-After', '3600');
     }
 }
