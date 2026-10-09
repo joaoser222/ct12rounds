@@ -69,6 +69,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: ct12rounds-deploy
+      cancel-in-progress: false
     steps:
       - uses: appleboy/ssh-action@v1.2.0
         with:
