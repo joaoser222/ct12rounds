@@ -54,6 +54,11 @@ multiple domains.
 When the user asks to proceed with an existing plan, also load `plan-execution`.
 It implements the plan directly and does not delegate work.
 
+Plan/skill confirmations use strict single words: `commit` applies the proposed
+commits (git-commit), `publicar` publishes a finished `plan/<slug>` branch to
+`develop` (plan-execution), and `publish_production` merges `develop` into
+`master` after a push to develop (git-commit).
+
 ## Implementation And Verification
 
 - Use Laravel generators with `--no-interaction` when applicable.

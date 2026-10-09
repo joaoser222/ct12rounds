@@ -154,11 +154,11 @@ Display the exact message **"Aguardando confirmação de commit"** at the end.
 Do NOT run any git commands yet. Only display the proposed commits and
 wait for the user to respond.
 
-If the user confirms (e.g., "sim", "pode comitar", "ok", "confirmo",
-"vamos"), proceed to Step 5.
-
-If the user rejects or asks for changes (e.g., "não", "espera", "altera
-tal commit"), adjust according to feedback and display again.
+The user must confirm with the exact single word **`commit`** (no quotes,
+nothing else). Any other reply means reject or adjust:
+- If the user replies exactly `commit`, proceed to Step 5.
+- Otherwise (e.g., "não", "espera", "altera tal commit"), adjust according
+  to feedback and display the proposals again.
 
 ### Step 5: Apply commits
 
@@ -195,6 +195,31 @@ After successful push, display:
 ```
 
 If there is an error in any step, display the error message and stop.
+
+### Step 7: Optional production publish (develop → master)
+
+After a successful push **to `develop`**, ask the user:
+
+```
+Deseja publicar em produção (merge develop→master)? Responda publish_production para publicar.
+```
+
+Proceeding requires the exact word **`publish_production`** — any other reply
+means skip. This push to `master` triggers the production deploy.
+
+Proceeding executes:
+
+1. `git switch master && git pull --ff-only origin master`
+2. `git merge --ff-only origin/develop`
+3. `git push origin master`
+4. `git switch develop`
+
+If the fast-forward fails (master advanced), stop and report; do not force-push
+and do not merge silently.
+
+If the push just made went **to a plan branch** (`plan/<slug>`) instead of
+`develop`, skip this prompt and remind that publishing to `develop` happens via
+`plan-execution` with the word `publicar`.
 
 ## Examples
 
