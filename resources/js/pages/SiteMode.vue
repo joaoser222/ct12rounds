@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
 import logo from '@/assets/logo.webp';
 
 defineOptions({ layout: null });
@@ -28,20 +27,10 @@ defineProps<{
                     </div>
 
                     <!-- Título -->
-                    <h1 class="text-h6 font-weight-medium mb-1">{{ title }}</h1>
-                    <p class="text-body-2 text-medium-emphasis mb-6">
+                    <h1 class="text-h5 font-weight-medium mb-1">{{ title }}</h1>
+                    <p class="text-body-1 text-medium-emphasis">
                         {{ message }}
                     </p>
-
-                    <v-btn
-                        variant="text"
-                        color="primary"
-                        size="small"
-                        class="text-caption"
-                        @click="router.visit('/login')"
-                    >
-                        Acesso da equipe
-                    </v-btn>
                 </v-card-text>
             </v-card>
         </v-container>
