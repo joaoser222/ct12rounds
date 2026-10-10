@@ -220,6 +220,12 @@ class SaleItemPersistenceTest extends TestCase
         $firstProduct = $this->createProduct('Produto A');
         $secondProduct = $this->createProduct('Produto B');
 
+        GatewayAccount::query()->create([
+            'name' => 'Asaas',
+            'description' => 'Asaas',
+            'settings' => [],
+        ]);
+
         $sale = Sale::query()->create([
             'client_id' => $client->id,
             'status' => BillableStatus::OPEN->value,
