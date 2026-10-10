@@ -134,6 +134,9 @@ services:
     restart: unless-stopped
     environment:
       ADMINER_DEFAULT_SERVER: db
+    volumes:
+      - ./docker/adminer/hydra.css:/var/www/html/adminer-hydra.css:ro
+      - ./docker/adminer/plugins-enabled/designs.php:/var/www/html/plugins-enabled/designs.php:ro
     depends_on:
       db:
         condition: service_healthy
