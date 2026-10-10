@@ -129,7 +129,7 @@ services:
       - loki
     profiles: ["monitoring"]
   adminer:
-    image: adminer:latest
+    image: adminer:4
     container_name: ct12rounds_adminer
     restart: unless-stopped
     environment:
