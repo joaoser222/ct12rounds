@@ -706,7 +706,7 @@ nav.scrolled{background:rgba(8,8,8,.92);backdrop-filter:blur(12px);border-bottom
 .nav-cta:hover{background:#1a6bff;transform:translateY(-1px)}
 
 /* ── HERO ── */
-.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:stretch;overflow:hidden;padding:108px 0}
+.hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:stretch;overflow:hidden}
 .hero-photo{position:absolute;top:0;right:0;width:58%;height:100%;z-index:1}
 .hero-photo img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;filter:grayscale(20%)}
 .hero-photo-tint{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,40,160,.18) 0%,rgba(0,87,255,.08) 60%,transparent 100%);mix-blend-mode:multiply;pointer-events:none}
