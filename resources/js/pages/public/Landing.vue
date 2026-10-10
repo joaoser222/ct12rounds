@@ -1015,7 +1015,6 @@ footer{background:#040404;border-top:1px solid var(--border);padding:64px;displa
     flex-direction:column;
     align-items:stretch;
     overflow:visible;
-    padding:72px 0 0;
     background:var(--black);
   }
   /* photo: remove absolute, become full-width inline block */
